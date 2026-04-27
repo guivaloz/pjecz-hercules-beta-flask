@@ -97,15 +97,15 @@
                 data: null,
                 render: function(data, type, row, meta) {
                     let html = '';
+                    // Ir al detalle de la plantilla
+                    html += '<a class="btn btn-outline-primary btn-sm" href="' + data.url + '"><span class="mdi mdi-eye"></span></a> ';
+                    // Editar la plantilla
+                    if (data.url_edicion !== '') {
+                        html += '<a class="btn btn-outline-primary btn-sm" href="' + data.url_edicion + '"><span class="mdi mdi-pencil"></span></a> ';
+                    }
                     // Crear un nuevo oficio con esta plantilla
                     if (data.url_nuevo !== '') {
                         html += '<a class="btn btn-outline-primary btn-sm" href="' + data.url_nuevo + '"><span class="mdi mdi-content-copy"></span></a> ';
-                    }
-                    // Detalle de la plantilla
-                    html += '<a class="btn btn-outline-primary btn-sm" href="' + data.url + '"><span class="mdi mdi-eye"></span></a> ';
-                    // Edicion de la plantilla
-                    if (data.url_edicion !== '') {
-                        html += '<a class="btn btn-outline-primary btn-sm" href="' + data.url_edicion + '"><span class="mdi mdi-pencil"></span></a> ';
                     }
                     return html;
                 }

@@ -47,6 +47,27 @@ def datatable_json():
         descripcion = safe_string(request.form["descripcion"], save_enie=True)
         if descripcion:
             consulta = consulta.filter(OfiPlantilla.descripcion.contains(descripcion))
+    # Luego filtrar por columnas de otras tablas
+    tabla_usuario_incluida = False
+    if "propietario" in request.form:
+        if tabla_usuario_incluida is False:
+            consulta = consulta.join(Usuario)
+            tabla_usuario_incluida = True
+        propietario = request.form["propietario"].lower()
+        consulta = consulta.filter(Usuario.email.contains(propietario))
+    if "autoridad" in request.form:
+        autoridad = safe_clave(request.form["autoridad"])
+        if autoridad:
+            if tabla_usuario_incluida is False:
+                consulta = consulta.join(Usuario)
+                tabla_usuario_incluida = True
+            consulta = consulta.join(Autoridad, Usuario.autoridad_id == Autoridad.id)
+            consulta = consulta.filter(Autoridad.clave.contains(autoridad))
+    if "usuario_autoridad_id" in request.form:
+        if tabla_usuario_incluida is False:
+            consulta = consulta.join(Usuario)
+            tabla_usuario_incluida = True
+        consulta = consulta.filter(Usuario.autoridad_id == request.form["usuario_autoridad_id"])
     # Ordenar y paginar
     registros = consulta.order_by(OfiPlantilla.descripcion).offset(start).limit(rows_per_page).all()
     total = consulta.count()
@@ -58,8 +79,16 @@ def datatable_json():
                 "detalle": {
                     "id": resultado.id,
                     "url": url_for("ofi_plantillas.detail", ofi_plantilla_id=resultado.id),
-                    "url_edicion": "",
-                    "url_nuevo": "",
+                    "url_edicion": (
+                        url_for("ofi_plantillas.edit", ofi_plantilla_id=resultado.id)
+                        if current_user.can_edit("OFI PLANTILLAS")
+                        else ""
+                    ),
+                    "url_nuevo": (
+                        url_for("ofi_documentos.new", ofi_plantilla_id=resultado.id)
+                        if current_user.can_insert("OFI DOCUMENTOS")
+                        else ""
+                    ),
                 },
                 "propietario": {
                     "email": resultado.usuario.email,
