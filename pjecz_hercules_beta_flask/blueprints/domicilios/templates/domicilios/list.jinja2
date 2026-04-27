@@ -1,0 +1,106 @@
+{% extends 'layouts/app.jinja2' %}
+{% import 'macros/list.jinja2' as list %}
+{% import 'macros/topbar.jinja2' as topbar %}
+
+{% block title %}{{ titulo }}{% endblock %}
+
+{% block topbar_actions %}
+    {% call topbar.page_buttons(titulo) %}
+        {% if current_user.can_view('OFICINAS') %}
+            {{ topbar.button('Oficinas', url_for('oficinas.list_active'), 'mdi mdi-store') }}
+        {% endif %}
+        {% if current_user.can_admin('DOMICILIOS') %}
+            {% if estatus == 'A' %}{{ topbar.button_list_inactive('Inactivos', url_for('domicilios.list_inactive')) }}{% endif %}
+            {% if estatus == 'B' %}{{ topbar.button_list_active('Activos', url_for('domicilios.list_active')) }}{% endif %}
+        {% endif %}
+        {% if current_user.can_insert('DOMICILIOS') %}
+            {{ topbar.button_new('Nuevo Domicilio', url_for('domicilios.new')) }}
+        {% endif %}
+    {% endcall %}
+{% endblock %}
+
+{% block content %}
+    {% call list.card() %}
+        <!-- Filtros Domicilios -->
+        <div class="row">
+            <div class="col">
+                <form class="row g-1 mb-3" id="filtradorForm" onsubmit="filtrosDomicilios.buscar(); return false;">
+                    <div class="col-6">
+                        <div class="form-floating">
+                            <input id="filtroEdificio" type="text" class="form-control" aria-label="Edificio" style="text-transform: uppercase;">
+                            <label for="filtroEdificio">Edificio</label>
+                        </div>
+                    </div>
+                    <div class="col-6 text-end">
+                        <button title="Buscar" class="btn btn-primary btn-lg" onclick="filtrosDomicilios.buscar(); return false;" id="button-buscar"><span class="mdi mdi-magnify"></span></button>
+                        <button title="Limpiar" class="btn btn-warning btn-lg" type="reset" onclick="filtrosDomicilios.limpiar();" id="button-limpiar"><span class="mdi mdi-broom"></span></button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <!-- DataTable Domicilios -->
+        <table id="domicilios_datatable" class="table {% if estatus == 'B'%}table-dark{% endif %} display nowrap" style="width:100%">
+            <thead>
+                <tr>
+                    <th>Edificio</th>
+                    <th>Estado</th>
+                    <th>Municipio</th>
+                    <th>Calle</th>
+                    <th>No. Ext.</th>
+                    <th>No. Int.</th>
+                    <th>Colonia</th>
+                    <th>C.P.</th>
+                </tr>
+            </thead>
+        </table>
+    {% endcall %}
+{% endblock %}
+
+{% block custom_javascript %}
+    <script src="/static/js/datatables-constructor.js"></script>
+    <script src="/static/js/datatables-filtros.js"></script>
+    <script>
+        // DataTable Domicilios
+        const constructorDataTable = new ConfigDataTable( '{{ csrf_token() }}' );
+        let configDataTable = constructorDataTable.config();
+        configDataTable['ajax']['url'] = '/domicilios/datatable_json';
+        configDataTable['ajax']['data'] = {{ filtros }};
+        configDataTable['columns'] = [
+            { data: "detalle" },
+            { data: "estado" },
+            { data: "municipio" },
+            { data: "calle" },
+            { data: "num_ext" },
+            { data: "num_int" },
+            { data: "colonia" },
+            { data: "cp" }
+        ];
+        configDataTable['columnDefs'] = [
+            {
+                targets: 0, //detalle
+                data: null,
+                render: function(data, type, row, meta) {
+                    return '<a href="' + data.url + '">' + data.edificio + '</a>';
+                }
+            },
+            {
+                targets: [1, 2], // estado, municipio
+                data: null,
+                render: function(data, type, row, meta) {
+                    return data.length > 8 ? data.substring(0, 8) + '…' : data;
+                }
+            },
+            {
+                targets: [3, 6], // calle, colonia
+                data: null,
+                render: function(data, type, row, meta) {
+                    return data.length > 16 ? data.substring(0, 16) + '…' : data;
+                }
+            }
+        ];
+        // Filtros Domicilios
+        const filtrosDomicilios = new FiltrosDataTable('#domicilios_datatable', configDataTable);
+        filtrosDomicilios.agregarInput('filtroEdificio', 'edificio');
+        filtrosDomicilios.precargar();
+    </script>
+{% endblock %}

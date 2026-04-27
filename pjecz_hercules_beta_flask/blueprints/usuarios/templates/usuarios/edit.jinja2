@@ -1,0 +1,112 @@
+{% extends 'layouts/app.jinja2' %}
+{% import 'macros/form.jinja2' as f with context %}
+{% import 'macros/topbar.jinja2' as topbar %}
+
+{% block title %}Editar Usuario {{ usuario.email }}{% endblock %}
+
+{% block custom_head %}
+    <!-- Select2 bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet">
+{% endblock %}
+
+{% block topbar_actions %}
+    {{ topbar.page('Editar Usuario ' + usuario.email) }}
+{% endblock %}
+
+{% block content %}
+    {% call f.card() %}
+        {% set form_kwargs = {'usuario_id': usuario.id} %}
+        {% call f.form_tag('usuarios.edit', fid='usuario_form', **form_kwargs) %}
+            <div class="row">
+                <div class="col-md-6">
+                    {% call f.form_group(form.email) %}{% endcall %}
+                    {% call f.form_group(form.nombres) %}{% endcall %}
+                    {% call f.form_group(form.apellido_paterno) %}{% endcall %}
+                    {% call f.form_group(form.apellido_materno) %}{% endcall %}
+                    {% call f.form_group(form.curp) %}{% endcall %}
+                    {% call f.form_group(form.efirma_registro_id) %}{% endcall %}
+                </div>
+                <div class="col-md-6">
+                    {% call f.form_group(form.distrito) %}{% endcall %}
+                    {% call f.form_group(form.autoridad) %}{% endcall %}
+                    {% call f.form_group(form.oficina) %}{% endcall %}
+                    {% call f.form_group(form.puesto) %}{% endcall %}
+                    {% call f.form_group(form.titulo) %}{% endcall %}
+                    {% call f.form_group(form.workspace) %}{% endcall %}
+                </div>
+            </div>
+            {% call f.form_group(form.guardar) %}{% endcall %}
+        {% endcall %}
+    {% endcall %}
+{% endblock %}
+
+{% block custom_javascript %}
+    <!-- Select Distrito-Autoridad -->
+    <script>
+        // Llamar a /distritos/select_json para cargar el select distrito
+        fetch('/distritos/select_json')
+            .then(response => response.json())
+            .then(data => {
+                const distritoSelect = document.getElementById('distrito');
+                data.forEach(distrito => {
+                    const option = document.createElement('option');
+                    option.value = distrito.id;
+                    option.text = distrito.nombre;
+                    distritoSelect.appendChild(option);
+                });
+                // Seleccionar el distrito del usuario
+                document.getElementById('distrito').value = {{ usuario.autoridad.distrito_id }};
+                document.getElementById('distrito').dispatchEvent(new Event('change'));
+            });
+        // Llamar a /autoridades/select_json para cargar el select autoridad, si el distrito cambia
+        document.getElementById('distrito').addEventListener('change', () => {
+            const distritoId = document.getElementById('distrito').value;
+            fetch(`/autoridades/select_json/${distritoId}`)
+                .then(response => response.json())
+                .then(data => {
+                    const autoridadSelect = document.getElementById('autoridad');
+                    autoridadSelect.innerHTML = '';
+                    data.forEach(autoridad => {
+                        const option = document.createElement('option');
+                        option.value = autoridad.id;
+                        option.text = autoridad.descripcion_corta;
+                        autoridadSelect.appendChild(option);
+                    });
+                    // Seleccionar la autoridad del usuario
+                    document.getElementById('autoridad').value = {{ usuario.autoridad_id }};
+                });
+        });
+    </script>
+    <!-- Select2 Oficina -->
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script>
+        // Cuando esté listo el DOM
+        $(document).ready(function(){
+            // Agregar clases al select
+            $("#oficina").addClass('js-example-placeholder-single js-states form-control');
+            // Definir AJAX para que al escribir desde 4 caracteres se haga la consulta
+            $(".js-example-placeholder-single").select2({
+                placeholder: "Escriba por lo menos 4 caracteres para buscar",
+                allowClear: true,
+                minimumInputLength: 4,
+                ajax: {
+                    url: '/oficinas/select_json',
+                    headers: { "X-CSRF-TOKEN": "{{ csrf_token() }}" },
+                    dataType: 'json',
+                    delay: 250,
+                    type: "POST",
+                    data: function (params) {
+                        return { 'searchString': params.term }
+                    }
+                }
+            });
+            // Agregar el valor (actual del registro) al select
+            let data = {
+                id: {{ usuario.oficina_id }},
+                text: "{{ usuario.oficina.clave }} - {{ usuario.oficina.descripcion_corta }}"
+            };
+            let newOption = new Option(data.text, data.id, true, true);
+            $(".js-example-placeholder-single").append(newOption).trigger('change');
+        });
+    </script>
+{% endblock %}

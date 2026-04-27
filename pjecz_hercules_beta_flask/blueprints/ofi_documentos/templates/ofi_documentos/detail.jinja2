@@ -1,0 +1,142 @@
+{% extends 'layouts/app.jinja2' %}
+{% import 'macros/detail.jinja2' as detail %}
+{% import 'macros/modals.jinja2' as modals %}
+{% import 'macros/topbar.jinja2' as topbar %}
+
+{% block title %}Oficio {{ ofi_documento.descripcion | truncate(32) }}{% endblock %}
+
+{% block custom_head %}
+    <!-- Estilos del contenido para poner bordes y margenes a las tablas -->
+    <link rel="stylesheet" href="https://storage.googleapis.com/pjecz-informatica/static/css/ckeditor5-justicia-digital-gob-mx.css">
+{% endblock %}
+
+{% block topbar_actions %}
+    {% call topbar.page_buttons('Oficio ' + ofi_documento.descripcion | truncate(32)) %}
+        {{ topbar.button_previous('Oficios', url_for('ofi_documentos.list_active')) }}
+        {% if current_user.can_admin('OFI DOCUMENTOS') %}
+            {% if ofi_documento.estatus == 'A' %}{{ topbar.button_delete('Eliminar', url_for('ofi_documentos.delete', ofi_documento_id=ofi_documento.id)) }}{% endif %}
+            {% if ofi_documento.estatus == 'B' %}{{ topbar.button_recover('Recuperar', url_for('ofi_documentos.recover', ofi_documento_id=ofi_documento.id)) }}{% endif %}
+        {% endif %}
+    {% endcall %}
+{% endblock %}
+
+{% block content %}
+    {% call detail.card(estatus=ofi_documento.estatus) %}
+        {{ detail.label_value('Descripción', ofi_documento.descripcion) }}
+        {{ detail.label_value('Folio', ofi_documento.folio) }}
+        {% if current_user.can_view('USUARIOS') %}
+            {{ detail.label_value('Propietario', ofi_documento.usuario.nombre,  url_for("usuarios.detail", usuario_id=ofi_documento.usuario.id)) }}
+        {% else %}
+            {{ detail.label_value('Propietario', ofi_documento.usuario.nombre) }}
+        {% endif %}
+        {% if current_user.can_view('AUTORIDADES')%}
+            {{ detail.label_value('Autoridad', ofi_documento.usuario.autoridad.clave, url_for('autoridades.detail', autoridad_id=ofi_documento.usuario.autoridad.id)) }}
+        {% else %}
+            {{ detail.label_value('Autoridad', ofi_documento.usuario.autoridad.clave) }}
+        {% endif %}
+        {# Inicia Contenido HTML #}
+        <hr>
+        {% if ofi_documento.contenido_html %}
+            {{ ofi_documento.contenido_html | safe }}
+        {% else %}
+            <div class="alert alert-warning" role="alert">
+                <strong>Aviso:</strong> Este oficio no tiene contenido HTML.
+            </div>
+        {% endif %}
+        {# Termina Contenido HTML #}
+    {% endcall %}
+    {# Adjuntos #}
+    {% call detail.card("Archivos Adjuntos") %}
+        <table id="ofi_documentos_adjuntos_datatable" class="table display nowrap" style="width:100%">
+            <thead>
+                <tr>
+                    <th>Id</th>
+                    <th>Nombre</th>
+                </tr>
+            </thead>
+        </table>
+    {% endcall %}
+    {# Destinatarios #}
+    {% call detail.card("Destinatarios") %}
+        <table id="ofi_documentos_destinatarios_datatable" class="table display nowrap" style="width:100%">
+            <thead>
+                <tr>
+                    <th>Id</th>
+                    <th>Correo electrónico</th>
+                    <th>Nombre</th>
+                    <th>Leído</th>
+                    <th>Con Copia</th>
+                </tr>
+            </thead>
+        </table>
+    {% endcall %}
+{% endblock %}
+
+{% block custom_javascript %}
+    {% if current_user.can_admin('OFI DOCUMENTOS') %}
+        {% if ofi_documento.estatus == 'A' %}{{ modals.custom_javascript_delete('Eliminar', '¿Eliminar a ' + ofi_documento.descripcion + '?') }}{% endif %}
+        {% if ofi_documento.estatus == 'B' %}{{ modals.custom_javascript_recover('Recuperar', '¿Recuperar a ' + ofi_documento.descripcion + '?') }}{% endif %}
+    {% endif %}
+    <!-- Javascript DataTables -->
+    <script src="/static/js/datatables-constructor.js"></script>
+    <script src="/static/js/datatables-filtros.js"></script>
+    <!-- Configuración de DataTables -->
+    <script>
+        const constructorDataTable = new ConfigDataTable( '{{ csrf_token() }}' );
+    </script>
+    <!-- DataTable Archivos Adjuntos -->
+    <script>
+        let configDT_adjuntos = constructorDataTable.config();
+        configDT_adjuntos['ajax']['url'] = '/ofi_documentos_adjuntos/datatable_json';
+        configDT_adjuntos['ajax']['data'] = {"estatus": "A", "ofi_documento_id": "{{ ofi_documento.id }}"};
+        configDT_adjuntos['columns'] = [
+            { data: 'detalle' },
+            { data: 'descripcion' }
+        ];
+        configDT_adjuntos['columnDefs'] = [
+            {
+                targets: 0, // detalle
+                data: null,
+                render: function(data, type, row, meta) {
+                    return '<a href="' + data.url + '">' + data.id.substring(0, 8) + '</a>';
+                }
+            }
+        ];
+        const filtrosAdjuntos = new FiltrosDataTable('#ofi_documentos_adjuntos_datatable', configDT_adjuntos);
+        filtrosAdjuntos.precargar();
+    </script>
+    <!-- DataTable Destinatarios -->
+    <script>
+        let configDT_destinatarios = constructorDataTable.config();
+        configDT_destinatarios['ajax']['url'] = '/ofi_documentos_destinatarios/datatable_json';
+        configDT_destinatarios['ajax']['data'] = {"estatus": "A", "ofi_documento_id": "{{ ofi_documento.id }}"};
+        configDT_destinatarios['columns'] = [
+            { data: 'detalle' },
+            { data: 'usuario_email' },
+            { data: 'usuario_nombre' },
+            { data: 'fue_leido' },
+            { data: 'con_copia' }
+        ];
+        configDT_destinatarios['columnDefs'] = [
+            {
+                targets: 0, // detalle
+                data: null,
+                render: function(data, type, row, meta) {
+                    return '<a href="' + data.url + '">' + data.id.substring(0, 8) + '</a>';
+                }
+            },
+            {
+                targets: [3, 4], // fue_leido
+                data: null,
+                render: function(data, type, row, meta) {
+                    if (data) {
+                        return '<span class="mdi mdi-checkbox-marked" style="font-size: 1.4em"></span>';
+                    }
+                    return '<span class="mdi mdi-checkbox-blank-outline text-secondary" style="font-size: 1.4em"></span>';
+                }
+            }
+        ];
+        const filtrosDestinatarios = new FiltrosDataTable('#ofi_documentos_destinatarios_datatable', configDT_destinatarios);
+        filtrosDestinatarios.precargar();
+    </script>
+{% endblock %}

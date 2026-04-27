@@ -1,0 +1,76 @@
+{% extends 'layouts/app.jinja2' %}
+{% import 'macros/list.jinja2' as list %}
+{% import 'macros/topbar.jinja2' as topbar %}
+
+{% block title %}{{ titulo }}{% endblock %}
+
+{% block topbar_actions %}
+    {% call topbar.page_buttons(titulo) %}
+        {% if current_user.can_view('MATERIAS TIPOS JUICIOS') %}
+            {{ topbar.button('Tipos de Juicios', url_for('materias_tipos_juicios.list_active'), 'mdi mdi-label') }}
+        {% endif %}
+        {% if current_user.can_admin('MATERIAS') %}
+            {% if estatus == 'A' %}{{ topbar.button_list_inactive('Inactivas', url_for('materias.list_inactive')) }}{% endif %}
+            {% if estatus == 'B' %}{{ topbar.button_list_active('Activas', url_for('materias.list_active')) }}{% endif %}
+        {% endif %}
+        {% if current_user.can_insert('MATERIAS') %}
+            {{ topbar.button_new('Nueva Materia', url_for('materias.new')) }}
+        {% endif %}
+    {% endcall %}
+{% endblock %}
+
+{% block content %}
+    {% call list.card() %}
+        <!-- DataTable Materias -->
+        <table id="materias_datatable" class="table {% if estatus == 'B'%}table-dark{% endif %} display nowrap" style="width:100%">
+            <thead>
+                <tr>
+                    <th>Clave</th>
+                    <th>Materia</th>
+                    <th>En sentencias</th>
+                    <th>En exhortos electrónicos</th>
+                </tr>
+            </thead>
+        </table>
+    {% endcall %}
+{% endblock %}
+
+{% block custom_javascript %}
+    <script src="/static/js/datatables-constructor.js"></script>
+    <script src="/static/js/datatables-filtros.js"></script>
+    <script>
+        // DataTable Materias
+        const constructorDataTable = new ConfigDataTable( '{{ csrf_token() }}' );
+        let configDataTable = constructorDataTable.config();
+        configDataTable['ajax']['url'] = '/materias/datatable_json';
+        configDataTable['ajax']['data'] = {{ filtros }};
+        configDataTable['columns'] = [
+            { data: 'detalle' },
+            { data: 'nombre' },
+            { data: 'en_sentencias' },
+            { data: 'en_exh_exhortos' }
+        ];
+        configDataTable['columnDefs'] = [
+            {
+                targets: 0, // detalle
+                data: null,
+                render: function(data, type, row, meta) {
+                    return '<a href="' + data.url + '">' + data.clave + '</a>';
+                }
+            },
+            {
+                targets: [2, 3], // en_sentencias, en_exh_exhortos
+                data: null,
+                render: function(data, type, row, meta) {
+                    if (data) {
+                        return '<span class="mdi mdi-checkbox-marked" style="font-size: 1.4em"></span>';
+                    }
+                    return '';
+                }
+            },
+        ];
+        // Filtros Materias
+        const filtrosMaterias = new FiltrosDataTable('#materias_datatable', configDataTable);
+        filtrosMaterias.precargar();
+    </script>
+{% endblock %}

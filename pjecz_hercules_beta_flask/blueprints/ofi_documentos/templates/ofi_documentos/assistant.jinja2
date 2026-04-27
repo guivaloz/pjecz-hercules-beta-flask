@@ -1,0 +1,337 @@
+{% extends 'layouts/app.jinja2' %}
+{% import 'macros/topbar.jinja2' as topbar %}
+
+{% block title %}{{ titulo }}{% endblock %}
+
+{% block custom_head %}
+    <!-- Estilos del contenido para poner bordes y margenes a las tablas -->
+    <link rel="stylesheet" href="https://storage.googleapis.com/pjecz-informatica/static/css/ckeditor5-justicia-digital-gob-mx.css">
+    <!-- Selectable cards -->
+    <style>
+        .selectable-card {
+            cursor: pointer;
+            transition: box-shadow 0.3s ease;
+        }
+        .selectable-card:hover {
+            border-width: 3px;
+            border-style: solid;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            transform: scale(1.05);
+        }
+        #step1 .card-body .mdi {
+            font-size: 3rem;
+        }
+    </style>
+{% endblock %}
+
+{% block topbar_actions %}
+    {% call topbar.page_buttons(titulo) %}
+        {{ topbar.button('Mi Bandeja de Entrada', url_for('ofi_documentos.list_active'), "mdi mdi-inbox-multiple") }}
+        {{ topbar.button('Mis Oficios', url_for('ofi_documentos.list_active_mis_oficios'), "mdi mdi-file-document-edit-outline") }}
+        {{ topbar.button('Mi Autoridad', url_for('ofi_documentos.list_active_mi_autoridad'), "mdi mdi-scale-balance") }}
+        {% if current_user.can_admin('OFI DOCUMENTOS') %}
+            {{ topbar.button('Administrar', url_for('ofi_documentos.list_active_administrar'), "mdi mdi-folder") }}
+        {% endif %}
+        {% if current_user.can_view('OFI PLANTILLAS') %}
+            {{ topbar.button('Plantillas', url_for('ofi_plantillas.list_active'), "mdi mdi-note-multiple") }}
+        {% endif %}
+        {% if current_user.can_admin('OFI DOCUMENTOS') %}
+            {% if estatus == 'A' %}{{ topbar.button_list_inactive('Inactivos', url_for('ofi_documentos.list_inactive')) }}{% endif %}
+            {% if estatus == 'B' %}{{ topbar.button_list_active('Activos', url_for('ofi_documentos.list_active')) }}{% endif %}
+        {% endif %}
+        {% if current_user.can_insert('OFI DOCUMENTOS') %}
+            {{ topbar.button_new('Nuevo Oficio', url_for('ofi_documentos.assistant')) }}
+        {% endif %}
+    {% endcall %}
+{% endblock %}
+
+{% block content %}
+    <!-- Paso 1: Elegir la autoridad de destino -->
+    <div id="step1">
+        <h5 class="mb-3">1. Elija el destinatario y da clic en siguiente</h5>
+        <div id="spinnerStep1" class="card h-100 text-center">
+            <div class="card-body">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Cargando...</span>
+                </div>
+            </div>
+        </div>
+        <div id="containerStep1" class="row row-cols-1 row-cols-md-4 row-cols-sm-2 g-3 mb-2"></div>
+    </div>
+    <!-- Paso 2: Elegir la plantilla -->
+    <div id="step2" class="d-none">
+        <h5 class="mb-3">2. Seleccione una plantilla y da clic en siguiente</h5>
+        <div id="spinnerStep2" class="card h-100 text-center">
+            <div class="card-body">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Cargando...</span>
+                </div>
+            </div>
+        </div>
+        <ul id="listStep2" class="list-group mb-2"></ul>
+        <div class="row">
+            <div class="col-md-3">
+                <button id="buttonBackToStep1" class="btn btn-secondary me-2 w-100 mb-2">Atrás</button>
+            </div>
+            <div class="col-md-9"></div>
+        </div>
+    </div>
+    <!-- Paso 3: Vista previa -->
+    <div id="step3" class="d-none">
+        <h5 class="mb-3">3. Da clic en "Nuevo oficio" para crearlo</h5>
+        <div class="card mb-2">
+            <div id="spinnerStep3">
+                <div class="card h-100 text-center">
+                    <div class="card-body">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Cargando...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div id="templatePreview" class="card-body"></div>
+        </div>
+        <div class="row">
+            <div class="col-md-3">
+                <button id="buttonBackToStep2" class="btn btn-secondary me-2 w-100 mb-2">Atrás</button>
+            </div>
+            <div class="col-md-6"></div>
+            <div class="col-md-3">
+                <button id="buttonAcceptTemplate" class="btn btn-success me-2 w-100 mb-2" disabled>Nuevo oficio</button>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block custom_javascript %}
+    <!-- Elegir la plantilla -->
+    <script>
+        // Variables globales
+        let selectedDest = null;
+        let selectedTemplate = null;
+        // Definir los elementos de los pasos
+        const step1 = document.getElementById('step1');
+        const step2 = document.getElementById('step2');
+        const step3 = document.getElementById('step3');
+        const spinnerStep1 = document.getElementById('spinnerStep1');
+        const spinnerStep2 = document.getElementById('spinnerStep2');
+        const spinnerStep3 = document.getElementById('spinnerStep3');
+        // Función para mostrar los cards de las autoridades
+        function showCards() {
+            // Mostrar el spinner
+            spinnerStep1.style.display = 'block';
+            // Mostrar el paso 1 y ocultar los otros pasos
+            step1.classList.remove('d-none');
+            step2.classList.add('d-none');
+            step3.classList.add('d-none');
+            fetch('{{ url_for("autoridades.assistant_json") }}')
+                .then(response => response.json())
+                .then(data => {
+                    // Definir el elemento donde se van a poner los cards
+                    const container = document.getElementById('containerStep1');
+                    // Limpiar el contenedor
+                    container.innerHTML = '';
+                    // Si la respuesta tiene éxito
+                    if (data.success) {
+                        // Crear los cards para cada autoridad
+                        data.data.forEach(autoridad => {
+                            const card = document.createElement('div');
+                            card.className = 'col';
+                            card.innerHTML = `
+                                <div class="col">
+                                    <div class="card h-100 text-center selectable-card" data-dest="${autoridad.clave}">
+                                        <div class="card-body">
+                                            <i class="${autoridad.tablero_icono}"></i>
+                                            <h6 class="card-title">${autoridad.descripcion_corta}</h6>
+                                        </div>
+                                    </div>
+                                </div>
+                            `;
+                            container.appendChild(card);
+                        });
+                        // Agregar evento de clic a los cards
+                        document.querySelectorAll('.selectable-card').forEach(card => {
+                            card.addEventListener('click', function() {
+                                document.querySelectorAll('.selectable-card').forEach(c => c.classList.remove('border-primary', 'bg-primary', 'shadow', 'text-white'));
+                                this.classList.add('border-primary', 'bg-primary', 'shadow', 'text-white');
+                                selectedDest = this.dataset.dest;
+                                showTemplates(); // Mostrar el selector de plantillas
+                            });
+                        });
+                        // Ocultar el spinner
+                        spinnerStep1.style.display = 'none';
+                    } else {
+                        // Si hubo un error, mostrar un mensaje
+                        const alert = document.createElement('div');
+                        alert.className = 'alert alert-danger';
+                        alert.textContent = data.message;
+                        container.appendChild(alert);
+                    }
+                })
+                .catch(error => console.error('Error:', error));
+        }
+        // Función para mostrar el selector de plantillas
+        function showTemplates() {
+            // Mostrar el spinner
+            spinnerStep2.style.display = 'block';
+            // Mostrar el paso 2 y ocultar los otros pasos
+            step1.classList.add('d-none');
+            step2.classList.remove('d-none');
+            step3.classList.add('d-none');
+            // Consultar las plantillas compartidas de la autoridad seleccionada
+            fetch(`{{ url_for("ofi_plantillas.shared_json") }}?autoridad_clave=${selectedDest}`)
+                .then(response => response.json())
+                .then(data => {
+                    // Definir el elemento donde se van a poner las opciones de la lista
+                    const templateList = document.getElementById('listStep2');
+                    // Limpiar la lista
+                    templateList.innerHTML = '';
+                    // Si la respuesta tiene éxito
+                    if (data.success) {
+                        // Crear los elementos de la lista para cada plantilla
+                        data.data.forEach(plantilla => {
+                            const item = document.createElement('li');
+                            item.className = 'list-group-item list-group-item-action';
+                            item.dataset.template = plantilla.id;
+                            item.innerHTML = `<i class="${plantilla.tablero_icono}"></i> ${plantilla.descripcion}`;
+                            templateList.appendChild(item);
+                        });
+                        // Consultar las plantillas del usuario actual
+                        fetch('{{ url_for("ofi_plantillas.my_templates_json") }}')
+                            .then(response => response.json())
+                            .then(data => {
+                                // Si la respuesta tiene éxito
+                                if (data.success) {
+                                    // Agregar los elementos de la lista para cada plantilla del usuario actual
+                                    data.data.forEach(template => {
+                                        const item = document.createElement('li');
+                                        item.className = 'list-group-item list-group-item-action';
+                                        item.dataset.template = template.id;
+                                        item.innerHTML = `<i class="mdi mdi-file"></i> ${template.descripcion}`;
+                                        templateList.appendChild(item);
+                                    });
+                                }
+                                // Agregar evento de clic a los TODOS los elementos de la lista
+                                document.querySelectorAll('.list-group-item').forEach(item => {
+                                    item.addEventListener('click', function() {
+                                        document.querySelectorAll('.list-group-item').forEach(i => i.classList.remove('active'));
+                                        this.classList.add('active');
+                                        selectedTemplate = this.dataset.template;
+                                        showPreview(); // Mostrar la vista previa de la plantilla
+                                    });
+                                });
+                                // Ocultar el spinner
+                                spinnerStep2.style.display = 'none';
+                            })
+                            .catch(error => console.error('Error:', error));
+                    } else {
+                        // Hubo un error, seguramente NO hay plantillas compartidas, mostrar ese mensaje
+                        const alert = document.createElement('div');
+                        alert.className = 'alert alert-warning';
+                        alert.textContent = data.message;
+                        templateList.appendChild(alert);
+                        // Consultar las plantillas del usuario actual
+                        fetch('{{ url_for("ofi_plantillas.my_templates_json") }}')
+                            .then(response => response.json())
+                            .then(data => {
+                                // Si la respuesta tiene éxito
+                                if (data.success) {
+                                    // Agregar los elementos de la lista para cada plantilla del usuario actual
+                                    data.data.forEach(template => {
+                                        const item = document.createElement('li');
+                                        item.className = 'list-group-item list-group-item-action';
+                                        item.dataset.template = template.id;
+                                        item.innerHTML = `<i class="mdi mdi-file"></i> ${template.descripcion}`;
+                                        templateList.appendChild(item);
+                                    });
+                                }
+                                // Agregar evento de clic a los TODOS los elementos de la lista
+                                document.querySelectorAll('.list-group-item').forEach(item => {
+                                    item.addEventListener('click', function() {
+                                        document.querySelectorAll('.list-group-item').forEach(i => i.classList.remove('active'));
+                                        this.classList.add('active');
+                                        selectedTemplate = this.dataset.template;
+                                        showPreview(); // Mostrar la vista previa de la plantilla
+                                    });
+                                });
+                                // Ocultar el spinner
+                                spinnerStep2.style.display = 'none';
+                            })
+                            .catch(error => console.error('Error:', error));
+                    }
+                })
+                .catch(error => console.error('Error:', error));
+        }
+        // Función para mostrar la vista previa
+        function showPreview() {
+            // Mostrar el spinner
+            spinnerStep3.style.display = 'block';
+            // Mostrar el paso 3 y ocultar los otros pasos
+            step1.classList.add('d-none');
+            step2.classList.add('d-none');
+            step3.classList.remove('d-none');
+            // Consultar la plantilla seleccionada
+            fetch(`{{ url_for("ofi_plantillas.preview_json") }}?id=${selectedTemplate}`)
+                .then(response => response.json())
+                .then(data => {
+                    // Definir el elemento donde se va a poner la vista previa
+                    const preview = document.getElementById('templatePreview');
+                    // Limpiar la vista previa
+                    preview.innerHTML = '';
+                    if (data.success) {
+                        // Copiar el HTML a una variable
+                        let html = data.data.contenido_html;
+                        // Reemplazar los marcadores
+                        html = html.replace(/\[\[DIA\]\]/g, new Date().getDate());
+                        html = html.replace(/\[\[MES\]\]/g, new Date().toLocaleString('es-MX', { month: 'long' }));
+                        html = html.replace(/\[\[AÑO\]\]/g, new Date().getFullYear());
+                        html = html.replace(/\[\[REMITENTE NOMBRE\]\]/g, '{{ current_user.nombre }}');
+                        html = html.replace(/\[\[REMITENTE PUESTO\]\]/g, '{{ current_user.puesto }}');
+                        html = html.replace(/\[\[REMITENTE AUTORIDAD\]\]/g, '{{ current_user.autoridad.descripcion }}');
+                        // Mostrar la vista previa
+                        preview.innerHTML = html;
+                        // Habilitar el botón Aceptar
+                        document.getElementById('buttonAcceptTemplate').disabled = false;
+                        // Ocultar el spinner
+                        spinnerStep3.style.display = 'none';
+                    } else {
+                        // Si hubo un error, mostrar un mensaje
+                        const alert = document.createElement('div');
+                        alert.className = 'alert alert-danger';
+                        alert.textContent = data.message;
+                        preview.appendChild(alert);
+                    }
+                })
+                .catch(error => console.error('Error:', error));
+        }
+        // Cuando se cargue el contenido del DOM
+        document.addEventListener('DOMContentLoaded', function() {
+            // Mostrar los cards de las autoridades
+            showCards();
+            // Agregar evento de clic al botón para regresar al paso 1
+            document.getElementById('buttonBackToStep1').addEventListener('click', function() {
+                step2.classList.add('d-none');
+                step1.classList.remove('d-none');
+                showCards(); // Mostrar los cards de las autoridades
+            });
+            // Agregar evento de clic al botón para regresar al paso 2
+            document.getElementById('buttonBackToStep2').addEventListener('click', function() {
+                step3.classList.add('d-none');
+                step2.classList.remove('d-none');
+                document.getElementById('buttonAcceptTemplate').disabled = true;
+                showTemplates(); // Mostrar el selector de plantillas
+            });
+            // Agregar evento de clic al botón para aceptar la plantilla
+            document.getElementById('buttonAcceptTemplate').addEventListener('click', function() {
+                // Redirigir al formulario de nuevo oficio con los parámetros seleccionados
+                if (selectedTemplate !== null) {
+                    if (selectedDest !== null) {
+                        window.location.href = `/ofi_documentos/nuevo/${selectedTemplate}?autoridad_clave=${selectedDest}`;
+                    } else {
+                        window.location.href = `/ofi_documentos/nuevo/${selectedTemplate}`
+                    }
+                }
+            });
+        });
+    </script>
+{% endblock %}

@@ -1,0 +1,152 @@
+{% extends 'layouts/app.jinja2' %}
+{% import 'macros/form.jinja2' as f with context %}
+{% import 'macros/topbar.jinja2' as topbar %}
+
+{% block title %}Editar {{ ofi_documento.descripcion | truncate(48) }}{% endblock %}
+
+{% block custom_head %}
+    <!-- CKEditor 5 -->
+    <link rel="stylesheet" href="https://storage.googleapis.com/pjecz-informatica/static/css/ckeditor5-editor.css" crossorigin>
+    <!-- Estilos del contenido para poner bordes y margenes a las tablas -->
+    <link rel="stylesheet" href="https://storage.googleapis.com/pjecz-informatica/static/css/ckeditor5-justicia-digital-gob-mx.css">
+{% endblock %}
+
+{% block topbar_actions %}
+    {{ topbar.page('Editar Oficio ' + ofi_documento.descripcion | truncate(48)) }}
+{% endblock %}
+
+{% block content %}
+    {% call f.card() %}
+        {% set form_kwargs = {'ofi_documento_id': ofi_documento.id} %}
+        {% call f.form_tag('ofi_documentos.edit', fid='ofi_documento_form', **form_kwargs) %}
+            {% call f.form_group(form.descripcion) %}{% endcall %}
+            <div class="row">
+                <div class="col-md-6">{% call f.form_group(form.folio) %}{% endcall %}</div>
+                <div class="col-md-6">{% call f.form_group(form.vencimiento_fecha) %}{% endcall %}</div>
+            </div>
+            <!-- CKEditor 5 -->
+            <label for="editor"><strong>Contenido</strong></label>
+            <div class="main-container">
+                <div class="editor-container editor-container_classic-editor editor-container_include-fullscreen" id="editor-container">
+                    <div class="editor-container__editor">
+                        <div id="editor"></div>
+                    </div>
+                </div>
+            </div>
+            <div style="display:none">
+                {% call f.form_group(form.contenido_md) %}{% endcall %}
+                {% call f.form_group(form.contenido_html) %}{% endcall %}
+                {% call f.form_group(form.contenido_sfdt) %}{% endcall %}
+                {% call f.form_group(form.continuar) %}{% endcall %}
+            </div>
+            <!-- Recomendaciones importantes -->
+            <div class="card border-warning mt-2" id="recomendaciones_importantes">
+                <div class="card-body" style="background-color: #fff3cd;">
+                    <div class="card-title">
+                        <strong>Recomendaciones importantes</strong>
+                    </div>
+                    <ul class="card-text mb-0">
+                        <li>
+                            Si va a "copiar y pegar" use <strong>pegar sin formato</strong>,
+                            para esto de clic con el botón derecho del ratón y elija esa opción en lugar de "pegar".
+                            Luego use la barra de herramientas para cambiar el formato.
+                        </li>
+                        <li>
+                            Todas las tablas tendrán líneas, bordes y márgenes por defecto (aunque no sean visibles).
+                        </li>
+                        <li>
+                            <strong>Guarde frecuentemente,</strong> de preferencia cada cinco minutos,
+                            porque puede perder su avance si cierra accidentalmente o cuando caduca la sesión.
+                        </li>
+                        <li>
+                            El número de folio quedará reservado. Puede cambiarlo, pero un nuevo oficio sugerirá el número más
+                            grande del año más uno.
+                        </li>
+                    </ul>
+                    <a href="javascript:ocultarRecomendacionesImportantes()" class="btn btn-warning btn-sm mt-2">Ocultar</a>
+                </div>
+            </div>
+            <!-- Botones -->
+            <div class="row">
+                <div class="col-md-3">
+                    <button type="submit" id="boton_guardar_y_continuar" class="btn btn-primary my-2 w-100" onclick="document.getElementById('continuar').value='1';">
+                        <span class="iconify" data-icon="mdi:content-save"></span>
+                        Guardar y seguir escribiendo
+                    </button>
+                </div>
+                <div class="col-md-3">
+                    <button type="submit" id="boton_guardar" class="btn btn-success my-2 w-100" onclick="document.getElementById('continuar').value='0';">
+                        <span class="iconify" data-icon="mdi:content-save-check"></span>
+                        Guardar y terminar
+                    </button>
+                </div>
+                <div class="col-md-3"></div>
+                <div class="col-md-3 text-end">
+                    <button type="button" id="boton_cancelar" class="btn btn-outline-danger my-2 w-100">
+                        <span class="iconify" data-icon="mdi:cancel"></span>
+                        ¡DESCARTAR! e ir al detalle
+                    </button>
+                </div>
+            </div>
+        {% endcall %}
+    {% endcall %}
+{% endblock %}
+
+{% block custom_javascript %}
+    <!-- Botón Cancelar -->
+    <script>
+        document.getElementById('boton_cancelar').addEventListener('click', function() {
+            if (confirm('¿Está seguro de que desea descartar y cerrar el editor? Se perderán los cambios no guardados.')) {
+                location.href = "{{ url_for('ofi_documentos.detail', ofi_documento_id=ofi_documento.id) }}";
+            }
+        });
+    </script>
+    <!-- Botón ocultar Recomendaciones importantes -->
+    <script>
+        function ocultarRecomendacionesImportantes() {
+            var elemento = document.getElementById("recomendaciones_importantes");
+            if (elemento) {
+                elemento.style.display = "none";
+            }
+        }
+    </script>
+    <!-- Turndown sirve para convertir el HTML a markdown-->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/turndown/7.0.0/turndown.js"></script>
+    <script>
+        var turndownService = new TurndownService();
+    </script>
+    <!-- CKEditor 5 -->
+    <script src="https://storage.googleapis.com/pjecz-informatica/static/js/ckeditor5.umd.js" crossorigin></script>
+    <script src="https://storage.googleapis.com/pjecz-informatica/static/js/ckeditor5_translations/es.umd.js" crossorigin></script>
+    <script src="https://storage.googleapis.com/pjecz-informatica/static/js/ckeditor5-justicia-digital-gob-mx.js"></script>
+    <script>
+        // Obtener los elementos del formulario y del componente
+        const editorElement = document.getElementById('editor');
+        const webPaginaForm = document.getElementById('ofi_documento_form');
+        const contenidoHtmlTextArea = document.getElementById('contenido_html');
+        const contenidoMdTextArea = document.getElementById('contenido_md');
+        // Inicializar el editor
+        let ckEditorInstance;
+        ClassicEditor
+            .create(editorElement, editorConfig)
+            .then( editor => {
+                ckEditorInstance = editor;
+                editor.setData(contenidoHtmlTextArea.value); // Al inicializar copiamos el contenido HTML
+            })
+            .catch( error => {
+                console.error('ERROR al inicializar el editor', error);
+            });
+        // Cambiar la forma de enviar el formulario
+        webPaginaForm.addEventListener('submit', function(event) {
+            event.preventDefault(); // Prevenir la sumisión inmediata del formulario
+            if (ckEditorInstance && typeof turndownService !== 'undefined') {
+                const ckEditorContenidoHTML = ckEditorInstance.getData();
+                contenidoHtmlTextArea.value = ckEditorContenidoHTML;
+                contenidoMdTextArea.value = turndownService.turndown(ckEditorContenidoHTML); // Convertir HTML a Markdown
+            } else {
+                console.error('ERROR al copiar y convertir el contenido');
+            }
+            webPaginaForm.submit(); // Enviar el formulario
+        });
+    </script>
+{% endblock %}
