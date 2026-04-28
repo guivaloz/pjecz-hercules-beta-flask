@@ -1,0 +1,113 @@
+{% extends 'layouts/app.jinja2' %}
+{% import 'macros/detail.jinja2' as detail %}
+{% import 'macros/modals.jinja2' as modals %}
+{% import 'macros/topbar.jinja2' as topbar %}
+
+{% block title %}Materia {{ materia.nombre }}{% endblock %}
+
+{% block topbar_actions %}
+    {% call topbar.page_buttons('Materia ' + materia.nombre) %}
+        {{ topbar.button_previous('Materias', url_for('materias.list_active')) }}
+        {% if current_user.can_edit('MATERIAS') %}
+            {{ topbar.button_edit('Editar', url_for('materias.edit', materia_id=materia.id)) }}
+        {% endif %}
+        {% if current_user.can_admin('MATERIAS') %}
+            {% if materia.estatus == 'A' %}{{ topbar.button_delete('Eliminar', url_for('materias.delete', materia_id=materia.id)) }}{% endif %}
+            {% if materia.estatus == 'B' %}{{ topbar.button_recover('Recuperar', url_for('materias.recover', materia_id=materia.id)) }}{% endif %}
+        {% endif %}
+    {% endcall %}
+{% endblock %}
+
+{% block content %}
+    {% call detail.card(estatus=materia.estatus) %}
+        {{ detail.label_value_big('Clave', materia.clave) }}
+        {{ detail.label_value('Descripción', materia.descripcion) }}
+        {{ detail.label_value_boolean('En sentencias', materia.en_sentencias) }}
+        {{ detail.label_value_boolean('En exhortos electrónicos', materia.en_exh_exhortos) }}
+    {% endcall %}
+    {% if current_user.can_view('AUTORIDADES') %}
+        {% call detail.card(title='Autoridades con esta materia') %}
+            <!-- Filtros Autoridades -->
+            <div class="row">
+                <div class="col">
+                    <form class="row g-1 mb-3" id="filtradorForm" onsubmit="filtrosAutoridades.buscar(); return false;">
+                        <div class="col-2">
+                            <div class="form-floating">
+                                <input id="filtroAutoridadClave" type="text" class="form-control" aria-label="Clave" style="text-transform: uppercase;">
+                                <label for="filtroAutoridadClave">Clave</label>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="form-floating">
+                                <input id="filtroAutoridadDescripcion" type="text" class="form-control" aria-label="Descripcion" style="text-transform: uppercase;">
+                                <label for="filtroAutoridadDescripcion">Descripción</label>
+                            </div>
+                        </div>
+                        <div class="col-3">
+                            <div class="form-floating">
+                                <input id="filtroAutoridadDistritoNombre" type="text" class="form-control" aria-label="Distrito" style="text-transform: uppercase;">
+                                <label for="filtroAutoridadDistritoNombre">Distrito</label>
+                            </div>
+                        </div>
+                        <div class="col-3 text-end">
+                            <button title="Buscar" class="btn btn-primary btn-lg" onclick="filtrosAutoridades.buscar(); return false;" id="button-buscar"><span class="mdi mdi-magnify"></span></button>
+                            <button title="Limpiar" class="btn btn-warning btn-lg" type="reset" onclick="filtrosAutoridades.limpiar();" id="button-limpiar"><span class="mdi mdi-broom"></span></button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <!-- Datatable Autoridades -->
+            <table id="autoridades_datatable" class="table display nowrap" style="width:100%">
+                <thead>
+                    <tr>
+                        <th>Clave</th>
+                        <th>Descripción corta</th>
+                        <th>Distrito</th>
+                        <th>Municipio</th>
+                        <th>Extinto</th>
+                    </tr>
+                </thead>
+            </table>
+        {% endcall %}
+    {% endif %}
+{% endblock %}
+
+{% block custom_javascript %}
+    {% if current_user.can_admin('MATERIAS') %}
+        {% if materia.estatus == 'A' %}{{ modals.custom_javascript_delete('Eliminar', '¿Eliminar a ' + materia.nombre + '?') }}{% endif %}
+        {% if materia.estatus == 'B' %}{{ modals.custom_javascript_recover('Recuperar', '¿Recuperar a ' + materia.nombre + '?') }}{% endif %}
+    {% endif %}
+    <script src="/static/js/datatables-constructor.js"></script>
+    <script src="/static/js/datatables-filtros.js"></script>
+    {% if current_user.can_view('AUTORIDADES') %}
+        <script>
+            // DataTable autoridades
+            const constructorDataTable = new ConfigDataTable( '{{ csrf_token() }}' );
+            let configDTAutoridades = constructorDataTable.config();
+            configDTAutoridades['ajax']['url'] = '/autoridades/datatable_json';
+            configDTAutoridades['ajax']['data'] = { "estatus": "A", "materia_id": {{ materia.id }} };
+            configDTAutoridades['columns'] = [
+                { data: "detalle" },
+                { data: "descripcion_corta" },
+                { data: "distrito_clave" },
+                { data: "municipio_nombre" },
+                { data: "es_extinto" }
+            ];
+            configDTAutoridades['columnDefs'] = [
+                {
+                    targets: 0, // detalle
+                    data: null,
+                    render: function(data, type, row, meta) {
+                        return '<a href="' + data.url + '">' + data.clave + '</a>';
+                    }
+                }
+            ];
+            // Filtros autoridades
+            const filtrosAutoridades = new FiltrosDataTable('#autoridades_datatable', configDTAutoridades);
+            filtrosAutoridades.agregarInput('filtroAutoridadClave', 'clave');
+            filtrosAutoridades.agregarInput('filtroAutoridadDescripcion', 'descripcion');
+            filtrosAutoridades.agregarInput('filtroAutoridadDistritoNombre', 'distrito_nombre');
+            filtrosAutoridades.precargar();
+        </script>
+    {% endif %}
+{% endblock %}

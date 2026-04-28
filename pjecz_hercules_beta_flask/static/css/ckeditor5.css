@@ -1,0 +1,54 @@
+/* CKEditor 5 */
+
+@import url("https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,400;0,700;1,400;1,700&display=swap");
+
+@media print {
+    body {
+        margin: 0 !important;
+    }
+}
+
+.main-container {
+    font-family: "Roboto", Arial, Helvetica, sans-serif;
+    width: 100%;
+}
+
+.ck-content {
+    font-family: "Roboto", Arial, Helvetica, sans-serif;
+    line-height: 1.6;
+    word-break: break-word;
+}
+
+.editor-container_classic-editor .editor-container__editor {
+    min-width: 795px;
+    max-width: 1920px;
+}
+
+/* Tablas */
+.content-table {
+    border-collapse: collapse;
+    border: 0.5px solid black;
+    margin-bottom: 12px;
+}
+
+.layout-table {
+    width: 100%;
+    border-collapse: collapse;
+    border: 0.5px solid black;
+    margin-bottom: 12px;
+}
+
+.content-table th,
+.layout-table th {
+    background-color: #aaaaaa;
+    border: 0.5px solid black;
+    padding: 4px;
+    text-align: center;
+    font-weight: bold;
+}
+
+.content-table td,
+.layout-table td {
+    border: 0.5px solid black;
+    padding: 4px;
+}

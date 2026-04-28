@@ -1,0 +1,134 @@
+{% extends 'layouts/app.jinja2' %}
+{% import 'macros/detail.jinja2' as detail %}
+{% import 'macros/modals.jinja2' as modals %}
+{% import 'macros/topbar.jinja2' as topbar %}
+
+{% block title %}Domicilio {{ domicilio.edificio }}{% endblock %}
+
+{% block topbar_actions %}
+    {% call topbar.page_buttons('Domicilio ' + domicilio.edificio) %}
+        {{ topbar.button_previous('Domicilios', url_for('domicilios.list_active')) }}
+        {% if current_user.can_edit('DOMICILIOS') %}
+            {{ topbar.button_edit('Editar', url_for('domicilios.edit', domicilio_id=domicilio.id)) }}
+        {% endif %}
+        {% if current_user.can_admin('DOMICILIOS') %}
+            {% if domicilio.estatus == 'A' %}{{ topbar.button_delete('Eliminar', url_for('domicilios.delete', domicilio_id=domicilio.id)) }}{% endif %}
+            {% if domicilio.estatus == 'B' %}{{ topbar.button_recover('Recuperar', url_for('domicilios.recover', domicilio_id=domicilio.id)) }}{% endif %}
+        {% endif %}
+    {% endcall %}
+{% endblock %}
+
+{% block content %}
+    {% call detail.card(estatus=domicilio.estatus) %}
+        {% if current_user.can_view("DISTRITOS") %}
+            {{ detail.label_value('Distrito', domicilio.distrito.nombre_corto, url_for('distritos.detail', distrito_id=domicilio.distrito_id)) }}
+        {% else %}
+            {{ detail.label_value('Distrito', domicilio.distrito.nombre_corto) }}
+        {% endif %}
+        {{ detail.label_value('Edificio', domicilio.edificio) }}
+        {{ detail.label_value('Calle', domicilio.calle) }}
+        {{ detail.label_value('No. Exterior', domicilio.num_ext) }}
+        {{ detail.label_value('No. Interior', domicilio.num_int) }}
+        {{ detail.label_value('Colonia', domicilio.colonia) }}
+        {{ detail.label_value('Municipio', domicilio.municipio) }}
+        {{ detail.label_value('Estado', domicilio.estado) }}
+        {{ detail.label_value('C.P.', domicilio.cp) }}
+    {% endcall %}
+    {% if current_user.can_view('OFICINAS') %}
+        {% call detail.card('Oficinas') %}
+            <!-- Filtros Oficinas -->
+            <div class="row">
+                <div class="col">
+                    <form class="row g-1 mb-3" id="filtradorForm" onsubmit="filtrosOficinas.buscar(); return false;">
+                        <div class="col-2">
+                            <div class="form-floating">
+                                <input id="filtroClave" type="text" class="form-control" aria-label="Clave" style="text-transform: uppercase;">
+                                <label for="filtroClave">Clave</label>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="form-floating">
+                                <input id="filtroDescripcionCorta" type="text" class="form-control" aria-label="Descripción corta" style="text-transform: uppercase;">
+                                <label for="filtroDescripcionCorta">Descripción corta</label>
+                            </div>
+                        </div>
+                        <div class="col-6 text-end">
+                            <button title="Buscar" class="btn btn-primary btn-lg" onclick="filtrosOficinas.buscar(); return false;" id="button-buscar"><span class="mdi mdi-magnify"></span></button>
+                            <button title="Limpiar" class="btn btn-warning btn-lg" type="reset" onclick="filtrosOficinas.limpiar();" id="button-limpiar"><span class="mdi mdi-broom"></span></button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <!-- DataTable Oficinas -->
+            <table id="oficinas_datatable" class="table display nowrap" style="width:100%">
+                <thead>
+                    <tr>
+                        <th>Clave</th>
+                        <th>Descripción corta</th>
+                        <th>Distrito</th>
+                        <th><span title="Es Jurisdiccional">Es J.</span></th>
+                    </tr>
+                </thead>
+            </table>
+        {% endcall %}
+    {% endif %}
+{% endblock %}
+
+{% block custom_javascript %}
+    {% if current_user.can_admin('DOMICILIOS') %}
+        {% if domicilio.estatus == 'A' %}{{ modals.custom_javascript_delete('Eliminar', '¿Eliminar a ' + domicilio.edificio + '?') }}{% endif %}
+        {% if domicilio.estatus == 'B' %}{{ modals.custom_javascript_recover('Recuperar', '¿Recuperar a ' + domicilio.edificio + '?') }}{% endif %}
+    {% endif %}
+    <!-- Constructor de DataTables -->
+    <script src="/static/js/datatables-constructor.js"></script>
+    <script src="/static/js/datatables-filtros.js"></script>
+    <script>
+        const constructorDataTable = new ConfigDataTable( '{{ csrf_token() }}' );
+    </script>
+    <!-- Oficinas de la Domicilio -->
+    {% if current_user.can_view('OFICINAS') %}
+        <script>
+            // DataTable Oficinas
+            let configDTOficinas = constructorDataTable.config();
+            configDTOficinas['ajax']['url'] = '/oficinas/datatable_json';
+            configDTOficinas['ajax']['data'] = { estatus: "A", domicilio_id: {{ domicilio.id}} };
+            configDTOficinas['columns'] = [
+                { data: "detalle" },
+                { data: "descripcion_corta" },
+                { data: "distrito_clave" },
+                { data: "es_jurisdiccional" }
+            ];
+            configDTOficinas['columnDefs'] = [
+                {
+                    targets: 0, // detalle
+                    data: null,
+                    render: function(data, type, row, meta) {
+                        return '<a href="' + data.url + '">' + data.clave + '</a>';
+                    }
+                },
+                {
+                    targets: 1, // descripcion_corta
+                    data: null,
+                    render: function(data, type, row, meta) {
+                        return (data.length > 48 ? data.substring(0, 48) + '…' : data);
+                    }
+                },
+                {
+                    targets: 3, // es_jurisdiccional
+                    data: null,
+                    render: function(data, type, row, meta) {
+                        if (data) {
+                            return 'SI';
+                        }
+                        return '';
+                    }
+                }
+            ];
+            // Filtros Oficinas
+            const filtrosOficinas = new FiltrosDataTable('#oficinas_datatable', configDTOficinas);
+            filtrosOficinas.agregarInput('filtroClave', 'clave');
+            filtrosOficinas.agregarInput('filtroDescripcionCorta', 'descripcion_corta');
+            filtrosOficinas.precargar();
+        </script>
+    {% endif %}
+{% endblock %}

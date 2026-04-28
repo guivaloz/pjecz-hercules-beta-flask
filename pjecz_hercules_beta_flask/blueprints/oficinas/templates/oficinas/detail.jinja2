@@ -1,0 +1,154 @@
+{% extends 'layouts/app.jinja2' %}
+{% import 'macros/detail.jinja2' as detail %}
+{% import 'macros/modals.jinja2' as modals %}
+{% import 'macros/topbar.jinja2' as topbar %}
+
+{% block title %}Oficina {{ oficina.clave }}{% endblock %}
+
+{% block topbar_actions %}
+    {% call topbar.page_buttons('Oficina ' + oficina.clave) %}
+        {{ topbar.button_previous('Oficinas', url_for('oficinas.list_active')) }}
+        {% if current_user.can_edit('OFICINAS') %}
+            {{ topbar.button_edit('Editar', url_for('oficinas.edit', oficina_id=oficina.id)) }}
+        {% endif %}
+        {% if current_user.can_admin('OFICINAS') %}
+            {% if oficina.estatus == 'A' %}{{ topbar.button_delete('Eliminar', url_for('oficinas.delete', oficina_id=oficina.id)) }}{% endif %}
+            {% if oficina.estatus == 'B' %}{{ topbar.button_recover('Recuperar', url_for('oficinas.recover', oficina_id=oficina.id)) }}{% endif %}
+        {% endif %}
+    {% endcall %}
+{% endblock %}
+
+{% block content %}
+    {% call detail.card(estatus=oficina.estatus) %}
+        {{ detail.label_value_big('Clave', oficina.clave) }}
+        {{ detail.label_value('Descripción', oficina.descripcion) }}
+        {{ detail.label_value('Descripción Corta', oficina.descripcion_corta) }}
+        {% if current_user.can_view('DISTRITOS') %}
+            {{ detail.label_value('Distrito', oficina.distrito.nombre, url_for('distritos.detail', distrito_id=oficina.distrito_id)) }}
+        {% else %}
+            {{ detail.label_value('Distrito', oficina.distrito.nombre) }}
+        {% endif %}
+        {% if current_user.can_view('DOMICILIOS') %}
+            {{ detail.label_value('Edificio', oficina.domicilio.edificio, url_for('domicilios.detail', domicilio_id=oficina.domicilio_id)) }}
+        {% else %}
+            {{ detail.label_value('Edificio', oficina.domicilio.edificio) }}
+        {% endif %}
+        {{ detail.label_value('Horario', oficina.apertura.strftime("%H:%M") + ' — ' + oficina.cierre.strftime("%H:%M")) }}
+        {{ detail.label_value('Límite de Personas', oficina.limite_personas) }}
+        {{ detail.label_value_boolean('Es Juridiccional', oficina.es_jurisdiccional) }}
+        {{ detail.label_value('Teléfono', oficina.telefono) }}
+        {{ detail.label_value('Extensión', oficina.extension) }}
+    {% endcall %}
+    {% if current_user.can_view('USUARIOS') and oficina.estatus == 'A' %}
+        {% call detail.card('Usuarios') %}
+            <!-- Filtros usuarios -->
+            <div class="row">
+                <div class="col">
+                    <form class="row g-1 mb-3" id="filtradorForm" onsubmit="filtrosDTUsuarios.buscar(); return false;">
+                        <div class="col-3">
+                            <div class="form-floating">
+                                <input id="filtroEMail" type="text" class="form-control" aria-label="email">
+                                <label for="filtroEMail">e-mail</label>
+                            </div>
+                        </div>
+                        <div class="col-3">
+                            <div class="form-floating">
+                                <input id="filtroNombres" type="text" class="form-control" aria-label="Nombres" style="text-transform: uppercase;">
+                                <label for="filtroNombres">Nombres</label>
+                            </div>
+                        </div>
+                        <div class="col-3">
+                            <div class="form-floating">
+                                <input id="filtroApellidoPaterno" type="text" class="form-control" aria-label="Apellido paterno" style="text-transform: uppercase;">
+                                <label for="filtroApellidoPaterno">Primer paterno</label>
+                            </div>
+                        </div>
+                        <div class="col-3 text-end">
+                            <button title="Buscar" class="btn btn-primary btn-lg" onclick="filtrosDTUsuarios.buscar(); return false;" id="button-buscar"><span class="mdi mdi-magnify"></span></button>
+                            <button title="Limpiar" class="btn btn-warning btn-lg" type="reset" onclick="filtrosDTUsuarios.limpiar();" id="button-limpiar"><span class="mdi mdi-broom"></span></button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <!-- Datatable usuarios -->
+            <table id="usuarios_datatable" class="table display nowrap" style="width:100%">
+                <thead>
+                    <tr>
+                        <th>Correo electrónico</th>
+                        <th>Nombre completo</th>
+                        <th>CURP</th>
+                        <th>Puesto</th>
+                        <th>Autoridad</th>
+                    </tr>
+                </thead>
+            </table>
+        {% endcall %}
+    {% endif %}
+{% endblock %}
+
+{% block custom_javascript %}
+    {% if current_user.can_admin('OFICINAS') %}
+        {% if oficina.estatus == 'A' %}{{ modals.custom_javascript_delete('Eliminar', '¿Eliminar a ' + oficina.clave + '?') }}{% endif %}
+        {% if oficina.estatus == 'B' %}{{ modals.custom_javascript_recover('Recuperar', '¿Recuperar a ' + oficina.clave + '?') }}{% endif %}
+    {% endif %}
+    <script src="/static/js/datatables-constructor.js"></script>
+    <script src="/static/js/datatables-filtros.js"></script>
+    {% if current_user.can_view('USUARIOS') and oficina.estatus == 'A' %}
+        <script>
+            // DataTable usuarios
+            const constructorDataTable = new ConfigDataTable( '{{ csrf_token() }}' );
+            let configDTUsuarios = constructorDataTable.config();
+            configDTUsuarios['ajax']['url'] = '/usuarios/datatable_json';
+            configDTUsuarios['ajax']['data'] = { 'estatus': "A", 'oficina_id': {{ oficina.id }} };
+            configDTUsuarios['columns'] = [
+                { data: "detalle" },
+                { data: "nombre" },
+                { data: "curp" },
+                { data: "puesto" },
+                { data: "autoridad" }
+            ];
+            configDTUsuarios['columnDefs'] = [
+                {
+                    targets: 0, // detalle
+                    data: null,
+                    render: function(data, type, row, meta) {
+                        return '<a href="' + data.url + '">' + data.email + '</a>';
+                    }
+                },
+                {
+                    targets: [1, 3], // nombre, puesto
+                    data: null,
+                    render: function(data, type, row, meta) {
+                        return (data.length > 24 ? data.substring(0, 24) + '…' : data);
+                    }
+                },
+                {
+                    targets: 2, // curp
+                    data: null,
+                    render: function(data, type, row, meta) {
+                        if (data.length > 4) {
+                            return '<span title="' + data + '">' + data.substring(0, 4) + '…</span>';
+                        }
+                        return data;
+                    }
+                },
+                {
+                    targets: 4, // autoridad
+                    data: null,
+                    render: function(data, type, row, meta) {
+                        if (data.url === "") {
+                            return data.clave;
+                        }
+                        return '<a href="' + data.url + '">' + data.clave + '</a>';
+                    }
+                }
+            ];
+            // Filtros usuarios
+            const filtrosDTUsuarios = new FiltrosDataTable('#usuarios_datatable', configDTUsuarios);
+            filtrosDTUsuarios.agregarInput('filtroEMail', 'email');
+            filtrosDTUsuarios.agregarInput('filtroNombres', 'nombres');
+            filtrosDTUsuarios.agregarInput('filtroApellidoPaterno', 'apellido_paterno');
+            filtrosDTUsuarios.precargar();
+        </script>
+    {% endif %}
+{% endblock %}

@@ -1,0 +1,52 @@
+{% extends 'layouts/app.jinja2' %}
+{% import 'macros/detail.jinja2' as detail %}
+{% import 'macros/modals.jinja2' as modals %}
+{% import 'macros/topbar.jinja2' as topbar %}
+
+{% block title %}Archivo Adjunto de {{ ofi_documento_adjunto.ofi_documento.descripcion | truncate(48) }}{% endblock %}
+
+{% block topbar_actions %}
+    {% call topbar.page_buttons('Archivo Adjunto de ' + ofi_documento_adjunto.ofi_documento.descripcion | truncate(48)) %}
+        {{ topbar.button_previous('Oficio', url_for('ofi_documentos.detail', ofi_documento_id=ofi_documento_adjunto.ofi_documento.id)) }}
+        {% if current_user.can_admin('OFI DOCUMENTOS ADJUNTOS') %}
+            {% if ofi_documento_adjunto.estatus == 'A' %}{{ topbar.button_delete('Eliminar', url_for('ofi_documentos_adjuntos.delete', ofi_documento_adjunto_id=ofi_documento_adjunto.id)) }}{% endif %}
+            {% if ofi_documento_adjunto.estatus == 'B' %}{{ topbar.button_recover('Recuperar', url_for('ofi_documentos_adjuntos.recover', ofi_documento_adjunto_id=ofi_documento_adjunto.id)) }}{% endif %}
+        {% endif %}
+    {% endcall %}
+{% endblock %}
+
+{% block content %}
+    {% call detail.card(title='Oficio') %}
+        {% if current_user.can_view('OFI DOCUMENTOS') %}
+            {{ detail.label_value('Descripción', ofi_documento_adjunto.ofi_documento.descripcion, url_for('ofi_documentos.detail', ofi_documento_id=ofi_documento_adjunto.ofi_documento.id)) }}
+        {% else %}
+            {{ detail.label_value('Descripción', ofi_documento_adjunto.ofi_documento.descripcion) }}
+        {% endif %}
+            {{ detail.label_value('Folio', ofi_documento_adjunto.ofi_documento.folio) }}
+        {% set propietario_nombre_email = ofi_documento_adjunto.ofi_documento.usuario.nombre + ' (' + ofi_documento_adjunto.ofi_documento.usuario.email + ')' %}
+        {% if current_user.can_view('USUARIOS') %}
+            {{ detail.label_value('Propietario', propietario_nombre_email,  url_for("usuarios.detail", usuario_id=ofi_documento_adjunto.ofi_documento.usuario.id)) }}
+        {% else %}
+            {{ detail.label_value('Propietario', propietario_nombre_email) }}
+        {% endif %}
+    {% endcall %}
+    {% call detail.card(title='Archivo Adjunto', estatus=ofi_documento_adjunto.estatus) %}
+        {{ detail.label_value('Descripción', ofi_documento_adjunto.descripcion) }}
+        {% if mostrar_boton_quitar %}
+            <div class="row">
+                <div class="col-md-4"></div>
+                <div class="col-md-8">
+                    {{ modals.button_modal_md('Quitar', url_for('ofi_documentos_adjuntos.delete', ofi_documento_adjunto_id=ofi_documento_adjunto.id), "Quitar", "mdi:file-document-remove-outline", "¿Desea quitar el archivo adjunto?",  "btn-danger") }}
+                </div>
+            </div>
+        {% endif %}
+    {% endcall %}
+{% endblock %}
+
+{% block custom_javascript %}
+    {% if current_user.can_admin('OFI DOCUMENTOS ADJUNTOS') %}
+        {% if ofi_documento_adjunto.estatus == 'A' %}{{ modals.custom_javascript_delete('Eliminar', '¿Eliminar a ' + ofi_documento_adjunto.descripcion + '?') }}{% endif %}
+        {% if ofi_documento_adjunto.estatus == 'B' %}{{ modals.custom_javascript_recover('Recuperar', '¿Recuperar a ' + ofi_documento_adjunto.descripcion + '?') }}{% endif %}
+    {% endif %}
+    {{ modals.custom_javascript("Quitar", "", "Quitar") }}
+{% endblock %}

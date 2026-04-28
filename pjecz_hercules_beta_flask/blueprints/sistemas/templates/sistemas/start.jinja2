@@ -1,0 +1,74 @@
+{% extends 'layouts/app.jinja2' %}
+{% import 'macros/card.jinja2' as card %}
+{% import 'macros/start.jinja2' as start %}
+{% import 'macros/topbar.jinja2' as topbar %}
+
+{% block title %}Plataforma Web{% endblock %}
+
+{% block topbar_actions %}
+    {{ topbar.page('Inicio') }}
+{% endblock %}
+
+{% block content %}
+    <div class="row">
+        <div class="col-md-4">
+            {% if mostrar_recibos_nomina %}
+                {% call card.card(title='Cuenta personal', img_top='https://storage.googleapis.com/pjecz-informatica/static/images/inicio_recibos_de_nomina.jpg', img_top_alt='Recibos de nómina') %}
+                    Hola <strong>{{ current_user.nombres }}.</strong>
+                    La descarga de recibos de nómina se puede hacer desde cualquier computadora o teléfono inteligente con la seguridad de tu cuenta de correo electrónico.
+                    Tus recibos de nómina (desde diciembre de 2023) están disponibles para su <a href="#">descarga aquí.</a>
+                {% endcall %}
+            {% else %}
+                {% call card.card(title='Cuenta operativa', img_top='https://storage.googleapis.com/pjecz-informatica/static/images/inicio_cuenta.jpg', img_top_alt='Bienvenido') %}
+                    Tu cuenta <strong>{{ current_user.email }}</strong> sirve para consultar y administrar información.
+                    En cambio, si es personal con <strong>coahuila.gob.mx</strong> y no puedes obtener recibos de nómina,
+                    levanta un ticket con una cuenta personal donde vas a escribir tu nombre completo, e-mail, CURP, oficina, puesto y teléfono celular solicitando el cambio.
+                {% endcall %}
+            {% endif %}
+        </div>
+        <div class="col-md-4">
+            {% if mostrar_tickets_soporte %}
+                {% call card.card(title='Tickets de soporte', img_top='https://storage.googleapis.com/pjecz-informatica/static/images/inicio_soporte_tecnico.jpg', img_top_alt='Tickets de soporte') %}
+                    El sistema de tickets para soporte técnico es esencial para gestionar eficientemente los problemas tecnológicos.
+                    Su propósito es asegurar que cada problema sea documentado, priorizado y atendido oportunamente.
+                    <a href="#">Levanta un ticket</a> o
+                    <a href="#">revisa tus tickets aquí.</a>
+                {% endcall %}
+            {% else %}
+                {% call card.card(title='Justicia cercana, moderna y pronta', img_top='https://storage.googleapis.com/pjecz-informatica/static/images/inicio_trabajo.jpg', img_top_alt='No dejes de...') %}
+                    La publicación de información oportuna y de alta calidad es fundamental para el funcionamiento efectivo de una sociedad democrática.
+                    Cuando los justiciables tienen acceso a datos precisos y actualizados en el momento adecuado, sus vidas tendrán los elementos para participar de manera más efectiva en el sistema de justicia.
+                {% endcall %}
+            {% endif %}
+        </div>
+        <div class="col-md-4">
+            {% call card.card(title='Nuevo módulo: Oficios', img_top='https://storage.googleapis.com/pjecz-informatica/static/images/plataforma-web-oficios.jpg', img_top_alt='Usar la Plataforma es ser sustentable') %}
+            Digitaliza la creación, firma y envío de documentos entre las áreas del Poder Judicial.
+            Impulsamos el "Cero Papel" en la Ciudad Judicial de Saltillo y todos los Distritos Judiciales,
+            logrando mayor eficiencia, ahorros, sustentabilidad y seguridad mediante la firma electrónica simple.
+            Para aprender su uso <a href="https://justiciadigital.gob.mx/plataforma_web/oficios" target="_blank">lea el manual en línea.</a>
+            {% endcall %}
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-12">
+            {% call card.card(title='Sistema Integral de Calidad y Gestión Documental') %}
+                <h4>Política Integral</h4>
+                <p class="lead">
+                    El Poder Judicial del Estado de Coahuila de Zaragoza
+                    basado en los principios de una justicia
+                    <span class="roboto-bold">
+                    Abierta y Transparente, de Calidad, Eficiente, Cercana, Innovadora y Profesional,
+                    </span>
+                    que brinda certeza jurídica, confianza e imparcialidad a la ciudadanía,
+                    comprometido a proporcionar atención y servicios bajo una cultura de calidad,
+                    gestión documental y mejora contínua,
+                    con un enfoque centrado en la persona y sus derechos humanos.
+                </p>
+            {% endcall %}
+        </div>
+    </div>
+{% endblock %}
+
+{% block custom_javascript %}
+{% endblock %}
