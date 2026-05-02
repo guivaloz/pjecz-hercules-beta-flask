@@ -5,7 +5,7 @@ Oficios Documentos Adjuntos, vistas
 import json
 from datetime import datetime
 
-from flask import Blueprint, current_app, flash, redirect, render_template, request, url_for
+from flask import Blueprint, abort, current_app, flash, make_response, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
 from werkzeug.datastructures import CombinedMultiDict
 from werkzeug.utils import secure_filename
@@ -261,7 +261,7 @@ def recover(ofi_documento_adjunto_id):
 @permission_required(MODULO, Permiso.MODIFICAR)
 def delete_recover_json(ofi_documento_adjunto_id):
     """Eliminar o recuperar adjunto, respuesta JSON"""
-    # Consultar el adjunto
+    # Consultar
     ofi_documento_adjunto_id = safe_uuid(ofi_documento_adjunto_id)
     if ofi_documento_adjunto_id == "":
         return {"success": False, "message": "No es un UUID válido"}
@@ -282,3 +282,53 @@ def delete_recover_json(ofi_documento_adjunto_id):
         "estatus": ofi_documento_adjunto.estatus,
         "id": ofi_documento_adjunto.id,
     }
+
+
+@ofi_documentos_adjuntos.route("/ofi_documentos_adjuntos/ver/<ofi_documento_adjunto_id>")
+def view_file(ofi_documento_adjunto_id):
+    """Ver el archivo adjunto"""
+    # Consultar
+    ofi_documento_adjunto_id = safe_uuid(ofi_documento_adjunto_id)
+    if ofi_documento_adjunto_id == "":
+        abort(400, description="ID de archivo adjunto inválido")
+    ofi_documento_adjunto = OfiDocumentoAdjunto.query.get(ofi_documento_adjunto_id)
+    if ofi_documento_adjunto is None:
+        abort(404, description="Archivo adjunto no encontrado")
+    # Obtener el contenido del archivo
+    try:
+        archivo = get_file_from_gcs(
+            bucket_name=current_app.config["CLOUD_STORAGE_DEPOSITO_OFICIOS"],
+            blob_name=get_blob_name_from_url(ofi_documento_adjunto.url),
+        )
+    except MyBucketNotFoundError, MyFileNotFoundError, MyNotValidParamError:
+        abort(404, description="Archivo adjunto no encontrado en el almacenamiento")
+    # Entregar el archivo con su tipo MIME
+    response = make_response(archivo)
+    response.headers.set("Content-Type", ofi_documento_adjunto.mime_type)
+    response.headers.set("Content-Disposition", "inline", filename=ofi_documento_adjunto.archivo)
+    return response
+
+
+@ofi_documentos_adjuntos.route("/ofi_documentos_adjuntos/descargar/<ofi_documento_adjunto_id>")
+def download_file(ofi_documento_adjunto_id):
+    """Descargar el archivo adjunto"""
+    # Consultar
+    ofi_documento_adjunto_id = safe_uuid(ofi_documento_adjunto_id)
+    if ofi_documento_adjunto_id == "":
+        abort(400, description="ID de archivo adjunto inválido")
+    ofi_documento_adjunto = OfiDocumentoAdjunto.query.get(ofi_documento_adjunto_id)
+    if ofi_documento_adjunto is None:
+        abort(404, description="Archivo adjunto no encontrado")
+    # Obtener el contenido del archivo
+    try:
+        archivo = get_file_from_gcs(
+            bucket_name=current_app.config["CLOUD_STORAGE_DEPOSITO_OFICIOS"],
+            blob_name=get_blob_name_from_url(ofi_documento_adjunto.url),
+        )
+    except MyBucketNotFoundError, MyFileNotFoundError, MyNotValidParamError:
+        abort(404, description="Archivo adjunto no encontrado en el almacenamiento")
+    # Entregar el archivo con su tipo MIME para descarga
+    response = make_response(archivo)
+    response.headers.set("Content-Type", ofi_documento_adjunto.mime_type)
+    response.headers.set("Content-Disposition", "attachment", filename=ofi_documento_adjunto.archivo)
+    return response

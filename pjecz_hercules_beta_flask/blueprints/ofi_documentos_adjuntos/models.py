@@ -16,14 +16,15 @@ class OfiDocumentoAdjunto(database.Model, UniversalMixin):
     """OfiDocumentoAdjunto"""
 
     EXTENSIONES = {
-        "jpg": ("Imagen", "image/jpg"),
-        "jpeg": ("Imagen", "image/jpeg"),
-        "png": ("Imagen", "image/png"),
-        "pdf": ("Archivo PDF", "application/pdf"),
-        "doc": ("Archivo Word", "application/msword"),
-        "docx": ("Archivo Word", "application/msword"),
-        "xls": ("Archivo Excel", "application/vnd.ms-excel"),
-        "xlsx": ("Archivo Excel", "application/vnd.ms-excel"),
+        "doc": "application/msword",
+        "docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        "jpg": "image/jpeg",
+        "jpeg": "image/jpeg",
+        "pdf": "application/pdf",
+        "png": "image/png",
+        "xml": "application/xml",
+        "xls": "application/msexcel",
+        "xlsx": "application/vnd.openxmlformats-officedocument.spreadsheetml.document",
     }
 
     # Nombre de la tabla

@@ -32,13 +32,21 @@
     {% endcall %}
     {% call detail.card(title='Archivo Adjunto', estatus=ofi_documento_adjunto.estatus) %}
         {{ detail.label_value('Descripción', ofi_documento_adjunto.descripcion) }}
-        {% if mostrar_boton_quitar %}
+        {% if current_user.can_edit('OFI DOCUMENTOS ADJUNTOS') %}
             <div class="row">
                 <div class="col-md-4"></div>
                 <div class="col-md-8">
-                    {{ modals.button_modal_md('Quitar', url_for('ofi_documentos_adjuntos.delete', ofi_documento_adjunto_id=ofi_documento_adjunto.id), "Quitar", "mdi:file-document-remove-outline", "¿Desea quitar el archivo adjunto?",  "btn-danger") }}
+                    {{ modals.button_modal_md('Eliminar', url_for('ofi_documentos_adjuntos.delete', ofi_documento_adjunto_id=ofi_documento_adjunto.id), "Eliminar", "mdi:file-document-remove-outline", "¿Desea Eliminar el archivo adjunto?",  "btn-danger") }}
                 </div>
             </div>
+        {% endif %}
+    {% endcall %}
+    {% call detail.card(title='Vista previa') %}
+        {% if ofi_documento_adjunto.archivo.endswith('.pdf') %}
+            <embed src="{{ url_for('ofi_documentos_adjuntos.view_file', ofi_documento_adjunto_id=ofi_documento_adjunto.id) }}" type="application/pdf" width="100%" height="600px">
+        {% endif %}
+        {% if ofi_documento_adjunto.archivo.endswith('.jpg') or ofi_documento_adjunto.archivo.endswith('.png') %}
+            <img src="{{ url_for('ofi_documentos_adjuntos.view_file', ofi_documento_adjunto_id=ofi_documento_adjunto.id) }}" alt="Archivo Adjunto" class="img-fluid">
         {% endif %}
     {% endcall %}
 {% endblock %}
@@ -47,6 +55,6 @@
     {% if current_user.can_edit('OFI DOCUMENTOS ADJUNTOS') %}
         {% if ofi_documento_adjunto.estatus == 'A' %}{{ modals.custom_javascript_delete('Eliminar', '¿Eliminar a ' + ofi_documento_adjunto.descripcion + '?') }}{% endif %}
         {% if ofi_documento_adjunto.estatus == 'B' %}{{ modals.custom_javascript_recover('Recuperar', '¿Recuperar a ' + ofi_documento_adjunto.descripcion + '?') }}{% endif %}
+        {{ modals.custom_javascript("Eliminar", "", "Eliminar") }}
     {% endif %}
-    {{ modals.custom_javascript("Quitar", "", "Quitar") }}
 {% endblock %}

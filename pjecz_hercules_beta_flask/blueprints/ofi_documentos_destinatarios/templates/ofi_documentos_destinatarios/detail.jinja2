@@ -40,11 +40,11 @@
         {{ detail.label_value_boolean('Con copia', ofi_documento_destinatario.con_copia) }}
         {{ detail.label_value_boolean('Fue Leído', ofi_documento_destinatario.fue_leido) }}
         {{ detail.label_value('Fue leído en la fecha', ofi_documento_destinatario.fue_leido_tiempo) }}
-        {% if mostrar_boton_quitar %}
+        {% if current_user.can_edit('OFI DOCUMENTOS DESTINATARIOS') %}
             <div class="row">
                 <div class="col-md-8"></div>
                 <div class="col-md-4">
-                    {{ modals.button_modal_md('Quitar', url_for('ofi_documentos_destinatarios.delete', ofi_documento_destinatario_id=ofi_documento_destinatario.id), "Quitar", "mdi:account-minus-outline", "¿Desea quitar el destinatario?",  "btn-danger") }}
+                    {{ modals.button_modal_md('Eliminar', url_for('ofi_documentos_destinatarios.delete', ofi_documento_destinatario_id=ofi_documento_destinatario.id), "Eliminar", "mdi mdi-account-minus-outline", "¿Desea Eliminar el destinatario?",  "btn-danger") }}
                 </div>
             </div>
         {% endif %}
@@ -55,6 +55,6 @@
     {% if current_user.can_edit('OFI DOCUMENTOS DESTINATARIOS') %}
         {% if ofi_documento_destinatario.estatus == 'A' %}{{ modals.custom_javascript_delete('Eliminar', '¿Eliminar a ' + ofi_documento_destinatario.email + '?') }}{% endif %}
         {% if ofi_documento_destinatario.estatus == 'B' %}{{ modals.custom_javascript_recover('Recuperar', '¿Recuperar a ' + ofi_documento_destinatario.email + '?') }}{% endif %}
+        {{ modals.custom_javascript("Eliminar", "", "Eliminar") }}
     {% endif %}
-    {{ modals.custom_javascript("Quitar", "", "Quitar") }}
 {% endblock %}
