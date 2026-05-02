@@ -8,7 +8,7 @@
 {% block topbar_actions %}
     {% call topbar.page_buttons('Archivo Adjunto de ' + ofi_documento_adjunto.ofi_documento.descripcion | truncate(48)) %}
         {{ topbar.button_previous('Oficio', url_for('ofi_documentos.detail', ofi_documento_id=ofi_documento_adjunto.ofi_documento.id)) }}
-        {% if current_user.can_admin('OFI DOCUMENTOS ADJUNTOS') %}
+        {% if current_user.can_edit('OFI DOCUMENTOS ADJUNTOS') %}
             {% if ofi_documento_adjunto.estatus == 'A' %}{{ topbar.button_delete('Eliminar', url_for('ofi_documentos_adjuntos.delete', ofi_documento_adjunto_id=ofi_documento_adjunto.id)) }}{% endif %}
             {% if ofi_documento_adjunto.estatus == 'B' %}{{ topbar.button_recover('Recuperar', url_for('ofi_documentos_adjuntos.recover', ofi_documento_adjunto_id=ofi_documento_adjunto.id)) }}{% endif %}
         {% endif %}
@@ -44,7 +44,7 @@
 {% endblock %}
 
 {% block custom_javascript %}
-    {% if current_user.can_admin('OFI DOCUMENTOS ADJUNTOS') %}
+    {% if current_user.can_edit('OFI DOCUMENTOS ADJUNTOS') %}
         {% if ofi_documento_adjunto.estatus == 'A' %}{{ modals.custom_javascript_delete('Eliminar', '¿Eliminar a ' + ofi_documento_adjunto.descripcion + '?') }}{% endif %}
         {% if ofi_documento_adjunto.estatus == 'B' %}{{ modals.custom_javascript_recover('Recuperar', '¿Recuperar a ' + ofi_documento_adjunto.descripcion + '?') }}{% endif %}
     {% endif %}

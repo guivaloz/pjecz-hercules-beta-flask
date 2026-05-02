@@ -24,13 +24,13 @@ function toggleEsActivo(id, url, row, myInit) {
           $(id).removeClass("btn-outline-dark");
           $(id).addClass("btn-primary");
           $(id).addClass("btn-outline-primary");
-          $(id).html('<span class="iconify" data-icon="mdi mdi mdi-toggle-switch"></span>');
+          $(id).html('<span class="mdi mdi-toggle-switch"></span>');
         } else {
           $(id).removeClass("btn-primary");
           $(id).removeClass("btn-outline-primary");
           $(id).addClass("btn-light");
           $(id).addClass("btn-outline-dark");
-          $(id).html('<span class="iconify" data-icon="mdi mdi-toggle-switch-off"></span>');
+          $(id).html('<span class="mdi-toggle-switch-off"></span>');
         }
         // console.log(data.message);
         console.log(row);

@@ -1,0 +1,116 @@
+{% extends 'layouts/app.jinja2' %}
+{% import 'macros/form.jinja2' as f with context %}
+{% import 'macros/topbar.jinja2' as topbar %}
+{% import 'macros/modals.jinja2' as modals %}
+{% import 'macros/detail.jinja2' as detail %}
+
+{% block title %}Agregar Archivo Adjunto a {{ ofi_documento.descripcion | truncate(48) }}{% endblock %}
+
+{% block custom_head %}
+    {{ f.drop_zone_css() }}
+{% endblock %}
+
+{% block topbar_actions %}
+    {% call topbar.page_buttons('Agregar Archivo Adjunto a ' + ofi_documento.descripcion | truncate(48)) %}
+        {{ topbar.button_previous('Regresar al Oficio', url_for('ofi_documentos.detail', ofi_documento_id=ofi_documento.id)) }}
+    {% endcall %}
+{% endblock %}
+
+{% block content %}
+    {% call f.card(title='Oficio') %}
+        {% if current_user.can_view('OFI DOCUMENTOS') %}
+            {{ detail.label_value('Descripción', ofi_documento.descripcion, url_for('ofi_documentos.detail', ofi_documento_id=ofi_documento.id)) }}
+        {% else %}
+            {{ detail.label_value('Descripción', ofi_documento.descripcion) }}
+        {% endif %}
+        {{ detail.label_value('Folio', ofi_documento.folio) }}
+        {% set propietario_nombre_email = ofi_documento.usuario.nombre + ' (' + ofi_documento.usuario.email + ')' %}
+        {% if current_user.can_view('USUARIOS') %}
+            {{ detail.label_value('Propietario', propietario_nombre_email,  url_for("usuarios.detail", usuario_id=ofi_documento.usuario.id)) }}
+        {% else %}
+            {{ detail.label_value('Propietario', propietario_nombre_email) }}
+        {% endif %}
+    {% endcall %}
+    {% call f.card(title='Agregar Archivo Adjunto') %}
+        <!-- Formulario Agregar Adjunto -->
+        {% set form_kwargs = {'ofi_documento_id': ofi_documento.id} %}
+        {% call f.form_tag_multipart('ofi_documentos_adjuntos.new_with_ofi_documento', fid='ofi_documento_adjunto_form', **form_kwargs) %}
+            {% call f.form_group(form.descripcion) %}{% endcall %}
+            {% call f.drop_zone_wrapper() %}
+                {% call f.form_group(form.archivo, class="dropzone") %}{% endcall %}
+            {% endcall %}
+            <div class="row">
+                <div class="col-2 mt-2">
+                    <a class="btn btn-primary" id="guardar" name="guardar" type="submit" onclick="ofi_documento_adjunto_form.submit()"><span class="iconify" data-icon="mdi:plus"></span> Agregar</a>
+                </div>
+            </div>
+        {% endcall %}
+        <hr />
+        <!-- DataTable Adjuntos -->
+        <table id="ofi_documentos_adjuntos_datatable" class="table display nowrap" style="width:100%">
+            <thead>
+                <tr>
+                    <th>Descripción</th>
+                    <th>Eliminar/Recuperar</th>
+                </tr>
+            </thead>
+        </table>
+    {% endcall %}
+{% endblock %}
+
+{% block custom_javascript %}
+    {{ f.drop_zone_js() }}
+    <!-- DataTables -->
+    <script src="/static/js/datatables-constructor.js"></script>
+    <script src="/static/js/datatables-filtros.js"></script>
+    <!-- DataTable Adjuntos -->
+    <script>
+        const constructorDataTable = new ConfigDataTable( '{{ csrf_token() }}' );
+        let configDTOfiDocumentosAdjuntos = constructorDataTable.config();
+        configDTOfiDocumentosAdjuntos['ajax']['url'] = '{{ url_for("ofi_documentos_adjuntos.datatable_json") }}';
+        configDTOfiDocumentosAdjuntos['ajax']['data'] = {"estatus": "A", "ofi_documento_id": "{{ ofi_documento.id }}"};
+        configDTOfiDocumentosAdjuntos['columns'] = [
+            { data: 'detalle' },
+            { data: 'eliminar_recuperar' }
+        ];
+        configDTOfiDocumentosAdjuntos['columnDefs'] = [
+            {
+                targets: 0, // detalle
+                data: null,
+                render: function(data, type, row, meta) {
+                    descripcion = data.descripcion.length > 32 ? data.descripcion.substring(0, 32) + '…' : data.descripcion;
+                    return '<a href="' + data.url + '">' + descripcion + '</a>';
+                }
+            },
+            {
+                targets: 1, // eliminar_recuperar
+                data: null,
+                render: function(data, type, row, meta) {
+                    if (data.url === '') {
+                        if (data.estatus === "A") {
+                            return '<span class="badge bg-primary">Activo</span>';
+                        } else {
+                            return '<span class="badge bg-secondary">Eliminado</span>';
+                        }
+                    }
+                    let myId = 'ofi_documento_adjunto_' + data.id;
+                    let myRow = 'ofi_documento_adjunto_row_' + data.id;
+                    let myOnClick = "deleteRecover('#" + myId + "', '" + data.url + "', '#" + myRow + "')";
+                    if (data.estatus === "A") {
+                        return '<button id="' + myId + '" type="button" class="btn btn-sm btn-outline-primary" onclick="' + myOnClick + '"><span class="mdi mdi-delete"></span></button>';
+                    } else {
+                        return '<button id="' + myId + '" type="button" class="btn btn-sm btn-light" onclick="' + myOnClick + '"><span class="mdi mdi-delete-restore"></span></button>';
+                    }
+                }
+            }
+        ];
+        // Cambiar la fila según el estatus
+        configDTOfiDocumentosAdjuntos['createdRow'] = function(row, data, dataIndex) {
+            // Agregar un id a la fila para usarlo en eliminar/recuperar
+            $(row).attr('id', 'ofi_documento_adjunto_row_' + data.id);
+        };
+        // No hay filtros
+        const filtrosAdjuntos = new FiltrosDataTable('#ofi_documentos_adjuntos_datatable', configDTOfiDocumentosAdjuntos);
+        filtrosAdjuntos.precargar();
+    </script>
+{% endblock %}

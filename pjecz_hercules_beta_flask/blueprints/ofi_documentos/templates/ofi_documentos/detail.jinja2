@@ -45,30 +45,41 @@
         {% endif %}
         {# Termina Contenido HTML #}
     {% endcall %}
-    {# Adjuntos #}
+    {# DataTable Adjuntos #}
     {% call detail.card("Archivos Adjuntos") %}
         <table id="ofi_documentos_adjuntos_datatable" class="table display nowrap" style="width:100%">
             <thead>
                 <tr>
-                    <th>Id</th>
-                    <th>Nombre</th>
+                    <th>Descripción</th>
+                    <th>Eliminar/Recuperar</th>
                 </tr>
             </thead>
         </table>
+        {% if current_user.can_insert('OFI DOCUMENTOS ADJUNTOS') %}
+            {% if not ofi_documento.esta_cancelado and not ofi_documento.esta_archivado %}
+                <a href="{{ url_for('ofi_documentos_adjuntos.new_with_ofi_documento', ofi_documento_id=ofi_documento.id) }}" class="btn btn-primary">Agregar Archivo Adjunto</a>
+            {% endif %}
+        {% endif %}
     {% endcall %}
-    {# Destinatarios #}
+    {# DataTable Destinatarios #}
     {% call detail.card("Destinatarios") %}
         <table id="ofi_documentos_destinatarios_datatable" class="table display nowrap" style="width:100%">
             <thead>
                 <tr>
-                    <th>Id</th>
                     <th>Correo electrónico</th>
                     <th>Nombre</th>
+                    <th>Puesto</th>
                     <th>Leído</th>
                     <th>Con Copia</th>
+                    <th>Eliminar/Recuperar</th>
                 </tr>
             </thead>
         </table>
+        {% if current_user.can_insert('OFI DOCUMENTOS DESTINATARIOS') %}
+            {% if not ofi_documento.esta_cancelado and not ofi_documento.esta_archivado %}
+                <a href="{{ url_for('ofi_documentos_destinatarios.new_with_ofi_documento', ofi_documento_id=ofi_documento.id) }}" class="btn btn-primary">Agregar Destinatario</a>
+            {% endif %}
+        {% endif %}
     {% endcall %}
 {% endblock %}
 
@@ -84,45 +95,82 @@
     <script>
         const constructorDataTable = new ConfigDataTable( '{{ csrf_token() }}' );
     </script>
-    <!-- DataTable Archivos Adjuntos -->
+    <!-- DataTable Adjuntos -->
     <script>
-        let configDT_adjuntos = constructorDataTable.config();
-        configDT_adjuntos['ajax']['url'] = '/ofi_documentos_adjuntos/datatable_json';
-        configDT_adjuntos['ajax']['data'] = {"estatus": "A", "ofi_documento_id": "{{ ofi_documento.id }}"};
-        configDT_adjuntos['columns'] = [
+        let configDTOfiDocumentosAdjuntos = constructorDataTable.config();
+        configDTOfiDocumentosAdjuntos['ajax']['url'] = '{{ url_for("ofi_documentos_adjuntos.datatable_json") }}';
+        configDTOfiDocumentosAdjuntos['ajax']['data'] = {"estatus": "A", "ofi_documento_id": "{{ ofi_documento.id }}"};
+        configDTOfiDocumentosAdjuntos['columns'] = [
             { data: 'detalle' },
-            { data: 'descripcion' }
+            { data: 'eliminar_recuperar' }
         ];
-        configDT_adjuntos['columnDefs'] = [
+        configDTOfiDocumentosAdjuntos['columnDefs'] = [
             {
                 targets: 0, // detalle
                 data: null,
                 render: function(data, type, row, meta) {
-                    return '<a href="' + data.url + '">' + data.id.substring(0, 8) + '</a>';
+                    descripcion = data.descripcion.length > 32 ? data.descripcion.substring(0, 32) + '…' : data.descripcion;
+                    return '<a href="' + data.url + '">' + descripcion + '</a>';
+                }
+            },
+            {
+                targets: 1, // eliminar_recuperar
+                data: null,
+                render: function(data, type, row, meta) {
+                    if (data.url === '') {
+                        if (data.estatus === "A") {
+                            return '<span class="badge bg-primary">Activo</span>';
+                        } else {
+                            return '<span class="badge bg-secondary">Eliminado</span>';
+                        }
+                    }
+                    let myId = 'ofi_documento_adjunto_' + data.id;
+                    let myRow = 'ofi_documento_adjunto_row_' + data.id;
+                    let myOnClick = "deleteRecover('#" + myId + "', '" + data.url + "', '#" + myRow + "')";
+                    if (data.estatus === "A") {
+                        return '<button id="' + myId + '" type="button" class="btn btn-sm btn-outline-primary" onclick="' + myOnClick + '"><span class="mdi mdi-delete"></span></button>';
+                    } else {
+                        return '<button id="' + myId + '" type="button" class="btn btn-sm btn-light" onclick="' + myOnClick + '"><span class="mdi mdi-delete-restore"></span></button>';
+                    }
                 }
             }
         ];
-        const filtrosAdjuntos = new FiltrosDataTable('#ofi_documentos_adjuntos_datatable', configDT_adjuntos);
+        // Cambiar la fila según el estatus
+        configDTOfiDocumentosAdjuntos['createdRow'] = function(row, data, dataIndex) {
+            // Agregar un id a la fila para usarlo en eliminar/recuperar
+            $(row).attr('id', 'ofi_documento_adjunto_row_' + data.id);
+        };
+        // No hay filtros
+        const filtrosAdjuntos = new FiltrosDataTable('#ofi_documentos_adjuntos_datatable', configDTOfiDocumentosAdjuntos);
         filtrosAdjuntos.precargar();
     </script>
     <!-- DataTable Destinatarios -->
     <script>
-        let configDT_destinatarios = constructorDataTable.config();
-        configDT_destinatarios['ajax']['url'] = '/ofi_documentos_destinatarios/datatable_json';
-        configDT_destinatarios['ajax']['data'] = {"estatus": "A", "ofi_documento_id": "{{ ofi_documento.id }}"};
-        configDT_destinatarios['columns'] = [
+        let configDTOfiDocumentosDestinatarios = constructorDataTable.config();
+        configDTOfiDocumentosDestinatarios['ajax']['url'] = '{{ url_for("ofi_documentos_destinatarios.datatable_json") }}';
+        configDTOfiDocumentosDestinatarios['ajax']['data'] = {"estatus": "A", "ofi_documento_id": "{{ ofi_documento.id }}"};
+        configDTOfiDocumentosDestinatarios['columns'] = [
             { data: 'detalle' },
-            { data: 'usuario_email' },
             { data: 'usuario_nombre' },
+            { data: 'usuario_puesto' },
             { data: 'fue_leido' },
-            { data: 'con_copia' }
+            { data: 'con_copia' },
+            { data: 'eliminar_recuperar' }
         ];
-        configDT_destinatarios['columnDefs'] = [
+        configDTOfiDocumentosDestinatarios['columnDefs'] = [
             {
                 targets: 0, // detalle
                 data: null,
                 render: function(data, type, row, meta) {
-                    return '<a href="' + data.url + '">' + data.id.substring(0, 8) + '</a>';
+                    email = data.usuario_email.length > 32 ? data.usuario_email.substring(0, 32) + '…' : data.usuario_email;
+                    return '<a href="' + data.url + '">' + email + '</a>';
+                }
+            },
+            {
+              targets: [1, 2], // usuario_nombre, usuario_puesto
+                data: null,
+                render: function(data, type, row, meta) {
+                    return data.length > 32 ? data.substring(0, 32) + '…' : data;
                 }
             },
             {
@@ -134,9 +182,43 @@
                     }
                     return '<span class="mdi mdi-checkbox-blank-outline text-secondary" style="font-size: 1.4em"></span>';
                 }
+            },
+            {
+                targets: 5, // eliminar_recuperar
+                data: null,
+                render: function(data, type, row, meta) {
+                    if (data.url === '') {
+                        if (data.estatus === "A") {
+                            return '<span class="badge bg-primary">Activo</span>';
+                        } else {
+                            return '<span class="badge bg-secondary">Eliminado</span>';
+                        }
+                    }
+                    let myId = 'ofi_documento_destinatario_' + data.id;
+                    let myRow = 'ofi_documento_destinatario_row_' + data.id;
+                    let myOnClick = "deleteRecover('#" + myId + "', '" + data.url + "', '#" + myRow + "')";
+                    if (data.estatus === "A") {
+                        return '<button id="' + myId + '" type="button" class="btn btn-sm btn-outline-primary" onclick="' + myOnClick + '"><span class="mdi mdi-delete"></span></button>';
+                    } else {
+                        return '<button id="' + myId + '" type="button" class="btn btn-sm btn-light" onclick="' + myOnClick + '"><span class="mdi mdi-delete-restore"></span></button>';
+                    }
+                }
             }
         ];
-        const filtrosDestinatarios = new FiltrosDataTable('#ofi_documentos_destinatarios_datatable', configDT_destinatarios);
+        const filtrosDestinatarios = new FiltrosDataTable('#ofi_documentos_destinatarios_datatable', configDTOfiDocumentosDestinatarios);
         filtrosDestinatarios.precargar();
     </script>
+    <!-- DataTable Eliminar/Recuperar -->
+    <script>
+        // Preparar headers para POST
+        const myHeaders = new Headers();
+        myHeaders.append("X-CSRF-TOKEN", "{{ csrf_token() }}");
+        const myInit = {
+            method: "POST",
+            headers: myHeaders,
+            mode: "cors",
+            cache: "default",
+        };
+    </script>
+    <script src="{{ url_for('static', filename='js/datatables-delete-recover.js') }}"></script>
 {% endblock %}
