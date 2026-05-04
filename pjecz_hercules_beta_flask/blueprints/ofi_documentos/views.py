@@ -122,7 +122,7 @@ def datatable_json():
                 "detalle": {
                     "id": resultado.id,
                     "detail_url": url_for("ofi_documentos.detail", ofi_documento_id=resultado.id),
-                    "fullscreen_url": url_for("ofi_documentos.detail", ofi_documento_id=resultado.id),
+                    "fullscreen_url": url_for("ofi_documentos.fullscreen", ofi_documento_id=resultado.id),
                     "sign_url": "",
                 },
                 "propietario": {
@@ -170,7 +170,7 @@ def list_active():
 def list_active_mis_oficios():
     """Listado de documentos activos, mis oficios"""
     return render_template(
-        "ofi_documentos/list.jinja2",
+        "ofi_documentos/list_my_documents.jinja2",
         estatus="A",
         filtros=json.dumps({"estatus": "A", "usuario_id": current_user.id}),
         titulo="Mis oficios",
@@ -233,6 +233,93 @@ def detail(ofi_documento_id):
         ofi_documento=ofi_documento,
         mostrar_botones_agregar=mostrar_botones_agregar,
     )
+
+
+@ofi_documentos.route("/ofi_documentos/pantalla_completa/<ofi_documento_id>")
+def fullscreen(ofi_documento_id):
+    """Pantalla completa de un Ofi Documento"""
+    # Consultar el oficio
+    ofi_documento_id = safe_uuid(ofi_documento_id)
+    if not ofi_documento_id:
+        flash("ID de oficio inválido", "warning")
+        return redirect(url_for("ofi_documentos.list_active"))
+    ofi_documento = OfiDocumento.query.get_or_404(ofi_documento_id)
+    # Si el documento está cancelado o archivado, no mostrar los botones para agregar archivos y destinatarios
+    mostrar_botones_agregar = False
+    if not ofi_documento.esta_cancelado or not ofi_documento.esta_archivado:
+        # Si el usuario es el propietario del documento o si pertenece a la autoridad del propietario, mostrar los botones
+        propietario = ofi_documento.usuario
+        autoridad = ofi_documento.usuario.autoridad
+        mostrar_botones_agregar = current_user.id == propietario.id or current_user.autoridad.id == autoridad.id
+    # Entregar a pantalla completa
+    return render_template(
+        "ofi_documentos/fullscreen.jinja2",
+        ofi_documento=ofi_documento,
+        mostrar_botones_agregar=mostrar_botones_agregar,
+    )
+
+
+@ofi_documentos.route("/ofi_documentos/pantalla_completa/documento/<ofi_documento_id>")
+def fullscreen_document(ofi_documento_id):
+    """Pantalla completa: contenido del frame para el documento"""
+    return render_template("ofi_documentos/fullscreen_document.jinja2", ofi_documento_id=ofi_documento_id)
+
+
+@ofi_documentos.route("/ofi_documentos/pantalla_completa/adjuntos/<ofi_documento_id>")
+def fullscreen_attachments(ofi_documento_id):
+    """Pantalla completa: contenido del frame para los adjuntos"""
+    return render_template("ofi_documentos/fullscreen_attachments.jinja2", ofi_documento_id=ofi_documento_id)
+
+
+@ofi_documentos.route("/ofi_documentos/pantalla_completa/destinatarios/<ofi_documento_id>")
+def fullscreen_recipients(ofi_documento_id):
+    """Pantalla completa: contenido del frame para los destinatarios"""
+    return render_template("ofi_documentos/fullscreen_recipients.jinja2", ofi_documento_id=ofi_documento_id)
+
+
+@ofi_documentos.route("/ofi_documentos/fullscreen_json/<ofi_documento_id>", methods=["GET", "POST"])
+def fullscreen_json(ofi_documento_id):
+    """Entregar JSON para la vista de pantalla completa"""
+    ofi_documento_id = safe_uuid(ofi_documento_id)
+    if not ofi_documento_id:
+        return {
+            "success": False,
+            "message": "ID de oficio inválido.",
+            "data": None,
+        }
+    ofi_documento = OfiDocumento.query.get_or_404(ofi_documento_id)
+    # Si está eliminado y NO es administrador
+    if ofi_documento.estatus != "A" and current_user.can_admin(MODULO) is False:
+        return {
+            "success": False,
+            "message": "Este oficio está eliminado.",
+            "data": None,
+        }
+    # Si el estado es ENVIADO y quien lo ve es un destinatario, se va a marcar como leído
+    if ofi_documento.estado == "ENVIADO":
+        # Buscar al usuario entre los destinatarios
+        usuario_destinatario = (
+            OfiDocumentoDestinatario.query.filter_by(ofi_documento_id=ofi_documento.id)
+            .filter_by(usuario_id=current_user.id)
+            .first()
+        )
+        # Marcar como leído si es que no lo ha sido
+        if usuario_destinatario is not None and usuario_destinatario.fue_leido is False:
+            usuario_destinatario.fue_leido = True
+            usuario_destinatario.fue_leido_tiempo = datetime.now()
+            usuario_destinatario.save()
+    # Entregar JSON
+    return {
+        "success": True,
+        "message": "Se encontró el documento.",
+        "data": {
+            "pagina_cabecera_url": ofi_documento.usuario.autoridad.pagina_cabecera_url,
+            "contenido_html": ofi_documento.contenido_html,
+            "pagina_pie_url": ofi_documento.usuario.autoridad.pagina_pie_url,
+            "firma_simple": ofi_documento.firma_simple,
+            "estado": ofi_documento.estado,
+        },
+    }
 
 
 @ofi_documentos.route("/ofi_documentos/asistente")

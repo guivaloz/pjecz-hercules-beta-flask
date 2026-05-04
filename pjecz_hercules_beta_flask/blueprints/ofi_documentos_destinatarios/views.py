@@ -88,6 +88,42 @@ def detail(ofi_documento_destinatario_id):
     return render_template("ofi_documentos_destinatarios/detail.jinja2", ofi_documento_destinatario=ofi_documento_destinatario)
 
 
+@ofi_documentos_destinatarios.route("/ofi_documentos_destinatarios/fullscreen_json/<ofi_documento_id>", methods=["GET", "POST"])
+def fullscreen_json(ofi_documento_id):
+    """Entregar JSON para la vista de pantalla completa"""
+    # Validar el UUID del oficio
+    ofi_documento_id = safe_uuid(ofi_documento_id)
+    if not ofi_documento_id:
+        return {
+            "success": False,
+            "message": "ID de oficio inválido.",
+            "data": None,
+        }
+    # Consultar
+    consulta = (
+        OfiDocumentoDestinatario.query.join(Usuario)
+        .filter(OfiDocumentoDestinatario.ofi_documento_id == ofi_documento_id)
+        .filter(OfiDocumentoDestinatario.estatus == "A")
+        .order_by(Usuario.email)
+        .all()
+    )
+    # Si no hay destinatarios, entregar mensaje indicando que no hay destinatarios para este oficio
+    if not consulta:
+        return {
+            "success": False,
+            "message": "Este oficio no tiene destinatarios.",
+            "data": None,
+        }
+    # Entregar JSON
+    return {
+        "success": True,
+        "message": f"Se encontraron {len(consulta)} destinatarios.",
+        "data": [
+            {"email": item.usuario.email, "nombre": item.usuario.nombre, "fue_leido": item.fue_leido} for item in consulta
+        ],
+    }
+
+
 @ofi_documentos_destinatarios.route("/ofi_documentos_destinatarios/nuevo/<ofi_documento_id>", methods=["GET", "POST"])
 @permission_required(MODULO, Permiso.CREAR)
 def new_with_ofi_documento(ofi_documento_id):

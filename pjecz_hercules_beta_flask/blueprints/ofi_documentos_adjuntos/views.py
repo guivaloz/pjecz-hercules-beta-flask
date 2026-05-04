@@ -97,6 +97,38 @@ def detail(ofi_documento_adjunto_id):
     return render_template("ofi_documentos_adjuntos/detail.jinja2", ofi_documento_adjunto=ofi_documento_adjunto)
 
 
+@ofi_documentos_adjuntos.route("/ofi_documentos_adjuntos/fullscreen_json/<ofi_documento_id>", methods=["GET", "POST"])
+def fullscreen_json(ofi_documento_id):
+    """Entregar JSON para la vista de pantalla completa"""
+    ofi_documento_id = safe_uuid(ofi_documento_id)
+    if not ofi_documento_id:
+        return {
+            "success": False,
+            "message": "ID de oficio inválido.",
+            "data": None,
+        }
+    # Consultar archivos adjuntos
+    consulta = (
+        OfiDocumentoAdjunto.query.filter_by(ofi_documento_id=ofi_documento_id)
+        .filter_by(estatus="A")
+        .order_by(OfiDocumentoAdjunto.descripcion)
+        .all()
+    )
+    # Si no hay adjuntos, entregar mensaje indicando que no hay adjuntos para este oficio
+    if not consulta:
+        return {
+            "success": False,
+            "message": "Este oficio no tiene archivos adjuntos.",
+            "data": None,
+        }
+    # Entregar JSON
+    return {
+        "success": True,
+        "message": f"Se encontraron {len(consulta)} documentos adjuntos.",
+        "data": [{"descripcion": item.descripcion, "archivo": item.archivo, "url": item.url} for item in consulta],
+    }
+
+
 @ofi_documentos_adjuntos.route("/ofi_documentos_adjuntos/nuevo/<ofi_documento_id>", methods=["GET", "POST"])
 @permission_required(MODULO, Permiso.CREAR)
 def new_with_ofi_documento(ofi_documento_id):

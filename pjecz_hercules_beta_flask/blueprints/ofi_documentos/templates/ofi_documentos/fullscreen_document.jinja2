@@ -1,0 +1,69 @@
+{% extends 'layouts/base.jinja2' %}
+
+{% block custom_head %}
+    <!-- Estilos del contenido para poner bordes y margenes a las tablas -->
+    <link rel="stylesheet" href="https://storage.googleapis.com/pjecz-informatica/static/css/ckeditor5-justicia-digital-gob-mx.css">
+    <!-- Estilos para la cabecera, contenido y pie de página -->
+    <style>
+        .cabecera {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .contenido {
+            font-family: "Helvetica Neue", "Liberation Sans", Arial, sans-serif;
+            font-size: 16px;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+        .pie_de_pagina {
+            text-align: center;
+            font-size: 12px;
+            color: #666;
+            margin-top: 20px;
+        }
+    </style>
+{% endblock %}
+
+{% block main %}
+    <div class="container" id="work-document">
+        <div class="cabecera" id="work-document-header"></div>
+        <div class="contenido" id="work-document-content"></div>
+        <div class="pie_de_pagina" id="work-document-footer"></div>
+    </div>
+{% endblock %}
+
+{% block custom_javascript %}
+    <script>
+        // Cuando se haya cargado
+        $(document).ready(function() {
+            // Obtener los elementos del documento
+            const workDocumentHeader = document.getElementById('work-document-header');
+            const workDocumentContent = document.getElementById('work-document-content');
+            const workDocumentFooter = document.getElementById('work-document-footer');
+            // Consultar /ofi_documentos/fullscreen_json para obtener los datos
+            fetch('/ofi_documentos/fullscreen_json/{{ ofi_documento_id }}')
+                .then(response => response.json())
+                .then(data => {
+                    // Si success es verdadero, mostrar los datos
+                    if (data.success) {
+                        // Poner la imagen en la cabecera
+                        workDocumentHeader.innerHTML = `<img src="${data.data.pagina_cabecera_url}" alt="cabecera" style="width: 100%;">`;
+                        // Poner el contenido HTML
+                        workDocumentContent.innerHTML = data.data.contenido_html;
+                        // Poner el pie de página
+                        if (data.data.firma_simple) {
+                            workDocumentFooter.innerHTML = `
+                                <small>Este documento tiene la firma electrónica simple: ${data.data.firma_simple}</small><br>
+                                <img src="${data.data.pagina_pie_url}" alt="pie de página" style="width: 100%;">
+                            `;
+                        } else {
+                            workDocumentFooter.innerHTML = `<img src="${data.data.pagina_pie_url}" alt="pie de página" style="width: 100%;">`;
+                        }
+                    } else {
+                        // Si hubo un error, mostrar un mensaje
+                        workDocumentContent.innerHTML = `<div class="alert alert-danger">${data.message}</div>`;
+                    }
+                });
+        });
+    </script>
+{% endblock %}
