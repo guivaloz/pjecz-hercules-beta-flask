@@ -24,15 +24,17 @@
     {% call detail.card(estatus=ofi_documento.estatus) %}
         {{ detail.label_value('Descripción', ofi_documento.descripcion) }}
         {{ detail.label_value('Folio', ofi_documento.folio) }}
+        {% set propietario_nombre_email = ofi_documento.usuario.nombre + ' (' + ofi_documento.usuario.email + ')' %}
         {% if current_user.can_view('USUARIOS') %}
-            {{ detail.label_value('Propietario', ofi_documento.usuario.nombre,  url_for("usuarios.detail", usuario_id=ofi_documento.usuario.id)) }}
+            {{ detail.label_value('Propietario', propietario_nombre_email,  url_for("usuarios.detail", usuario_id=ofi_documento.usuario.id)) }}
         {% else %}
-            {{ detail.label_value('Propietario', ofi_documento.usuario.nombre) }}
+            {{ detail.label_value('Propietario', propietario_nombre_email) }}
         {% endif %}
+        {% set autoridad_descripcion_clave = ofi_documento.usuario.autoridad.descripcion + ' (' + ofi_documento.usuario.autoridad.clave + ')' %}
         {% if current_user.can_view('AUTORIDADES')%}
-            {{ detail.label_value('Autoridad', ofi_documento.usuario.autoridad.clave, url_for('autoridades.detail', autoridad_id=ofi_documento.usuario.autoridad.id)) }}
+            {{ detail.label_value('Autoridad', autoridad_descripcion_clave, url_for('autoridades.detail', autoridad_id=ofi_documento.usuario.autoridad.id)) }}
         {% else %}
-            {{ detail.label_value('Autoridad', ofi_documento.usuario.autoridad.clave) }}
+            {{ detail.label_value('Autoridad', autoridad_descripcion_clave) }}
         {% endif %}
         {# Inicia Contenido HTML #}
         <hr>
@@ -55,10 +57,8 @@
                 </tr>
             </thead>
         </table>
-        {% if current_user.can_insert('OFI DOCUMENTOS ADJUNTOS') %}
-            {% if not ofi_documento.esta_cancelado and not ofi_documento.esta_archivado %}
-                <a href="{{ url_for('ofi_documentos_adjuntos.new_with_ofi_documento', ofi_documento_id=ofi_documento.id) }}" class="btn btn-primary">Agregar Archivo Adjunto</a>
-            {% endif %}
+        {% if current_user.can_insert('OFI DOCUMENTOS ADJUNTOS') and mostrar_botones_agregar %}
+            <a href="{{ url_for('ofi_documentos_adjuntos.new_with_ofi_documento', ofi_documento_id=ofi_documento.id) }}" class="btn btn-primary">Agregar Archivo Adjunto</a>
         {% endif %}
     {% endcall %}
     {# DataTable Destinatarios #}
@@ -75,10 +75,8 @@
                 </tr>
             </thead>
         </table>
-        {% if current_user.can_insert('OFI DOCUMENTOS DESTINATARIOS') %}
-            {% if not ofi_documento.esta_cancelado and not ofi_documento.esta_archivado %}
-                <a href="{{ url_for('ofi_documentos_destinatarios.new_with_ofi_documento', ofi_documento_id=ofi_documento.id) }}" class="btn btn-primary">Agregar Destinatario</a>
-            {% endif %}
+        {% if current_user.can_insert('OFI DOCUMENTOS DESTINATARIOS') and mostrar_botones_agregar %}
+            <a href="{{ url_for('ofi_documentos_destinatarios.new_with_ofi_documento', ofi_documento_id=ofi_documento.id) }}" class="btn btn-primary">Agregar Destinatario</a>
         {% endif %}
     {% endcall %}
 {% endblock %}

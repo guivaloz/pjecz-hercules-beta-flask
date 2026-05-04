@@ -220,7 +220,19 @@ def detail(ofi_documento_id):
         flash("ID de oficio inválido", "warning")
         return redirect(url_for("ofi_documentos.list_active"))
     ofi_documento = OfiDocumento.query.get_or_404(ofi_documento_id)
-    return render_template("ofi_documentos/detail.jinja2", ofi_documento=ofi_documento)
+    # Si el documento está cancelado o archivado, no mostrar los botones para agregar archivos y destinatarios
+    mostrar_botones_agregar = False
+    if not ofi_documento.esta_cancelado or not ofi_documento.esta_archivado:
+        # Si el usuario es el propietario del documento o si pertenece a la autoridad del propietario, mostrar los botones
+        propietario = ofi_documento.usuario
+        autoridad = ofi_documento.usuario.autoridad
+        mostrar_botones_agregar = current_user.id == propietario.id or current_user.autoridad.id == autoridad.id
+    # Entregar el detalle
+    return render_template(
+        "ofi_documentos/detail.jinja2",
+        ofi_documento=ofi_documento,
+        mostrar_botones_agregar=mostrar_botones_agregar,
+    )
 
 
 @ofi_documentos.route("/ofi_documentos/asistente")

@@ -106,6 +106,21 @@ def new_with_ofi_documento(ofi_documento_id):
         flash("ID de documento inválido", "warning")
         return redirect(url_for("ofi_documentos.list_active"))
     ofi_documento = OfiDocumento.query.get_or_404(ofi_documento_id)
+    # Validar que el documento NO esté archivado
+    if ofi_documento.esta_archivado:
+        flash("No se pueden agregar adjuntos a un documento archivado", "warning")
+        return redirect(url_for("ofi_documentos.detail", ofi_documento_id=ofi_documento_id))
+    # Validar que el documento NO esté cancelado
+    if ofi_documento.esta_cancelado:
+        flash("No se pueden agregar adjuntos a un documento cancelado", "warning")
+        return redirect(url_for("ofi_documentos.detail", ofi_documento_id=ofi_documento_id))
+    # Validar que el usuario se el propietario del documento o que pertenezca a su autoridad
+    propietario = ofi_documento.usuario
+    autoridad = ofi_documento.usuario.autoridad
+    if not (current_user.id == propietario.id or current_user.autoridad.id == autoridad.id):
+        flash("No tiene permiso para agregar adjuntos a este documento", "danger")
+        return redirect(url_for("ofi_documentos.detail", ofi_documento_id=ofi_documento_id))
+    # Preparar el formulario
     form = OfiDocumentoAdjuntoForm(CombinedMultiDict((request.files, request.form)))
     if form.validate_on_submit():
         es_valido = True
