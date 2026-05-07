@@ -220,18 +220,72 @@ def detail(ofi_documento_id):
         flash("ID de oficio inválido", "warning")
         return redirect(url_for("ofi_documentos.list_active"))
     ofi_documento = OfiDocumento.query.get_or_404(ofi_documento_id)
-    # Si el documento está cancelado o archivado, no mostrar los botones para agregar archivos y destinatarios
+    # Definir por defecto que no se muestran los botones
+    mostrar_boton_editar = False
+    mostrar_boton_firmar = False
+    mostrar_boton_enviar = False
+    mostrar_boton_archivar_desarchivar = False
+    mostrar_boton_cancelar_descancelar = False
+    # Definir si el usuario puede escribir y/o firmar
+    usuario_roles = current_user.get_roles()
+    puede_escribir = ROL_ESCRITOR in usuario_roles
+    puede_firmar = ROL_FIRMANTE in usuario_roles
+    # Definir si el documento es de la autoridad del usuario
+    es_de_mi_autoridad = current_user.autoridad_id == ofi_documento.usuario.autoridad_id
+    # Si puede firmar y el documento es de su autoridad
+    if puede_firmar and es_de_mi_autoridad:
+        # Si está en BORRADOR, puede editar y firmar
+        if ofi_documento.estado == "BORRADOR":
+            mostrar_boton_editar = True
+            mostrar_boton_firmar = True
+        # Si está en FIRMADO o ENVIADO, puede enviar o archivar
+        if ofi_documento.estado in ["FIRMADO", "ENVIADO"]:
+            mostrar_boton_enviar = True
+        # Si NO está cancelado y NO es BORRADOR, se puede archivar/desarchivar
+        if ofi_documento.esta_cancelado is False and ofi_documento.estado != "BORRADOR":
+            mostrar_boton_archivar_desarchivar = True
+        # Si NO está archivado, puede cancelar/descancelar
+        if ofi_documento.esta_archivado is False:
+            mostrar_boton_cancelar_descancelar = True
+    # Si puede escribir y el documento es de su autoridad
+    if puede_escribir and es_de_mi_autoridad:
+        # Si está en BORRADOR, puede editar
+        if ofi_documento.estado == "BORRADOR":
+            mostrar_boton_editar = True
+        # Si está en FIRMADO o ENVIADO, puede enviar o archivar
+        if ofi_documento.estado in ["FIRMADO", "ENVIADO"]:
+            mostrar_boton_enviar = True
+        # Si NO está cancelado y NO es BORRADOR, se puede archivar/desarchivar
+        if ofi_documento.esta_cancelado is False and ofi_documento.estado != "BORRADOR":
+            mostrar_boton_archivar_desarchivar = True
+        # Si NO está archivado, puede cancelar/descancelar
+        if ofi_documento.esta_archivado is False:
+            mostrar_boton_cancelar_descancelar = True
+    # Definir que por defecto no se muestran los botones para agregar archivos y destinatarios
     mostrar_botones_agregar = False
+    # Si NO está cancelado y NO está archivado
     if not ofi_documento.esta_cancelado or not ofi_documento.esta_archivado:
         # Si el usuario es el propietario del documento o si pertenece a la autoridad del propietario, mostrar los botones
         propietario = ofi_documento.usuario
         autoridad = ofi_documento.usuario.autoridad
         mostrar_botones_agregar = current_user.id == propietario.id or current_user.autoridad.id == autoridad.id
+    # Si sólo puede ver, no mostrar ningún botón
+    if current_user.permisos[MODULO] <= 1:
+        mostrar_boton_editar = False
+        mostrar_boton_firmar = False
+        mostrar_boton_enviar = False
+        mostrar_boton_archivar_desarchivar = False
+        mostrar_boton_cancelar_descancelar = False
     # Entregar el detalle
     return render_template(
         "ofi_documentos/detail.jinja2",
         ofi_documento=ofi_documento,
         mostrar_botones_agregar=mostrar_botones_agregar,
+        mostrar_boton_editar=mostrar_boton_editar,
+        mostrar_boton_firmar=mostrar_boton_firmar,
+        mostrar_boton_enviar=mostrar_boton_enviar,
+        mostrar_boton_archivar_desarchivar=mostrar_boton_archivar_desarchivar,
+        mostrar_boton_cancelar_descancelar=mostrar_boton_cancelar_descancelar,
     )
 
 
@@ -389,7 +443,7 @@ def new(ofi_plantilla_id):
                 folio_anio=anio_folio,
                 folio_num=numero_folio,
                 vencimiento_fecha=vencimiento_fecha,
-                contenido_md=str(form.contenido_md.data),
+                contenido_md=str(form.contenido_md.data).strip(),
                 contenido_html=clean_html(str(form.contenido_html.data)),
                 contenido_sfdt=None,
                 estado="BORRADOR",
@@ -534,6 +588,509 @@ def new(ofi_plantilla_id):
         ofi_plantilla_id=ofi_plantilla_id,
         autoridad_clave=autoridad_clave if autoridad_clave else "",
     )
+
+
+@ofi_documentos.route("/ofi_documentos/edicion/<ofi_documento_id>", methods=["GET", "POST"])
+@permission_required(MODULO, Permiso.MODIFICAR)
+def edit(ofi_documento_id):
+    """Editar Documento"""
+    # Validar que el usuario tenga el rol ESCRITOR o FIRMANTE, para que un ADMINISTRADOR no pueda editar
+    roles = current_user.get_roles()
+    if ROL_ESCRITOR not in roles and ROL_FIRMANTE not in roles:
+        flash("Se necesitan roles de ESCRITOR o FIRMANTE para editar un oficio", "warning")
+        return redirect(url_for("ofi_documentos.list_active"))
+    # Consultar el documento
+    ofi_documento_id = safe_uuid(ofi_documento_id)
+    if not ofi_documento_id:
+        flash("ID de oficio inválido", "warning")
+        return redirect(url_for("ofi_documentos.list_active"))
+    ofi_documento = OfiDocumento.query.get_or_404(ofi_documento_id)
+    # Obtener el formulario
+    form = OfiDocumentoForm()
+    if form.validate_on_submit():
+        es_valido = True
+        # Validar el folio, separar el número y el año
+        folio = str(form.folio.data).strip()
+        numero_folio = None
+        anio_folio = None
+        if folio != "":
+            try:
+                numero_folio, anio_folio = validar_folio(folio)
+            except ValueError as error:
+                flash(str(error), "warning")
+                es_valido = False
+        # Validar la fecha de vencimiento
+        vencimiento_fecha = form.vencimiento_fecha.data
+        if vencimiento_fecha is not None and vencimiento_fecha < datetime.now().date():
+            flash("La fecha de vencimiento no puede ser anterior a la fecha actual", "warning")
+            es_valido = False
+        # Si es válido, guardar los cambios
+        if es_valido:
+            ofi_documento.descripcion = safe_string(form.descripcion.data, save_enie=True)
+            ofi_documento.folio = folio
+            ofi_documento.folio_anio = anio_folio
+            ofi_documento.folio_num = numero_folio
+            ofi_documento.vencimiento_fecha = vencimiento_fecha
+            ofi_documento.contenido_md = str(form.contenido_md.data).strip()
+            ofi_documento.contenido_html = clean_html(str(form.contenido_html.data))
+            ofi_documento.contenido_sfdt = None
+            ofi_documento.save()
+            bitacora = Bitacora(
+                modulo=Modulo.query.filter_by(nombre=MODULO).first(),
+                usuario=current_user,
+                descripcion=safe_message(f"Editado Oficio Documento {ofi_documento.descripcion}"),
+                url=url_for("ofi_documentos.detail", ofi_documento_id=ofi_documento.id),
+            )
+            bitacora.save()
+            flash(bitacora.descripcion, "success")
+            # Si NO va a seguir editando, redirigir al detalle, de lo contrario seguir en la edición
+            if form.continuar.data != "1":
+                return redirect(bitacora.url)
+    # Cargar los datos en el formulario
+    form.descripcion.data = ofi_documento.descripcion
+    form.folio.data = ofi_documento.folio
+    form.vencimiento_fecha.data = ofi_documento.vencimiento_fecha
+    form.contenido_md.data = ofi_documento.contenido_md
+    form.contenido_html.data = ofi_documento.contenido_html
+    form.contenido_sfdt.data = ofi_documento.contenido_sfdt
+    # Si no tiene folio, sugerir el folio consultando el último documento de la autoridad del usuario
+    if ofi_documento.folio is None or ofi_documento.folio == "":
+        ultimo_documento = (
+            OfiDocumento.query.join(Usuario)
+            .filter(Usuario.autoridad_id == current_user.autoridad_id)
+            .filter(OfiDocumento.folio_anio == datetime.now().year)
+            .order_by(OfiDocumento.folio_num.desc())
+            .first()
+        )
+        if ultimo_documento:
+            folio = f"{ultimo_documento.usuario.autoridad.clave}-{ultimo_documento.folio_num + 1}/{datetime.now().year}"
+        else:
+            folio = f"{current_user.autoridad.clave}-1/{datetime.now().year}"  # Tal vez sea el primer oficio del año
+        form.folio.data = folio
+    # Entregar el formulario
+    return render_template(
+        "ofi_documentos/edit.jinja2",
+        form=form,
+        ofi_documento=ofi_documento,
+    )
+
+
+@ofi_documentos.route("/ofi_documentos/firmar/<ofi_documento_id>", methods=["GET", "POST"])
+@permission_required(MODULO, Permiso.MODIFICAR)
+def sign(ofi_documento_id):
+    """Firmar un Documento"""
+    # Validar que el usuario tenga el rol FIRMANTE
+    if ROL_FIRMANTE not in current_user.get_roles():
+        flash("Se necesita el rol de FIRMANTE para firmar un oficio", "warning")
+        return redirect(url_for("ofi_documentos.list_active"))
+    # Consultar el oficio
+    ofi_documento_id = safe_uuid(ofi_documento_id)
+    if not ofi_documento_id:
+        flash("ID de oficio inválido", "warning")
+        return redirect(url_for("ofi_documentos.list_active"))
+    ofi_documento = OfiDocumento.query.get_or_404(ofi_documento_id)
+    # Validar que la autoridad del oficio sea la misma que la del usuario
+    if ofi_documento.usuario.autoridad_id != current_user.autoridad_id:
+        flash("No tienes permiso para firmar este oficio, pertenece a otra autoridad", "warning")
+        return redirect(url_for("ofi_documentos.list_active"))
+    # Validar el estatus, que no esté eliminado
+    if ofi_documento.estatus != "A":
+        flash("El oficio está eliminado", "warning")
+        return redirect(url_for("ofi_documentos.detail", ofi_documento_id=ofi_documento.id))
+    # Validar que tenga el estado BORRADOR
+    if ofi_documento.estado != "BORRADOR":
+        flash("El oficio no está en estado BORRADOR, no se puede firmar", "warning")
+        return redirect(url_for("ofi_documentos.detail", ofi_documento_id=ofi_documento.id))
+    # Obtener el formuario
+    form = OfiDocumentoSignForm()
+    if form.validate_on_submit():
+        # Validar el tipo de firma
+        if form.tipo.data not in ["simple", "avanzada"]:
+            flash("Tipo de firma inválido, debe ser 'simple' o 'avanzada'", "warning")
+            return redirect(url_for("ofi_documentos.sign", ofi_documento_id=ofi_documento.id))
+        # Reemplazar los marcadores en el contenido HTML
+        actualizar_contenido_html = False
+        contenido_html = ofi_documento.contenido_html
+        if "[[REMITENTE NOMBRE]]" in contenido_html:
+            contenido_html = contenido_html.replace("[[REMITENTE NOMBRE]]", current_user.nombre)
+            actualizar_contenido_html = True
+        if "[[REMITENTE PUESTO]]" in contenido_html:
+            contenido_html = contenido_html.replace("[[REMITENTE PUESTO]]", current_user.puesto)
+            actualizar_contenido_html = True
+        if "[[REMITENTE AUTORIDAD]]" in contenido_html:
+            contenido_html = contenido_html.replace("[[REMITENTE AUTORIDAD]]", current_user.autoridad.descripcion)
+            actualizar_contenido_html = True
+        if actualizar_contenido_html:
+            ofi_documento.contenido_html = contenido_html
+        # Actualizar
+        ofi_documento.usuario = current_user  # El usuario que firma es el propietario del oficio
+        ofi_documento.descripcion = safe_string(form.descripcion.data, save_enie=True)
+        ofi_documento.estado = "FIRMADO"
+        ofi_documento.firma_simple = OfiDocumento.elaborar_hash(ofi_documento)
+        ofi_documento.firma_simple_tiempo = datetime.now()
+        ofi_documento.firma_simple_usuario_id = current_user.id
+        ofi_documento.save()
+        # Lanzar la tarea en el fondo para convertir a archivo PDF de acuerdo al tipo de firma
+        if form.tipo.data == "avanzada":
+            current_user.launch_task(
+                comando="ofi_documentos.tasks.lanzar_enviar_a_efirma",
+                mensaje="Convirtiendo a archivo PDF con firma electrónica avanzada...",
+                ofi_documento_id=str(ofi_documento.id),
+            )
+            descripcion = f"Oficio firmado con firma electrónica avanzada {ofi_documento.folio} {ofi_documento.descripcion}"
+        elif form.tipo.data == "simple":
+            current_user.launch_task(
+                comando="ofi_documentos.tasks.lanzar_convertir_a_pdf",
+                mensaje="Convirtiendo a archivo PDF con firma simple...",
+                ofi_documento_id=str(ofi_documento.id),
+            )
+            descripcion = f"Oficio firmado con firma simple {ofi_documento.folio} {ofi_documento.descripcion}"
+        # Si tiene destinatarios
+        cantidad = 0
+        for ofi_destinatario in ofi_documento.ofi_documentos_destinatarios:
+            if ofi_destinatario.estatus == "A":
+                cantidad += 1
+        if cantidad > 0:
+            # Lanzar la tarea en el fondo para enviar mensajes por correo electrónico a los destinatarios por SendGrid
+            current_user.launch_task(
+                comando="ofi_documentos.tasks.lanzar_enviar_a_sendgrid",
+                mensaje="Enviado mensajes por correo electrónico a los destinatarios por SendGrid...",
+                ofi_documento_id=str(ofi_documento.id),
+            )
+            ofi_documento.estado = "ENVIADO"
+            ofi_documento.enviado_tiempo = datetime.now()
+            ofi_documento.save()
+            descripcion = f"{descripcion} y enviado a {cantidad} destinatarios"
+        # Agregar registro a la bitácora
+        bitacora = Bitacora(
+            modulo=Modulo.query.filter_by(nombre=MODULO).first(),
+            usuario=current_user,
+            descripcion=safe_message(descripcion),
+            url=url_for("ofi_documentos.detail", ofi_documento_id=ofi_documento.id),
+        )
+        bitacora.save()
+        flash(bitacora.descripcion, "success")
+        return redirect(bitacora.url)
+    # Cargar los datos en el formulario
+    form.descripcion.data = ofi_documento.descripcion
+    form.folio.data = ofi_documento.folio  # Read only
+    form.vencimiento_fecha.data = ofi_documento.vencimiento_fecha  # Read only
+    # Entregar el formulario
+    return render_template(
+        "ofi_documentos/sign.jinja2",
+        form=form,
+        ofi_documento=ofi_documento,
+        tiene_firma_electronica_avanzada=(current_user.efirma_registro_id is not None and current_user.efirma_registro_id > 0),
+    )
+
+
+@ofi_documentos.route("/ofi_documentos/enviar/<ofi_documento_id>")
+@permission_required(MODULO, Permiso.MODIFICAR)
+def send(ofi_documento_id):
+    """Enviar un Ofi Documento"""
+    # Validar que el usuario tenga el rol ESCRITOR o FIRMANTE, para que un ADMINISTRADOR no pueda enviar
+    roles = current_user.get_roles()
+    if ROL_ESCRITOR not in roles and ROL_FIRMANTE not in roles:
+        flash("Se necesitan roles de ESCRITOR o FIRMANTE para enviar un oficio", "warning")
+        return redirect(url_for("ofi_documentos.list_active"))
+    # Consultar el oficio
+    ofi_documento_id = safe_uuid(ofi_documento_id)
+    if not ofi_documento_id:
+        flash("ID de oficio inválido", "warning")
+        return redirect(url_for("ofi_documentos.list_active"))
+    ofi_documento = OfiDocumento.query.get_or_404(ofi_documento_id)
+    # Validar que la autoridad del oficio sea la misma que la del usuario
+    if ofi_documento.usuario.autoridad_id != current_user.autoridad_id:
+        flash("No tienes permiso para enviar este oficio, pertenece a otra autoridad", "warning")
+        return redirect(url_for("ofi_documentos.list_active"))
+    # Validar el estatus, que no esté eliminado
+    if ofi_documento.estatus != "A":
+        flash("El oficio está eliminado", "warning")
+        return redirect(url_for("ofi_documentos.detail", ofi_documento_id=ofi_documento.id))
+    # Validar que tenga el estado FIRMADO
+    if ofi_documento.estado != "FIRMADO":
+        flash("El oficio no está en estado FIRMADO, no se puede enviar", "warning")
+        return redirect(url_for("ofi_documentos.detail", ofi_documento_id=ofi_documento.id))
+    # Validar que no esté archivado
+    if ofi_documento.esta_archivado:
+        flash("El oficio está archivado", "warning")
+        return redirect(url_for("ofi_documentos.detail", ofi_documento_id=ofi_documento.id))
+    # Validar que haya al menos un destinatario
+    cantidad_destinatarios = (
+        OfiDocumentoDestinatario.query.filter_by(ofi_documento_id=ofi_documento.id).filter_by(estatus="A").count()
+    )
+    if cantidad_destinatarios == 0:
+        flash("Este oficio NO tiene destinatarios, no se puede enviar, debe agregarlos", "danger")
+        return redirect(url_for("ofi_documentos.detail", ofi_documento_id=ofi_documento.id))
+    # Actualizar el estado a ENVIADO
+    ofi_documento.estado = "ENVIADO"
+    ofi_documento.enviado_tiempo = datetime.now()
+    ofi_documento.save()
+    # Lanzar la tarea en el fondo para enviar mensajes por correo electrónico a los destinatarios por SendGrid
+    current_user.launch_task(
+        comando="ofi_documentos.tasks.lanzar_enviar_a_sendgrid",
+        mensaje="Enviado mensajes por correo electrónico a los destinatarios por SendGrid...",
+        ofi_documento_id=str(ofi_documento.id),
+    )
+    # Agregar registro a la bitácora
+    bitacora = Bitacora(
+        modulo=Modulo.query.filter_by(nombre=MODULO).first(),
+        usuario=current_user,
+        descripcion=safe_message(f"Enviado Ofi Documento {ofi_documento.descripcion}"),
+        url=url_for("ofi_documentos.detail", ofi_documento_id=ofi_documento.id),
+    )
+    bitacora.save()
+    flash(bitacora.descripcion, "success")
+    # Redirigir al detalle del oficio
+    return redirect(url_for("ofi_documentos.detail", ofi_documento_id=ofi_documento.id))
+
+
+@ofi_documentos.route("/ofi_documentos/cancelar/<ofi_documento_id>")
+@permission_required(MODULO, Permiso.MODIFICAR)
+def cancel(ofi_documento_id):
+    """Cancelar Documento"""
+    # Validar que el usuario tenga el rol ESCRITOR o FIRMANTE, para que un ADMINISTRADOR no pueda descancelar
+    roles = current_user.get_roles()
+    if ROL_ESCRITOR not in roles and ROL_FIRMANTE not in roles:
+        flash("Se necesitan roles de ESCRITOR o FIRMANTE para descancelar un oficio", "warning")
+        return redirect(url_for("ofi_documentos.list_active"))
+    # Consultar el oficio
+    ofi_documento_id = safe_uuid(ofi_documento_id)
+    if not ofi_documento_id:
+        flash("ID de oficio inválido", "warning")
+        return redirect(url_for("ofi_documentos.list_active"))
+    ofi_documento = OfiDocumento.query.get_or_404(ofi_documento_id)
+    # Validar que la autoridad del oficio sea la misma que la del usuario
+    if ofi_documento.usuario.autoridad_id != current_user.autoridad_id:
+        flash("No tienes permiso para cancelar este oficio, pertenece a otra autoridad", "warning")
+        return redirect(url_for("ofi_documentos.list_active"))
+    # Validar que no esté archivado
+    if ofi_documento.esta_archivado:
+        flash("El oficio ya está archivado", "warning")
+        return redirect(url_for("ofi_documentos.detail", ofi_documento_id=ofi_documento.id))
+    # Validar que SI esté cancelado
+    if ofi_documento.esta_cancelado is True:
+        flash("El oficio ya está caneclado", "warning")
+        return redirect(url_for("ofi_documentos.detail", ofi_documento_id=ofi_documento.id))
+    # Actualizar esta_cancelado a verdadero
+    ofi_documento.esta_cancelado = True
+    # Si el oficio tiene el estado BORRADOR, entonces se limpia el folio
+    if ofi_documento.estado == "BORRADOR":
+        ofi_documento.folio = None
+        ofi_documento.folio_anio = None
+        ofi_documento.folio_num = None
+    ofi_documento.save()
+    # Agregar registro a la bitácora
+    bitacora = Bitacora(
+        modulo=Modulo.query.filter_by(nombre=MODULO).first(),
+        usuario=current_user,
+        descripcion=safe_message(f"Cancelado Oficio Documento {ofi_documento.descripcion}"),
+        url=url_for("ofi_documentos.detail", ofi_documento_id=ofi_documento.id),
+    )
+    bitacora.save()
+    flash(bitacora.descripcion, "success")
+    # Redirigir al detalle del oficio
+    return redirect(url_for("ofi_documentos.detail", ofi_documento_id=ofi_documento.id))
+
+
+@ofi_documentos.route("/ofi_documentos/descancelar/<ofi_documento_id>")
+@permission_required(MODULO, Permiso.MODIFICAR)
+def uncancel(ofi_documento_id):
+    """Descancelar Documento"""
+    # Validar que el usuario tenga el rol ESCRITOR o FIRMANTE, para que un ADMINISTRADOR no pueda descancelar
+    roles = current_user.get_roles()
+    if ROL_ESCRITOR not in roles and ROL_FIRMANTE not in roles:
+        flash("Se necesitan roles de ESCRITOR o FIRMANTE para descancelar un oficio", "warning")
+        return redirect(url_for("ofi_documentos.list_active"))
+    # Consultar el oficio
+    ofi_documento_id = safe_uuid(ofi_documento_id)
+    if not ofi_documento_id:
+        flash("ID de oficio inválido", "warning")
+        return redirect(url_for("ofi_documentos.list_active"))
+    ofi_documento = OfiDocumento.query.get_or_404(ofi_documento_id)
+    # Validar que la autoridad del oficio sea la misma que la del usuario
+    if ofi_documento.usuario.autoridad_id != current_user.autoridad_id:
+        flash("No tienes permiso para descancelar este oficio, pertenece a otra autoridad", "warning")
+        return redirect(url_for("ofi_documentos.detail", ofi_documento_id=ofi_documento.id))
+    # Validar que no esté archivado
+    if ofi_documento.esta_archivado:
+        flash("El oficio ya está archivado", "warning")
+        return redirect(url_for("ofi_documentos.detail", ofi_documento_id=ofi_documento.id))
+    # Validar que NO esté cancelado
+    if ofi_documento.esta_cancelado is False:
+        flash("El oficio no está cancelado", "warning")
+        return redirect(url_for("ofi_documentos.detail", ofi_documento_id=ofi_documento.id))
+    # Actualizar esta_cancelado a falso
+    ofi_documento.esta_cancelado = False
+    ofi_documento.save()
+    bitacora = Bitacora(
+        modulo=Modulo.query.filter_by(nombre=MODULO).first(),
+        usuario=current_user,
+        descripcion=safe_message(f"Descancelado Oficio Documento {ofi_documento.descripcion}"),
+        url=url_for("ofi_documentos.detail", ofi_documento_id=ofi_documento.id),
+    )
+    bitacora.save()
+    flash(bitacora.descripcion, "success")
+    # Redirigir al detalle del oficio
+    return redirect(url_for("ofi_documentos.detail", ofi_documento_id=ofi_documento.id))
+
+
+@ofi_documentos.route("/ofi_documentos/archivar/<ofi_documento_id>")
+@permission_required(MODULO, Permiso.MODIFICAR)
+def archive(ofi_documento_id):
+    """Archivar Ofi Documento"""
+    # Validar que el usuario tenga el rol ESCRITOR o FIRMANTE, para que un ADMINISTRADOR no pueda cancelar
+    roles = current_user.get_roles()
+    if ROL_ESCRITOR not in roles and ROL_FIRMANTE not in roles:
+        flash("Se necesitan roles de ESCRITOR o FIRMANTE para archivar un oficio", "warning")
+        return redirect(url_for("ofi_documentos.list_active"))
+    # Consultar el oficio
+    ofi_documento_id = safe_uuid(ofi_documento_id)
+    if not ofi_documento_id:
+        flash("ID de oficio inválido", "warning")
+        return redirect(url_for("ofi_documentos.list_active"))
+    ofi_documento = OfiDocumento.query.get_or_404(ofi_documento_id)
+    # Validar que la autoridad del oficio sea la misma que la del usuario
+    if ofi_documento.usuario.autoridad_id != current_user.autoridad_id:
+        flash("No tienes permiso para archivar este oficio, pertenece a otra autoridad", "warning")
+        return redirect(url_for("ofi_documentos.list_active"))
+    # Validar que no esté archivado
+    if ofi_documento.esta_archivado is True:
+        flash("El oficio ya está archivado", "warning")
+        return redirect(url_for("ofi_documentos.detail", ofi_documento_id=ofi_documento.id))
+    # Validar que SI esté cancelado
+    if ofi_documento.esta_cancelado is True:
+        flash("El oficio ya está caneclado", "warning")
+        return redirect(url_for("ofi_documentos.detail", ofi_documento_id=ofi_documento.id))
+    # Actualizar esta_archivado a verdadero
+    ofi_documento.esta_archivado = True
+    ofi_documento.save()
+    # Agregar registro a la bitácora
+    bitacora = Bitacora(
+        modulo=Modulo.query.filter_by(nombre=MODULO).first(),
+        usuario=current_user,
+        descripcion=safe_message(f"Archivando Oficio Documento {ofi_documento.descripcion}"),
+        url=url_for("ofi_documentos.detail", ofi_documento_id=ofi_documento.id),
+    )
+    bitacora.save()
+    flash(bitacora.descripcion, "success")
+    # Redirigir al detalle del oficio
+    return redirect(url_for("ofi_documentos.detail", ofi_documento_id=ofi_documento.id))
+
+
+@ofi_documentos.route("/ofi_documentos/desarchivar/<ofi_documento_id>")
+@permission_required(MODULO, Permiso.MODIFICAR)
+def unarchive(ofi_documento_id):
+    """Desarchivar Ofi Documento"""
+    # Validar que el usuario tenga el rol ESCRITOR o FIRMANTE, para que un ADMINISTRADOR no pueda desarchivar
+    roles = current_user.get_roles()
+    if ROL_ESCRITOR not in roles and ROL_FIRMANTE not in roles:
+        flash("Se necesitan roles de ESCRITOR o FIRMANTE para desarchivar un oficio", "warning")
+        return redirect(url_for("ofi_documentos.list_active"))
+    # Consultar el oficio
+    ofi_documento_id = safe_uuid(ofi_documento_id)
+    if not ofi_documento_id:
+        flash("ID de oficio inválido", "warning")
+        return redirect(url_for("ofi_documentos.list_active"))
+    ofi_documento = OfiDocumento.query.get_or_404(ofi_documento_id)
+    # Validar que la autoridad del oficio sea la misma que la del usuario
+    if ofi_documento.usuario.autoridad_id != current_user.autoridad_id:
+        flash("No tienes permiso para desarchivar este oficio, pertenece a otra autoridad", "warning")
+        return redirect(url_for("ofi_documentos.detail", ofi_documento_id=ofi_documento.id))
+    # Validar que no esté archivado
+    if ofi_documento.esta_archivado is False:
+        flash("El oficio NO está archivado", "warning")
+        return redirect(url_for("ofi_documentos.detail", ofi_documento_id=ofi_documento.id))
+    # Validar que está cancelado
+    if ofi_documento.esta_cancelado:
+        flash("El oficio está cancelado", "warning")
+        return redirect(url_for("ofi_documentos.detail", ofi_documento_id=ofi_documento.id))
+    # Actualizar esta_archivado a falso
+    ofi_documento.esta_archivado = False
+    ofi_documento.save()
+    bitacora = Bitacora(
+        modulo=Modulo.query.filter_by(nombre=MODULO).first(),
+        usuario=current_user,
+        descripcion=safe_message(f"Desarchivar Oficio Documento {ofi_documento.descripcion}"),
+        url=url_for("ofi_documentos.detail", ofi_documento_id=ofi_documento.id),
+    )
+    bitacora.save()
+    flash(bitacora.descripcion, "success")
+    # Redirigir al detalle del oficio
+    return redirect(url_for("ofi_documentos.detail", ofi_documento_id=ofi_documento.id))
+
+
+@ofi_documentos.route("/ofi_documentos/obtener_archivo_pdf_url_json/<ofi_documento_id>", methods=["GET", "POST"])
+def get_file_pdf_url_json(ofi_documento_id):
+    """Obtener el URL del archivo PDF en formato JSON, para usar en el botón de descarga"""
+    # Consultar el oficio
+    ofi_documento_id = safe_uuid(ofi_documento_id)
+    if not ofi_documento_id:
+        return {
+            "success": False,
+            "message": "ID de oficio inválido",
+        }
+    ofi_documento = OfiDocumento.query.get_or_404(ofi_documento_id)
+    # Validar el estatus, que no esté eliminado
+    if ofi_documento.estatus != "A":
+        return {
+            "success": False,
+            "message": "El oficio está eliminado",
+        }
+    # Validar que tenga el estado FIRMADO o ENVIADO
+    if ofi_documento.estado not in ["FIRMADO", "ENVIADO"]:
+        return {
+            "success": False,
+            "message": "No está en estado FIRMADO o ENVIADO",
+        }
+    # Validar que tenga archivo_pdf_url
+    if ofi_documento.archivo_pdf_url is None or ofi_documento.archivo_pdf_url == "":
+        return {
+            "success": False,
+            "message": "Falló la creación del archivo PDF",
+        }
+    # Entregar el URL del archivo PDF
+    return {
+        "success": True,
+        "message": "Descargar Archivo PDF",
+        "url": url_for("ofi_documentos.download_file_pdf", ofi_documento_id=ofi_documento.id),
+    }
+
+
+@ofi_documentos.route("/ofi_documentos/descargar_archivo_pdf/<ofi_documento_id>")
+def download_file_pdf(ofi_documento_id):
+    """Descargar archivo PDF"""
+    # Consultar el oficio
+    ofi_documento_id = safe_uuid(ofi_documento_id)
+    if not ofi_documento_id:
+        flash("ID de oficio inválido", "warning")
+        return redirect(url_for("ofi_documentos.list_active"))
+    ofi_documento = OfiDocumento.query.get_or_404(ofi_documento_id)
+    # Validar el estatus, que no esté eliminado
+    if ofi_documento.estatus != "A":
+        flash("El oficio está eliminado", "warning")
+        return redirect(url_for("ofi_documentos.detail", ofi_documento_id=ofi_documento.id))
+    # Validar que tenga el estado FIRMADO o ENVIADO
+    if ofi_documento.estado not in ["FIRMADO", "ENVIADO"]:
+        flash("El oficio no está en estado FIRMADO o ENVIADO, no se puede descargar", "warning")
+        return redirect(url_for("ofi_documentos.detail", ofi_documento_id=ofi_documento.id))
+    # Validar que tenga archivo_pdf_url
+    if ofi_documento.archivo_pdf_url is None or ofi_documento.archivo_pdf_url == "":
+        flash("El oficio no tiene archivo PDF, no se puede descargar", "warning")
+        return redirect(url_for("ofi_documentos.detail", ofi_documento_id=ofi_documento.id))
+    # Obtener el contenido del archivo
+    try:
+        archivo = get_file_from_gcs(
+            bucket_name=current_app.config["CLOUD_STORAGE_DEPOSITO_OFICIOS"],
+            blob_name=get_blob_name_from_url(ofi_documento.archivo_pdf_url),
+        )
+    except (MyBucketNotFoundError, MyFileNotFoundError, MyNotValidParamError) as error:
+        raise NotFound("No se encontró el archivo.")
+    # Entregar el archivo PDF
+    response = make_response(archivo)
+    response.headers["Content-Type"] = "application/pdf"
+    response.headers["Content-Disposition"] = f"attachment; filename={ofi_documento.folio} {ofi_documento.descripcion}.pdf"
+    return response
 
 
 @ofi_documentos.route("/ofi_documentos/eliminar/<ofi_documento_id>")

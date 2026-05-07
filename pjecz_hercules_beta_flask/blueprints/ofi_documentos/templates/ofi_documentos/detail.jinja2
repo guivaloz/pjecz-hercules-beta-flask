@@ -37,6 +37,7 @@
 {% endblock %}
 
 {% block content %}
+    {# Detalle #}
     {% call detail.card(estatus=ofi_documento.estatus) %}
         {{ detail.label_value('Descripción', ofi_documento.descripcion) }}
         {{ detail.label_value('Folio', ofi_documento.folio) }}
@@ -62,6 +63,40 @@
             </div>
         {% endif %}
         {# Termina Contenido HTML #}
+        {# Inician Botones #}
+        <div class="row">
+            <div class="col-md-4">
+                {% if mostrar_boton_editar %}
+                    {{ detail.button_md('Editar', url_for('ofi_documentos.edit', ofi_documento_id=ofi_documento.id), 'mdi mdi-file-document-edit-outline', color_class='btn-warning') }}
+                {% endif %}
+            </div>
+            <div class="col-md-4">
+                {% if mostrar_boton_firmar %}
+                    {{ detail.button_md('Firmar', url_for('ofi_documentos.sign', ofi_documento_id=ofi_documento.id), 'mdi mdi-file-sign', color_class='btn-success') }}
+                {% elif mostrar_boton_enviar %}
+                    {{ modals.button_modal_md('Enviar', url_for('ofi_documentos.send', ofi_documento_id=ofi_documento.id), "Enviar", "mdi mdi-send-outline", "¿Desea enviar el oficio? Esta acción no puede ser deshecha.", "btn-primary") }}
+                {% endif %}
+            </div>
+            <div class="col-md-2">
+                {% if mostrar_boton_archivar_desarchivar %}
+                    {% if ofi_documento.esta_archivado == false %}
+                        {{ modals.button_modal_md('Archivar', url_for('ofi_documentos.archive', ofi_documento_id=ofi_documento.id), "Archivar", "mdi mdi-archive-outline", "¿Desea archivar el oficio?", "btn-secondary") }}
+                    {% else %}
+                        {{ modals.button_modal_md('Desarchivar', url_for('ofi_documentos.unarchive', ofi_documento_id=ofi_documento.id), "Desarchivar", "mdi mdi-archive-off-outline", "¿Desea desarchivar el oficio?", "btn-outline-secondary") }}
+                    {% endif %}
+                {% endif %}
+            </div>
+            <div class="col-md-2">
+                {% if mostrar_boton_cancelar_descancelar %}
+                    {% if ofi_documento.esta_cancelado == false %}
+                        {{ modals.button_modal_md('Cancelar', url_for('ofi_documentos.cancel', ofi_documento_id=ofi_documento.id), "Cancelar", "mdi mdi-cancel", "¿Desea cancelar el oficio?", "btn-danger") }}
+                    {% else %}
+                        {{ modals.button_modal_md('Descancelar', url_for('ofi_documentos.uncancel', ofi_documento_id=ofi_documento.id), "Descancelar", "mdi mdi-file-undo-outline", "¿Desea descancelar el oficio?",  "btn-outline-danger") }}
+                    {% endif %}
+                {% endif %}
+            </div>
+        </div>
+        {# Termina Botones #}
     {% endcall %}
     {# DataTable Adjuntos #}
     {% call detail.card("Archivos Adjuntos") %}
@@ -235,4 +270,16 @@
         };
     </script>
     <script src="{{ url_for('static', filename='js/datatables-delete-recover.js') }}"></script>
+    <!-- Modales -->
+    {% if mostrar_boton_enviar %}
+        {{ modals.custom_javascript("Enviar", "", "Enviar") }}
+    {% endif %}
+    {% if mostrar_boton_archivar_desarchivar %}
+        {{ modals.custom_javascript("Archivar", "", "Archivar") }}
+        {{ modals.custom_javascript("Desarchivar", "", "Desarchivar") }}
+    {% endif %}
+    {% if mostrar_boton_cancelar_descancelar %}
+        {{ modals.custom_javascript("Confirmar", "", "Cancelar") }}
+        {{ modals.custom_javascript("Descancelar", "", "Descancelar") }}
+    {% endif %}
 {% endblock %}
