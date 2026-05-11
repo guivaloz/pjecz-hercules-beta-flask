@@ -7,14 +7,15 @@ from rich.table import Table
 from sqlalchemy import select
 from typer import Exit, Option, Typer
 
-from cli.lib.database import get_database
-from pjecz_hercules_beta_flask.app import app, database
+from pjecz_hercules_beta_flask.app import app
 from pjecz_hercules_beta_flask.blueprints.autoridades.models import Autoridad
 from pjecz_hercules_beta_flask.blueprints.ofi_documentos.models import OfiDocumento
 from pjecz_hercules_beta_flask.blueprints.roles.models import Rol
 from pjecz_hercules_beta_flask.blueprints.usuarios.models import Usuario
 from pjecz_hercules_beta_flask.blueprints.usuarios_roles.models import UsuarioRol
+from pjecz_hercules_beta_flask.config.extensions import database
 
+# Inicializar la aplicación
 app.app_context().push()
 
 ofi_documentos = Typer()
