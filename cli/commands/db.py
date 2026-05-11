@@ -665,6 +665,447 @@ def alimentar_usuarios_roles():
     console.print(f"[green]{contador} usuarios-roles alimentados.")
 
 
+def respaldar_autoridades():
+    """Respaldar Autoridades"""
+    console = Console()
+    ruta = Path(AUTORIDADES_CSV)
+    if ruta.exists():
+        console.print(f"[red]ERROR: {AUTORIDADES_CSV} ya existe, no voy a sobreescribirlo.")
+        sys.exit(1)
+    console.print("Respaldando autoridades...")
+    contador = 0
+    with open(ruta, "w", encoding="utf8") as puntero:
+        respaldo = csv.writer(puntero)
+        respaldo.writerow(
+            [
+                "autoridad_id",
+                "distrito_id",
+                "materia_id",
+                "municipio_id",
+                "clave",
+                "descripcion",
+                "descripcion_corta",
+                "es_archivo_solicitante",
+                "es_cemasc",
+                "es_defensoria",
+                "es_extinto",
+                "es_jurisdiccional",
+                "es_notaria",
+                "es_organo_especializado",
+                "es_revisor_escrituras",
+                "organo_jurisdiccional",
+                "directorio_edictos",
+                "directorio_glosas",
+                "directorio_listas_de_acuerdos",
+                "directorio_sentencias",
+                "audiencia_categoria",
+                "limite_dias_listas_de_acuerdos",
+                "datawarehouse_id",
+                "sede",
+                "estatus",
+            ]
+        )
+        for autoridad in Autoridad.query.order_by(Autoridad.id).all():
+            respaldo.writerow(
+                [
+                    autoridad.id,
+                    autoridad.distrito_id,
+                    autoridad.materia_id,
+                    autoridad.municipio_id,
+                    autoridad.clave,
+                    autoridad.descripcion,
+                    autoridad.descripcion_corta,
+                    int(autoridad.es_archivo_solicitante),
+                    int(autoridad.es_cemasc),
+                    int(autoridad.es_defensoria),
+                    int(autoridad.es_extinto),
+                    int(autoridad.es_jurisdiccional),
+                    int(autoridad.es_notaria),
+                    int(autoridad.es_organo_especializado),
+                    int(autoridad.es_revisor_escrituras),
+                    autoridad.organo_jurisdiccional,
+                    autoridad.directorio_edictos,
+                    autoridad.directorio_glosas,
+                    autoridad.directorio_listas_de_acuerdos,
+                    autoridad.directorio_sentencias,
+                    autoridad.audiencia_categoria,
+                    autoridad.limite_dias_listas_de_acuerdos,
+                    autoridad.datawarehouse_id,
+                    autoridad.sede,
+                    autoridad.estatus,
+                ]
+            )
+            contador += 1
+    console.print(f"[green]{contador} autoridades respaldadas.")
+
+
+def respaldar_distritos():
+    """Respaldar Distritos"""
+    console = Console()
+    ruta = Path(DISTRITOS_CSV)
+    if ruta.exists():
+        console.print(f"[red]ERROR: {DISTRITOS_CSV} ya existe, no voy a sobreescribirlo.")
+        sys.exit(1)
+    console.print("Respaldando distritos...")
+    contador = 0
+    with open(ruta, "w", encoding="utf8") as puntero:
+        respaldo = csv.writer(puntero)
+        respaldo.writerow(
+            [
+                "distrito_id",
+                "clave",
+                "nombre",
+                "nombre_corto",
+                "es_distrito_judicial",
+                "es_distrito",
+                "es_jurisdiccional",
+                "estatus",
+            ]
+        )
+        for distrito in Distrito.query.order_by(Distrito.id).all():
+            respaldo.writerow(
+                [
+                    distrito.id,
+                    distrito.clave,
+                    distrito.nombre,
+                    distrito.nombre_corto,
+                    int(distrito.es_distrito_judicial),
+                    int(distrito.es_distrito),
+                    int(distrito.es_jurisdiccional),
+                    distrito.estatus,
+                ]
+            )
+            contador += 1
+    console.print(f"[green]{contador} distritos respaldados.")
+
+
+def respaldar_domicilios():
+    """Respaldar Domicilios"""
+    console = Console()
+    ruta = Path(DOMICILIOS_CSV)
+    if ruta.exists():
+        console.print(f"[red]ERROR: {DOMICILIOS_CSV} ya existe, no voy a sobreescribirlo.")
+        sys.exit(1)
+    console.print("Respaldando domicilios...")
+    contador = 0
+    with open(ruta, "w", encoding="utf8") as puntero:
+        respaldo = csv.writer(puntero)
+        respaldo.writerow(
+            [
+                "domicilio_id",
+                "distrito_clave",
+                "edificio",
+                "estado",
+                "municipio",
+                "calle",
+                "num_ext",
+                "num_int",
+                "colonia",
+                "cp",
+                "estatus",
+            ]
+        )
+        for domicilio in Domicilio.query.order_by(Domicilio.id).all():
+            respaldo.writerow(
+                [
+                    domicilio.id,
+                    domicilio.distrito.clave,
+                    domicilio.edificio,
+                    domicilio.estado,
+                    domicilio.municipio,
+                    domicilio.calle,
+                    domicilio.num_ext,
+                    domicilio.num_int,
+                    domicilio.colonia,
+                    domicilio.cp,
+                    domicilio.estatus,
+                ]
+            )
+            contador += 1
+    console.print(f"[green]{contador} domicilios respaldados.")
+
+
+def respaldar_estados():
+    """Respaldar Estados"""
+    console = Console()
+    ruta = Path(ESTADOS_CSV)
+    if ruta.exists():
+        console.print(f"[red]ERROR: {ESTADOS_CSV} ya existe, no voy a sobreescribirlo.")
+        sys.exit(1)
+    console.print("Respaldando estados...")
+    contador = 0
+    with open(ruta, "w", encoding="utf8") as puntero:
+        respaldo = csv.writer(puntero)
+        respaldo.writerow(
+            [
+                "estado_id",
+                "clave",
+                "nombre",
+                "estatus",
+            ]
+        )
+        for estado in Estado.query.order_by(Estado.id).all():
+            respaldo.writerow(
+                [
+                    estado.id,
+                    estado.clave,
+                    estado.nombre,
+                    estado.estatus,
+                ]
+            )
+            contador += 1
+    console.print(f"[green]{contador} estados respaldados.")
+
+
+def respaldar_materias():
+    """Respaldar Materias"""
+    console = Console()
+    ruta = Path(MATERIAS_CSV)
+    if ruta.exists():
+        console.print(f"[red]ERROR: {MATERIAS_CSV} ya existe, no voy a sobreescribirlo.")
+        sys.exit(1)
+    console.print("Respaldando materias...")
+    contador = 0
+    with open(ruta, "w", encoding="utf8") as puntero:
+        respaldo = csv.writer(puntero)
+        respaldo.writerow(
+            [
+                "materia_id",
+                "clave",
+                "nombre",
+                "descripcion",
+                "en_sentencias",
+                "estatus",
+            ]
+        )
+        for materia in Materia.query.order_by(Materia.id).all():
+            respaldo.writerow(
+                [
+                    materia.id,
+                    materia.clave,
+                    materia.nombre,
+                    materia.descripcion,
+                    int(materia.en_sentencias),
+                    materia.estatus,
+                ]
+            )
+            contador += 1
+    console.print(f"[green]{contador} materias respaldadas.")
+
+
+def respaldar_modulos():
+    """Respaldar Modulos"""
+    console = Console()
+    ruta = Path(MODULOS_CSV)
+    if ruta.exists():
+        console.print(f"[red]ERROR: {MODULOS_CSV} ya existe, no voy a sobreescribirlo.")
+        sys.exit(1)
+    console.print("Respaldando modulos...")
+    contador = 0
+    with open(ruta, "w", encoding="utf8") as puntero:
+        respaldo = csv.writer(puntero)
+        respaldo.writerow(
+            [
+                "modulo_id",
+                "nombre",
+                "nombre_corto",
+                "icono",
+                "ruta",
+                "en_navegacion",
+                "en_plataforma_carina",
+                "en_plataforma_hercules",
+                "en_plataforma_web",
+                "en_portal_notarias",
+                "estatus",
+            ]
+        )
+        for modulo in Modulo.query.order_by(Modulo.id).all():
+            respaldo.writerow(
+                [
+                    modulo.id,
+                    modulo.nombre,
+                    modulo.nombre_corto,
+                    modulo.icono,
+                    modulo.ruta,
+                    int(modulo.en_navegacion),
+                    int(modulo.en_plataforma_carina),
+                    int(modulo.en_plataforma_hercules),
+                    int(modulo.en_plataforma_web),
+                    int(modulo.en_portal_notarias),
+                    modulo.estatus,
+                ]
+            )
+            contador += 1
+    console.print(f"[green]{contador} modulos respaldados.")
+
+
+def respaldar_municipios():
+    """Respaldar Municipios"""
+    console = Console()
+    ruta = Path(MUNICIPIOS_CSV)
+    if ruta.exists():
+        console.print(f"[red]ERROR: {MUNICIPIOS_CSV} ya existe, no voy a sobreescribirlo.")
+        sys.exit(1)
+    console.print("Respaldando municipios...")
+    contador = 0
+    with open(ruta, "w", encoding="utf8") as puntero:
+        respaldo = csv.writer(puntero)
+        respaldo.writerow(
+            [
+                "municipio_id",
+                "estado_id",
+                "clave",
+                "nombre",
+                "estatus",
+            ]
+        )
+        for municipio in Municipio.query.order_by(Municipio.id).all():
+            respaldo.writerow(
+                [
+                    municipio.id,
+                    municipio.estado_id,
+                    municipio.clave,
+                    municipio.nombre,
+                    municipio.estatus,
+                ]
+            )
+            contador += 1
+    console.print(f"[green]{contador} municipios respaldados.")
+
+
+def respaldar_oficinas():
+    """Respaldar Oficinas"""
+    console = Console()
+    ruta = Path(OFICINAS_CSV)
+    if ruta.exists():
+        console.print(f"[red]ERROR: {OFICINAS_CSV} ya existe, no voy a sobreescribirlo.")
+        sys.exit(1)
+    console.print("Respaldando oficinas...")
+    contador = 0
+    with open(ruta, "w", encoding="utf8") as puntero:
+        respaldo = csv.writer(puntero)
+        respaldo.writerow(
+            [
+                "oficina_id",
+                "clave",
+                "domicilio_id",
+                "distrito_id",
+                "descripcion",
+                "descripcion_corta",
+                "es_jurisdiccional",
+                "apertura",
+                "cierre",
+                "limite_personas",
+                "telefono",
+                "extension",
+                "estatus",
+            ]
+        )
+        for oficina in Oficina.query.order_by(Oficina.id).all():
+            respaldo.writerow(
+                [
+                    oficina.id,
+                    oficina.clave,
+                    oficina.domicilio_id,
+                    oficina.distrito_id,
+                    oficina.descripcion,
+                    oficina.descripcion_corta,
+                    int(oficina.es_jurisdiccional),
+                    oficina.apertura,
+                    oficina.cierre,
+                    oficina.limite_personas,
+                    oficina.telefono,
+                    oficina.extension,
+                    oficina.estatus,
+                ]
+            )
+            contador += 1
+    console.print(f"[green]{contador} oficinas respaldadas.")
+
+
+def respaldar_roles_permisos():
+    """Respaldar Roles-Permisos"""
+    console = Console()
+    ruta = Path(ROLES_CSV)
+    if ruta.exists():
+        console.print(f"[red]ERROR: {ROLES_CSV} ya existe, no voy a sobreescribirlo.")
+        sys.exit(1)
+    modulos = Modulo.query.order_by(Modulo.id).all()
+    console.print("Respaldando roles-permisos...")
+    contador = 0
+    with open(ruta, "w", encoding="utf8") as puntero:
+        encabezados = ["rol_id", "nombre"]
+        for modulo in modulos:
+            encabezados.append(modulo.nombre.lower())
+        encabezados.append("estatus")
+        respaldo = csv.writer(puntero)
+        respaldo.writerow(encabezados)
+        for rol in Rol.query.order_by(Rol.id).all():
+            renglon = [rol.id, rol.nombre]
+            for modulo in modulos:
+                permiso_str = ""
+                for permiso in rol.permisos:
+                    if permiso.modulo_id == modulo.id and permiso.estatus == "A":
+                        permiso_str = str(permiso.nivel)
+                renglon.append(permiso_str)
+            renglon.append(rol.estatus)
+            respaldo.writerow(renglon)
+            contador += 1
+    console.print(f"[green]{contador} roles-permisos respaldados.")
+
+
+def respaldar_usuarios_roles():
+    """Respaldar Usuarios-Roles"""
+    console = Console()
+    ruta = Path(USUARIOS_ROLES_CSV)
+    if ruta.exists():
+        console.print(f"[red]ERROR: {USUARIOS_ROLES_CSV} ya existe, no voy a sobreescribirlo.")
+        sys.exit(1)
+    console.print("Respaldando usuarios-roles...")
+    contador = 0
+    with open(ruta, "w", encoding="utf8") as puntero:
+        respaldo = csv.writer(puntero)
+        respaldo.writerow(
+            [
+                "usuario_id",
+                "autoridad_clave",
+                "oficina_id",
+                "email",
+                "nombres",
+                "apellido_paterno",
+                "apellido_materno",
+                "curp",
+                "puesto",
+                "roles",
+                "workspace",
+                "estatus",
+            ]
+        )
+        for usuario in Usuario.query.order_by(Usuario.id).all():
+            roles_list = []
+            for usuario_rol in usuario.usuarios_roles:
+                if usuario_rol.estatus == "A":
+                    roles_list.append(usuario_rol.rol.nombre)
+            respaldo.writerow(
+                [
+                    usuario.id,
+                    usuario.autoridad.clave,
+                    usuario.oficina_id,
+                    usuario.email,
+                    usuario.nombres,
+                    usuario.apellido_paterno,
+                    usuario.apellido_materno,
+                    usuario.curp,
+                    usuario.puesto,
+                    ",".join(roles_list),
+                    usuario.workspace,
+                    usuario.estatus,
+                ]
+            )
+            contador += 1
+    console.print(f"[green]{contador} usuarios-roles respaldados.")
+
+
 @db.command()
 def inicializar():
     """Inicializar la base de datos"""
@@ -704,3 +1145,18 @@ def reiniciar():
     """Reiniciar la base de datos (inicializar y alimentar)"""
     inicializar()
     alimientar()
+
+
+@db.command()
+def respaldar():
+    """Respaldar la base de datos en archivos CSV"""
+    respaldar_autoridades()
+    respaldar_distritos()
+    respaldar_domicilios()
+    respaldar_estados()
+    respaldar_materias()
+    respaldar_modulos()
+    respaldar_municipios()
+    respaldar_oficinas()
+    respaldar_roles_permisos()
+    respaldar_usuarios_roles()
