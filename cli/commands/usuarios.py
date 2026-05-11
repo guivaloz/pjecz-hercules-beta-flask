@@ -18,6 +18,7 @@ load_dotenv()
 FERNET_KEY = os.getenv("FERNET_KEY", "")
 SALT = os.getenv("SALT", "")
 
+# Inicializar la aplicación
 app.app_context().push()
 
 usuarios = Typer()

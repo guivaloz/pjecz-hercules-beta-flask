@@ -1,0 +1,49 @@
+{% extends 'layouts/base.jinja2' %}
+
+{% block custom_head %}{% endblock %}
+
+{% block main %}
+    <div class="container-fluid">
+        <div id="work-recipients">
+            <p class="mt-2"><strong>Destinatarios</strong></p>
+            <ul class="list-group" id="work-recipients-list"></ul>
+        </div>
+    </div>
+{% endblock %}
+
+{% block custom_javascript %}
+    <script>
+        // Cuando se haya cargado
+        $(document).ready(function() {
+            // Obtener los elementos donde se mostrarán los destinatarios
+            const workRecipients = document.getElementById('work-recipients');
+            const workRecipientsList = document.getElementById('work-recipients-list');
+            // Consultar /ofi_documentos_destinatarios/fullscreen_json para obtener los datos
+            fetch('/ofi_documentos_destinatarios/fullscreen_json/{{ ofi_documento_id }}')
+                .then(response => response.json())
+                .then(data => {
+                    // Si success es verdadero, crear la lista de destinatarios
+                    if (data.success) {
+                        // Crear un elemento de lista para cada destinatario
+                        data.data.forEach(destinatario => {
+                            const listItem = document.createElement('li');
+                            listItem.className = 'list-group-item';
+                            if (destinatario.fue_leido) {
+                                listItem.classList.add('list-group-item-info');
+                            } else {
+                                listItem.classList.add('list-group-item-warning');
+                            }
+                            listItem.textContent = `${destinatario.nombre}`
+                            workRecipientsList.appendChild(listItem);
+                        });
+                    } else {
+                        // Si hubo un error, mostrar un mensaje
+                        const errorItem = document.createElement('li');
+                        errorItem.className = 'list-group-item list-group-item-danger';
+                        errorItem.textContent = data.message;
+                        workRecipientsList.appendChild(errorItem);
+                    }
+                })
+        });
+    </script>
+{% endblock %}

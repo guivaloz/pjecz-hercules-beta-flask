@@ -22,14 +22,14 @@ from .exceptions import (
 
 EXTENSIONS_MEDIA_TYPES = {
     "doc": "application/msword",
-    "docx": "application/msword",
+    "docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
     "jpg": "image/jpeg",
     "jpeg": "image/jpeg",
     "pdf": "application/pdf",
     "png": "image/png",
     "xml": "application/xml",
-    "xls": "xapplication/vnd.ms-excel",
-    "xlsx": "xapplication/vnd.ms-excel",
+    "xls": "application/msexcel",
+    "xlsx": "application/vnd.openxmlformats-officedocument.spreadsheetml.document",
 }
 
 

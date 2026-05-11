@@ -12,7 +12,23 @@
 
 {% block topbar_actions %}
     {% call topbar.page_buttons('Oficio ' + ofi_documento.descripcion | truncate(32)) %}
-        {{ topbar.button_previous('Oficios', url_for('ofi_documentos.list_active')) }}
+        {{ topbar.button('Ver en Monitor', url_for('ofi_documentos.fullscreen', ofi_documento_id=ofi_documento.id), "mdi mdi-monitor") }}
+        {{ topbar.button('Mi Bandeja de Entrada', url_for('ofi_documentos.list_active'), "mdi mdi-inbox-multiple") }}
+        {{ topbar.button('Mis Oficios', url_for('ofi_documentos.list_active_mis_oficios'), "mdi mdi-file-document-edit-outline") }}
+        {{ topbar.button('Mi Autoridad', url_for('ofi_documentos.list_active_mi_autoridad'), "mdi mdi-scale-balance") }}
+        {% if current_user.can_admin('OFI DOCUMENTOS') %}
+            {{ topbar.button('Administrar', url_for('ofi_documentos.list_active_administrar'), "mdi mdi-folder") }}
+        {% endif %}
+        {% if current_user.can_view('OFI PLANTILLAS') %}
+            {{ topbar.button('Plantillas', url_for('ofi_plantillas.list_active'), "mdi mdi-note-multiple") }}
+        {% endif %}
+        {% if current_user.can_admin('OFI DOCUMENTOS') %}
+            {% if estatus == 'A' %}{{ topbar.button_list_inactive('Inactivos', url_for('ofi_documentos.list_inactive')) }}{% endif %}
+            {% if estatus == 'B' %}{{ topbar.button_list_active('Activos', url_for('ofi_documentos.list_active')) }}{% endif %}
+        {% endif %}
+        {% if current_user.can_insert('OFI DOCUMENTOS') %}
+            {{ topbar.button_new('Nuevo Oficio', url_for('ofi_documentos.assistant')) }}
+        {% endif %}
         {% if current_user.can_admin('OFI DOCUMENTOS') %}
             {% if ofi_documento.estatus == 'A' %}{{ topbar.button_delete('Eliminar', url_for('ofi_documentos.delete', ofi_documento_id=ofi_documento.id)) }}{% endif %}
             {% if ofi_documento.estatus == 'B' %}{{ topbar.button_recover('Recuperar', url_for('ofi_documentos.recover', ofi_documento_id=ofi_documento.id)) }}{% endif %}
@@ -21,18 +37,21 @@
 {% endblock %}
 
 {% block content %}
+    {# Detalle #}
     {% call detail.card(estatus=ofi_documento.estatus) %}
         {{ detail.label_value('Descripción', ofi_documento.descripcion) }}
         {{ detail.label_value('Folio', ofi_documento.folio) }}
+        {% set propietario_nombre_email = ofi_documento.usuario.nombre + ' (' + ofi_documento.usuario.email + ')' %}
         {% if current_user.can_view('USUARIOS') %}
-            {{ detail.label_value('Propietario', ofi_documento.usuario.nombre,  url_for("usuarios.detail", usuario_id=ofi_documento.usuario.id)) }}
+            {{ detail.label_value('Propietario', propietario_nombre_email,  url_for("usuarios.detail", usuario_id=ofi_documento.usuario.id)) }}
         {% else %}
-            {{ detail.label_value('Propietario', ofi_documento.usuario.nombre) }}
+            {{ detail.label_value('Propietario', propietario_nombre_email) }}
         {% endif %}
+        {% set autoridad_descripcion_clave = ofi_documento.usuario.autoridad.descripcion + ' (' + ofi_documento.usuario.autoridad.clave + ')' %}
         {% if current_user.can_view('AUTORIDADES')%}
-            {{ detail.label_value('Autoridad', ofi_documento.usuario.autoridad.clave, url_for('autoridades.detail', autoridad_id=ofi_documento.usuario.autoridad.id)) }}
+            {{ detail.label_value('Autoridad', autoridad_descripcion_clave, url_for('autoridades.detail', autoridad_id=ofi_documento.usuario.autoridad.id)) }}
         {% else %}
-            {{ detail.label_value('Autoridad', ofi_documento.usuario.autoridad.clave) }}
+            {{ detail.label_value('Autoridad', autoridad_descripcion_clave) }}
         {% endif %}
         {# Inicia Contenido HTML #}
         <hr>
@@ -44,31 +63,72 @@
             </div>
         {% endif %}
         {# Termina Contenido HTML #}
+        {# Inician Botones #}
+        <div class="row">
+            <div class="col-md-4">
+                {% if mostrar_boton_editar %}
+                    {{ detail.button_md('Editar', url_for('ofi_documentos.edit', ofi_documento_id=ofi_documento.id), 'mdi mdi-file-document-edit-outline', color_class='btn-warning') }}
+                {% endif %}
+            </div>
+            <div class="col-md-4">
+                {% if mostrar_boton_firmar %}
+                    {{ detail.button_md('Firmar', url_for('ofi_documentos.sign', ofi_documento_id=ofi_documento.id), 'mdi mdi-file-sign', color_class='btn-success') }}
+                {% elif mostrar_boton_enviar %}
+                    {{ modals.button_modal_md('Enviar', url_for('ofi_documentos.send', ofi_documento_id=ofi_documento.id), "Enviar", "mdi mdi-send-outline", "¿Desea enviar el oficio? Esta acción no puede ser deshecha.", "btn-primary") }}
+                {% endif %}
+            </div>
+            <div class="col-md-2">
+                {% if mostrar_boton_archivar_desarchivar %}
+                    {% if ofi_documento.esta_archivado == false %}
+                        {{ modals.button_modal_md('Archivar', url_for('ofi_documentos.archive', ofi_documento_id=ofi_documento.id), "Archivar", "mdi mdi-archive-outline", "¿Desea archivar el oficio?", "btn-secondary") }}
+                    {% else %}
+                        {{ modals.button_modal_md('Desarchivar', url_for('ofi_documentos.unarchive', ofi_documento_id=ofi_documento.id), "Desarchivar", "mdi mdi-archive-off-outline", "¿Desea desarchivar el oficio?", "btn-outline-secondary") }}
+                    {% endif %}
+                {% endif %}
+            </div>
+            <div class="col-md-2">
+                {% if mostrar_boton_cancelar_descancelar %}
+                    {% if ofi_documento.esta_cancelado == false %}
+                        {{ modals.button_modal_md('Cancelar', url_for('ofi_documentos.cancel', ofi_documento_id=ofi_documento.id), "Cancelar", "mdi mdi-cancel", "¿Desea cancelar el oficio?", "btn-danger") }}
+                    {% else %}
+                        {{ modals.button_modal_md('Descancelar', url_for('ofi_documentos.uncancel', ofi_documento_id=ofi_documento.id), "Descancelar", "mdi mdi-file-undo-outline", "¿Desea descancelar el oficio?",  "btn-outline-danger") }}
+                    {% endif %}
+                {% endif %}
+            </div>
+        </div>
+        {# Termina Botones #}
     {% endcall %}
-    {# Adjuntos #}
+    {# DataTable Adjuntos #}
     {% call detail.card("Archivos Adjuntos") %}
         <table id="ofi_documentos_adjuntos_datatable" class="table display nowrap" style="width:100%">
             <thead>
                 <tr>
-                    <th>Id</th>
-                    <th>Nombre</th>
+                    <th>Descripción</th>
+                    <th>Eliminar/Recuperar</th>
                 </tr>
             </thead>
         </table>
+        {% if current_user.can_insert('OFI DOCUMENTOS ADJUNTOS') and mostrar_botones_agregar %}
+            <a href="{{ url_for('ofi_documentos_adjuntos.new_with_ofi_documento', ofi_documento_id=ofi_documento.id) }}" class="btn btn-primary">Agregar Archivo Adjunto</a>
+        {% endif %}
     {% endcall %}
-    {# Destinatarios #}
+    {# DataTable Destinatarios #}
     {% call detail.card("Destinatarios") %}
         <table id="ofi_documentos_destinatarios_datatable" class="table display nowrap" style="width:100%">
             <thead>
                 <tr>
-                    <th>Id</th>
                     <th>Correo electrónico</th>
                     <th>Nombre</th>
+                    <th>Puesto</th>
                     <th>Leído</th>
                     <th>Con Copia</th>
+                    <th>Eliminar/Recuperar</th>
                 </tr>
             </thead>
         </table>
+        {% if current_user.can_insert('OFI DOCUMENTOS DESTINATARIOS') and mostrar_botones_agregar %}
+            <a href="{{ url_for('ofi_documentos_destinatarios.new_with_ofi_documento', ofi_documento_id=ofi_documento.id) }}" class="btn btn-primary">Agregar Destinatario</a>
+        {% endif %}
     {% endcall %}
 {% endblock %}
 
@@ -84,45 +144,82 @@
     <script>
         const constructorDataTable = new ConfigDataTable( '{{ csrf_token() }}' );
     </script>
-    <!-- DataTable Archivos Adjuntos -->
+    <!-- DataTable Adjuntos -->
     <script>
-        let configDT_adjuntos = constructorDataTable.config();
-        configDT_adjuntos['ajax']['url'] = '/ofi_documentos_adjuntos/datatable_json';
-        configDT_adjuntos['ajax']['data'] = {"estatus": "A", "ofi_documento_id": "{{ ofi_documento.id }}"};
-        configDT_adjuntos['columns'] = [
+        let configDTOfiDocumentosAdjuntos = constructorDataTable.config();
+        configDTOfiDocumentosAdjuntos['ajax']['url'] = '{{ url_for("ofi_documentos_adjuntos.datatable_json") }}';
+        configDTOfiDocumentosAdjuntos['ajax']['data'] = {"estatus": "A", "ofi_documento_id": "{{ ofi_documento.id }}"};
+        configDTOfiDocumentosAdjuntos['columns'] = [
             { data: 'detalle' },
-            { data: 'descripcion' }
+            { data: 'eliminar_recuperar' }
         ];
-        configDT_adjuntos['columnDefs'] = [
+        configDTOfiDocumentosAdjuntos['columnDefs'] = [
             {
                 targets: 0, // detalle
                 data: null,
                 render: function(data, type, row, meta) {
-                    return '<a href="' + data.url + '">' + data.id.substring(0, 8) + '</a>';
+                    descripcion = data.descripcion.length > 32 ? data.descripcion.substring(0, 32) + '…' : data.descripcion;
+                    return '<a href="' + data.url + '">' + descripcion + '</a>';
+                }
+            },
+            {
+                targets: 1, // eliminar_recuperar
+                data: null,
+                render: function(data, type, row, meta) {
+                    if (data.url === '') {
+                        if (data.estatus === "A") {
+                            return '<span class="badge bg-primary">Activo</span>';
+                        } else {
+                            return '<span class="badge bg-secondary">Eliminado</span>';
+                        }
+                    }
+                    let myId = 'ofi_documento_adjunto_' + data.id;
+                    let myRow = 'ofi_documento_adjunto_row_' + data.id;
+                    let myOnClick = "deleteRecover('#" + myId + "', '" + data.url + "', '#" + myRow + "')";
+                    if (data.estatus === "A") {
+                        return '<button id="' + myId + '" type="button" class="btn btn-sm btn-outline-primary" onclick="' + myOnClick + '"><span class="mdi mdi-delete"></span></button>';
+                    } else {
+                        return '<button id="' + myId + '" type="button" class="btn btn-sm btn-light" onclick="' + myOnClick + '"><span class="mdi mdi-delete-restore"></span></button>';
+                    }
                 }
             }
         ];
-        const filtrosAdjuntos = new FiltrosDataTable('#ofi_documentos_adjuntos_datatable', configDT_adjuntos);
+        // Cambiar la fila según el estatus
+        configDTOfiDocumentosAdjuntos['createdRow'] = function(row, data, dataIndex) {
+            // Agregar un id a la fila para usarlo en eliminar/recuperar
+            $(row).attr('id', 'ofi_documento_adjunto_row_' + data.id);
+        };
+        // No hay filtros
+        const filtrosAdjuntos = new FiltrosDataTable('#ofi_documentos_adjuntos_datatable', configDTOfiDocumentosAdjuntos);
         filtrosAdjuntos.precargar();
     </script>
     <!-- DataTable Destinatarios -->
     <script>
-        let configDT_destinatarios = constructorDataTable.config();
-        configDT_destinatarios['ajax']['url'] = '/ofi_documentos_destinatarios/datatable_json';
-        configDT_destinatarios['ajax']['data'] = {"estatus": "A", "ofi_documento_id": "{{ ofi_documento.id }}"};
-        configDT_destinatarios['columns'] = [
+        let configDTOfiDocumentosDestinatarios = constructorDataTable.config();
+        configDTOfiDocumentosDestinatarios['ajax']['url'] = '{{ url_for("ofi_documentos_destinatarios.datatable_json") }}';
+        configDTOfiDocumentosDestinatarios['ajax']['data'] = {"estatus": "A", "ofi_documento_id": "{{ ofi_documento.id }}"};
+        configDTOfiDocumentosDestinatarios['columns'] = [
             { data: 'detalle' },
-            { data: 'usuario_email' },
             { data: 'usuario_nombre' },
+            { data: 'usuario_puesto' },
             { data: 'fue_leido' },
-            { data: 'con_copia' }
+            { data: 'con_copia' },
+            { data: 'eliminar_recuperar' }
         ];
-        configDT_destinatarios['columnDefs'] = [
+        configDTOfiDocumentosDestinatarios['columnDefs'] = [
             {
                 targets: 0, // detalle
                 data: null,
                 render: function(data, type, row, meta) {
-                    return '<a href="' + data.url + '">' + data.id.substring(0, 8) + '</a>';
+                    email = data.usuario_email.length > 32 ? data.usuario_email.substring(0, 32) + '…' : data.usuario_email;
+                    return '<a href="' + data.url + '">' + email + '</a>';
+                }
+            },
+            {
+              targets: [1, 2], // usuario_nombre, usuario_puesto
+                data: null,
+                render: function(data, type, row, meta) {
+                    return data.length > 32 ? data.substring(0, 32) + '…' : data;
                 }
             },
             {
@@ -134,9 +231,55 @@
                     }
                     return '<span class="mdi mdi-checkbox-blank-outline text-secondary" style="font-size: 1.4em"></span>';
                 }
+            },
+            {
+                targets: 5, // eliminar_recuperar
+                data: null,
+                render: function(data, type, row, meta) {
+                    if (data.url === '') {
+                        if (data.estatus === "A") {
+                            return '<span class="badge bg-primary">Activo</span>';
+                        } else {
+                            return '<span class="badge bg-secondary">Eliminado</span>';
+                        }
+                    }
+                    let myId = 'ofi_documento_destinatario_' + data.id;
+                    let myRow = 'ofi_documento_destinatario_row_' + data.id;
+                    let myOnClick = "deleteRecover('#" + myId + "', '" + data.url + "', '#" + myRow + "')";
+                    if (data.estatus === "A") {
+                        return '<button id="' + myId + '" type="button" class="btn btn-sm btn-outline-primary" onclick="' + myOnClick + '"><span class="mdi mdi-delete"></span></button>';
+                    } else {
+                        return '<button id="' + myId + '" type="button" class="btn btn-sm btn-light" onclick="' + myOnClick + '"><span class="mdi mdi-delete-restore"></span></button>';
+                    }
+                }
             }
         ];
-        const filtrosDestinatarios = new FiltrosDataTable('#ofi_documentos_destinatarios_datatable', configDT_destinatarios);
+        const filtrosDestinatarios = new FiltrosDataTable('#ofi_documentos_destinatarios_datatable', configDTOfiDocumentosDestinatarios);
         filtrosDestinatarios.precargar();
     </script>
+    <!-- DataTable Eliminar/Recuperar -->
+    <script>
+        // Preparar headers para POST
+        const myHeaders = new Headers();
+        myHeaders.append("X-CSRF-TOKEN", "{{ csrf_token() }}");
+        const myInit = {
+            method: "POST",
+            headers: myHeaders,
+            mode: "cors",
+            cache: "default",
+        };
+    </script>
+    <script src="{{ url_for('static', filename='js/datatables-delete-recover.js') }}"></script>
+    <!-- Modales -->
+    {% if mostrar_boton_enviar %}
+        {{ modals.custom_javascript("Enviar", "", "Enviar") }}
+    {% endif %}
+    {% if mostrar_boton_archivar_desarchivar %}
+        {{ modals.custom_javascript("Archivar", "", "Archivar") }}
+        {{ modals.custom_javascript("Desarchivar", "", "Desarchivar") }}
+    {% endif %}
+    {% if mostrar_boton_cancelar_descancelar %}
+        {{ modals.custom_javascript("Confirmar", "", "Cancelar") }}
+        {{ modals.custom_javascript("Descancelar", "", "Descancelar") }}
+    {% endif %}
 {% endblock %}

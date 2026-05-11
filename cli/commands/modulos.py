@@ -10,6 +10,7 @@ from typer import Typer
 from pjecz_hercules_beta_flask.app import app
 from pjecz_hercules_beta_flask.blueprints.modulos.models import Modulo
 
+# Inicializar la aplicación
 app.app_context().push()
 
 modulos = Typer()

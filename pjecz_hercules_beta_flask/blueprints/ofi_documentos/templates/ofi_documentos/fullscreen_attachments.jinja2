@@ -1,0 +1,44 @@
+{% extends 'layouts/base.jinja2' %}
+
+{% block custom_head %}{% endblock %}
+
+{% block main %}
+    <div class="container-fluid">
+        <div id="work-attachments">
+            <p class="mt-2"><strong>Archivos Adjuntos</strong></p>
+            <ul class="list-group" id="work-attachments-list"></ul>
+        </div>
+    </div>
+{% endblock %}
+
+{% block custom_javascript %}
+    <script>
+        // Cuando se haya cargado
+        $(document).ready(function() {
+            // Obtener los elementos donde se mostrarán los adjuntos
+            const workAttachments = document.getElementById('work-attachments');
+            const workAttachmentsList = document.getElementById('work-attachments-list');
+            // Consultar /ofi_documentos_adjuntos/fullscreen_json para obtener los datos
+            fetch('/ofi_documentos_adjuntos/fullscreen_json/{{ ofi_documento_id }}')
+                .then(response => response.json())
+                .then(data => {
+                    // Si success es verdadero, crear la lista de adjuntos
+                    if (data.success) {
+                        // Crear un elemento de lista para cada adjunto
+                        data.data.forEach(attachment => {
+                            const listItem = document.createElement('li');
+                            listItem.className = 'list-group-item';
+                            listItem.textContent = `${attachment.archivo}`;
+                            workAttachmentsList.appendChild(listItem);
+                        });
+                    } else {
+                        // Si hubo un error, mostrar un mensaje
+                        const errorItem = document.createElement('li');
+                        errorItem.className = 'list-group-item list-group-item-danger';
+                        errorItem.textContent = data.message;
+                        workAttachmentsList.appendChild(errorItem);
+                    }
+                });
+        });
+    </script>
+{% endblock %}
