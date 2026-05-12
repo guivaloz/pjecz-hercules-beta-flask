@@ -37,6 +37,10 @@ main {
     z-index: 0;
 }
 
+#welcome h4 {
+    color: #cccccc;
+}
+
 .form-signin {
     width: 100%;
     max-width: 330px;

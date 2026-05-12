@@ -4,6 +4,7 @@ Settings
 
 import os
 from functools import lru_cache
+from turtle import st
 
 from google.cloud import secretmanager
 from pydantic_settings import BaseSettings
@@ -44,6 +45,8 @@ class Settings(BaseSettings):
     """Settings"""
 
     # Variables de entorno
+    AUTORIDADES_PAGINA_CABECERA_URL: str = get_secret("AUTORIDADES_PAGINA_CABECERA_URL")
+    AUTORIDADES_PAGINA_PIE_URL: str = get_secret("AUTORIDADES_PAGINA_PIE_URL")
     CLOUD_STORAGE_DEPOSITO: str = get_secret("CLOUD_STORAGE_DEPOSITO")
     CLOUD_STORAGE_DEPOSITO_EDICTOS: str = get_secret("CLOUD_STORAGE_DEPOSITO_EDICTOS")
     CLOUD_STORAGE_DEPOSITO_EXHORTOS: str = get_secret("CLOUD_STORAGE_DEPOSITO_EXHORTOS")
@@ -54,12 +57,13 @@ class Settings(BaseSettings):
     CLOUD_STORAGE_DEPOSITO_REQUISICIONES: str = get_secret("CLOUD_STORAGE_DEPOSITO_REQUISICIONES")
     CLOUD_STORAGE_DEPOSITO_SENTENCIAS: str = get_secret("CLOUD_STORAGE_DEPOSITO_SENTENCIAS")
     CLOUD_STORAGE_DEPOSITO_VALES_GASOLINA: str = get_secret("CLOUD_STORAGE_DEPOSITO_VALES_GASOLINA")
-    ENVIRONMENT: str = get_secret("ENVIRONMENT", "development")
+    ESTADO_CLAVE: str = get_secret("ESTADO_CLAVE", "05")
     HOST: str = get_secret("HOST", "http://127.0.0.1:5000")
-    PREFIX: str = get_secret("PREFIX", "")
-    SECRET_KEY: str = get_secret("SECRET_KEY", "")
-    SALT: str = get_secret("SALT", "")
-    SQLALCHEMY_DATABASE_URI: str = get_secret("SQLALCHEMY_DATABASE_URI", "")
+    MUNICIPIO_CLAVE: str = get_secret("MUNICIPIO_CLAVE", "030")
+    PREFIX: str = get_secret("PREFIX")
+    SECRET_KEY: str = get_secret("SECRET_KEY")
+    SALT: str = get_secret("SALT")
+    SQLALCHEMY_DATABASE_URI: str = get_secret("SQLALCHEMY_DATABASE_URI")
     TZ: str = get_secret("TZ", "America/Mexico_City")
 
     # Incrementar el tamaño de lo que se sube en los formularios

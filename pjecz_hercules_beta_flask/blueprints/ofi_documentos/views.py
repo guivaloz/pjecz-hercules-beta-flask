@@ -5,7 +5,7 @@ Oficios Documentos, vistas
 import json
 from datetime import datetime
 
-from flask import Blueprint, flash, redirect, render_template, request, url_for
+from flask import Blueprint, current_app, flash, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
 
 from ...lib.clean_html import clean_html
@@ -362,14 +362,22 @@ def fullscreen_json(ofi_documento_id):
             usuario_destinatario.fue_leido = True
             usuario_destinatario.fue_leido_tiempo = datetime.now()
             usuario_destinatario.save()
+    # Definir la cabecera
+    pagina_cabecera_url = ofi_documento.usuario.autoridad.pagina_cabecera_url
+    if pagina_cabecera_url is None or pagina_cabecera_url.strip() == "":
+        pagina_cabecera_url = current_app.config["AUTORIDADES_PAGINA_CABECERA_URL"]
+    # Definir el pie
+    pagina_pie_url = ofi_documento.usuario.autoridad.pagina_pie_url
+    if pagina_pie_url is None or pagina_pie_url.strip() == "":
+        pagina_pie_url = current_app.config["AUTORIDADES_PAGINA_PIE_URL"]
     # Entregar JSON
     return {
         "success": True,
         "message": "Se encontró el documento.",
         "data": {
-            "pagina_cabecera_url": ofi_documento.usuario.autoridad.pagina_cabecera_url,
+            "pagina_cabecera_url": pagina_cabecera_url,
             "contenido_html": ofi_documento.contenido_html,
-            "pagina_pie_url": ofi_documento.usuario.autoridad.pagina_pie_url,
+            "pagina_pie_url": pagina_pie_url,
             "firma_simple": ofi_documento.firma_simple,
             "estado": ofi_documento.estado,
         },
