@@ -33,51 +33,6 @@ EXTENSIONS_MEDIA_TYPES = {
 }
 
 
-def get_media_type_from_filename(filename: str) -> str:
-    """
-    Get media type from filename
-
-    :param filename: Name of file
-    :return: Media type
-    """
-
-    # Get extension
-    extension = Path(filename).suffix[1:].lower()
-
-    # Get media type
-    try:
-        media_type = EXTENSIONS_MEDIA_TYPES[extension]
-    except KeyError as error:
-        raise MyFileNotAllowedError("File not allowed") from error
-
-    # Return media type
-    return media_type
-
-
-def get_blob_name_from_url(url: str) -> str:
-    """
-    Get blob name from URL
-
-    :param url: URL of the file
-    :return: Blob name
-    """
-
-    # Parse URL
-    parsed_url = urlparse(url)
-
-    # Get blob name
-    try:
-        blob_name_complete = parsed_url.path[1:]  # Extract the path and remove the first slash
-        blob_name = "/".join(
-            blob_name_complete.split("/")[1:]
-        )  # Remove the first directory from the path, because it is the bucket name
-    except IndexError as error:
-        raise MyNotValidParamError("Not valid URL") from error
-
-    # Returno blob name unquoted
-    return unquote(blob_name)
-
-
 def check_file_exists_from_gcs(
     bucket_name: str,
     blob_name: str,
@@ -104,6 +59,106 @@ def check_file_exists_from_gcs(
 
     # Return True if file exists
     return True
+
+
+def delete_file_from_gcs(
+    bucket_name: str,
+    blob_name: str,
+) -> None:
+    """
+    Delete file from Google Cloud Storage
+
+    :param bucket_name: Name of the bucket
+    :param blob_name: Path to the file
+    """
+
+    # Get bucket
+    storage_client = storage.Client()
+    try:
+        bucket = storage_client.get_bucket(bucket_name)
+    except NotFound as error:
+        raise MyBucketNotFoundError("Bucket not found") from error
+
+    # Delete file
+    blob = bucket.blob(blob_name)
+    if not blob.exists():
+        raise MyFileNotFoundError("File not found")
+
+    # Delete the file
+    blob.delete()
+
+
+def get_blob_name_from_url(url: str) -> str:
+    """
+    Get blob name from URL
+
+    :param url: URL of the file
+    :return: Blob name
+    """
+
+    # Parse URL
+    parsed_url = urlparse(url)
+
+    # Get blob name
+    try:
+        blob_name_complete = parsed_url.path[1:]  # Extract the path and remove the first slash
+        blob_name = "/".join(
+            blob_name_complete.split("/")[1:]
+        )  # Remove the first directory from the path, because it is the bucket name
+    except IndexError as error:
+        raise MyNotValidParamError("Not valid URL") from error
+
+    # Returno blob name unquoted
+    return unquote(blob_name)
+
+
+def get_file_from_gcs(
+    bucket_name: str,
+    blob_name: str,
+) -> bytes:
+    """
+    Get file from Google Cloud Storage
+
+    :param bucket_name: Name of the bucket
+    :param blob_name: Path to the file
+    :return: File content
+    """
+
+    # Get bucket
+    storage_client = storage.Client()
+    try:
+        bucket = storage_client.get_bucket(bucket_name)
+    except NotFound as error:
+        raise MyBucketNotFoundError("Bucket not found") from error
+
+    # Get file
+    blob = bucket.get_blob(blob_name)
+    if blob is None:
+        raise MyFileNotFoundError("File not found")
+
+    # Return file content
+    return blob.download_as_string()
+
+
+def get_media_type_from_filename(filename: str) -> str:
+    """
+    Get media type from filename
+
+    :param filename: Name of file
+    :return: Media type
+    """
+
+    # Get extension
+    extension = Path(filename).suffix[1:].lower()
+
+    # Get media type
+    try:
+        media_type = EXTENSIONS_MEDIA_TYPES[extension]
+    except KeyError as error:
+        raise MyFileNotAllowedError("File not allowed") from error
+
+    # Return media type
+    return media_type
 
 
 def get_public_url_from_gcs(
@@ -134,16 +189,18 @@ def get_public_url_from_gcs(
     return blob.public_url
 
 
-def get_file_from_gcs(
+def get_signed_url_from_gcs(
     bucket_name: str,
     blob_name: str,
-) -> bytes:
+    expiration_time: int = 3600,
+) -> str:
     """
-    Get file from Google Cloud Storage
+    Get signed URL from Google Cloud Storage
 
     :param bucket_name: Name of the bucket
     :param blob_name: Path to the file
-    :return: File content
+    :param expiration_time: Expiration time in seconds
+    :return: Signed URL
     """
 
     # Get bucket
@@ -151,15 +208,22 @@ def get_file_from_gcs(
     try:
         bucket = storage_client.get_bucket(bucket_name)
     except NotFound as error:
-        raise MyBucketNotFoundError("Bucket not found") from error
+        raise MyBucketNotFoundError("El depósito no existe") from error
 
     # Get file
     blob = bucket.get_blob(blob_name)
     if blob is None:
-        raise MyFileNotFoundError("File not found")
+        raise MyFileNotFoundError("No se encontró el archivo")
 
-    # Return file content
-    return blob.download_as_string()
+    # Return signed URL
+    try:
+        return blob.generate_signed_url(expiration=expiration_time, method="GET", version="v4")
+    except AttributeError as error:
+        raise MyFileNotFoundError("Error al generar el vínculo de descarga") from error
+    except TypeError as error:
+        raise MyNotValidParamError("El tiempo de expiración del vínculo de descarga no es válido") from error
+    except ValueError as error:
+        raise MyNotValidParamError("La versión del protocolo de almacenamiento no es válida") from error
 
 
 def upload_file_to_gcs(
@@ -200,30 +264,3 @@ def upload_file_to_gcs(
 
     # Return public URL
     return blob.public_url
-
-
-def delete_file_from_gcs(
-    bucket_name: str,
-    blob_name: str,
-) -> None:
-    """
-    Delete file from Google Cloud Storage
-
-    :param bucket_name: Name of the bucket
-    :param blob_name: Path to the file
-    """
-
-    # Get bucket
-    storage_client = storage.Client()
-    try:
-        bucket = storage_client.get_bucket(bucket_name)
-    except NotFound as error:
-        raise MyBucketNotFoundError("Bucket not found") from error
-
-    # Delete file
-    blob = bucket.blob(blob_name)
-    if not blob.exists():
-        raise MyFileNotFoundError("File not found")
-
-    # Delete the file
-    blob.delete()

@@ -1,0 +1,80 @@
+{% extends 'layouts/app.jinja2' %}
+{% import 'macros/detail.jinja2' as detail %}
+{% import 'macros/modals.jinja2' as modals %}
+{% import 'macros/topbar.jinja2' as topbar %}
+
+{% set title = 'Digitalización ' + vsp_digitalizacion.expediente + ' del ' + vsp_digitalizacion.autoridad.clave %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block topbar_actions %}
+    {% call topbar.page_buttons('Digitalización ' + vsp_digitalizacion.expediente) %}
+        {{ topbar.button_previous('Digitalizaciones', url_for('vsp_digitalizaciones.list_active')) }}
+        {% if current_user.can_edit('VSP DIGITALIZACIONES') %}
+            {{ topbar.button_edit('Editar', url_for('vsp_digitalizaciones.edit', vsp_digitalizacion_id=vsp_digitalizacion.id)) }}
+        {% endif %}
+        {% if current_user.can_admin('VSP DIGITALIZACIONES') %}
+            {% if vsp_digitalizacion.estatus == 'A' %}{{ topbar.button_delete('Eliminar', url_for('vsp_digitalizaciones.delete', vsp_digitalizacion_id=vsp_digitalizacion.id)) }}{% endif %}
+            {% if vsp_digitalizacion.estatus == 'B' %}{{ topbar.button_recover('Recuperar', url_for('vsp_digitalizaciones.recover', vsp_digitalizacion_id=vsp_digitalizacion.id)) }}{% endif %}
+        {% endif %}
+    {% endcall %}
+{% endblock %}
+
+{% block content %}
+    {% call detail.card(estatus=vsp_digitalizacion.estatus) %}
+        {{ detail.label_value_big('Expediente', vsp_digitalizacion.expediente) }}
+        {{ detail.label_value('Descripción', vsp_digitalizacion.descripcion) }}
+        {{ detail.label_value('Observaciones', vsp_digitalizacion.observaciones) }}
+        {{ detail.label_value('Creado', moment(vsp_digitalizacion.creado, local=False).format('DD MMM YYYY HH:mm')) }}
+    {% endcall %}
+    {% call detail.card() %}
+        {% if vsp_digitalizacion.tamano is not none and vsp_digitalizacion.tamano > 31457280 %}
+            <a href="" class="w-100 btn btn-lg btn-success my-2" id="downloadPDFButton" target="_blank">
+                <span class="iconify" data-icon="mdi:download"></span>
+                Descargar archivo PDF
+            </a>
+            <div class="alert alert-danger" role="alert" id="downloadPDFError" style="display: none;">
+                No se pudo obtener el enlace para descargar el archivo PDF.
+            </div>
+        {% else %}
+            <object data="{{ url_for('vsp_digitalizaciones.view_file_pdf', vsp_digitalizacion_id=vsp_digitalizacion.id) }}" type="application/pdf" width="100%" height="600px">
+                <p class="mb-0">El navegador no puede mostrar el archivo PDF o no existe en el depósito.</p>
+            </object>
+        {% endif %}
+    {% endcall %}
+{% endblock %}
+
+{% block custom_javascript %}
+    {% if current_user.can_admin('VSP DIGITALIZACIONES') %}
+        {% if vsp_digitalizacion.estatus == 'A' %}{{ modals.custom_javascript_delete('Eliminar', '¿Eliminar la ' + title + '?') }}{% endif %}
+        {% if vsp_digitalizacion.estatus == 'B' %}{{ modals.custom_javascript_recover('Recuperar', '¿Recuperar la ' + title + '?') }}{% endif %}
+    {% endif %}
+    {% if vsp_digitalizacion.tamano is not none and vsp_digitalizacion.tamano > 31457280 %}
+        <script>
+        // Cuando el PDF es mayor de 30 MB, se muestra un botón para descargarlo en lugar de la vista previa
+        downloadPDFButton = document.getElementById('downloadPDFButton');
+        downloadPDFError = document.getElementById('downloadPDFError');
+        // Llamar a la vista vsp_digitalizaciones.get_file_url_json que entrega un JSON con success, message y el url,
+        // Si success es true, se habilita el botón para descargar el PDF y se cambia su atributo href con la URL obtenida,
+        // Si no, se muestra un mensaje de error
+        fetch('{{ url_for('vsp_digitalizaciones.get_file_url_json', vsp_digitalizacion_id=vsp_digitalizacion.id) }}')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Si se obtiene la URL correctamente, se cambia el atributo href del botón para descargar el PDF
+                    downloadPDFButton.setAttribute('href', data.url);
+                } else {
+                    // Si no se obtiene la URL, se muestra un mensaje de error
+                    downloadPDFError.style.display = 'block';
+                    downloadPDFError.textContent = data.message || 'No se pudo obtener el enlace para descargar el archivo PDF.';
+                    // Y se oculta el botón de descarga
+                    downloadPDFButton.style.display = 'none';
+                }
+            })
+            .catch(error => {
+                console.error('Error al obtener la URL del PDF:', error);
+                downloadPDFError.style.display = 'block';
+            });
+        </script>
+    {% endif %}
+{% endblock %}
