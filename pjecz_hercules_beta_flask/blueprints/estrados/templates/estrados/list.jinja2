@@ -22,22 +22,38 @@
         <!-- Filtros Estrados -->
         <div class="row">
             <div class="col">
-                <form class="row g-1 mb-3" id="filtradorForm" onsubmit="filtrosEstrados.buscar(); return false;">
-                    <div class="col-4">
+                <form class="row g-1 mb-3" id="filtradorForm" onsubmit="filtrosDTEstrados.buscar(); return false;">
+                    {% if mostrar_filtro_autoridad_clave %}
+                    <div class="col-2">
                         <div class="form-floating">
-                            <input id="filtroClave" type="text" class="form-control" aria-label="Clave" style="text-transform: uppercase;">
-                            <label for="filtroClave">Clave</label>
+                            <input id="filtroAutoridadClave" type="text" class="form-control" aria-label="Autoridad clave" style="text-transform: uppercase;">
+                            <label for="filtroAutoridadClave">Autoridad clave</label>
                         </div>
                     </div>
-                    <div class="col-6">
+                    {% endif %}
+                    <div class="col-2">
+                        <div class="form-floating">
+                            <input id="filtroFechaDesde" type="date" class="form-control" aria-label="Fecha Desde">
+                            <label for="filtroFechaDesde">Fecha Desde</label>
+                        </div>
+                    </div>
+                    <div class="col-2">
+                        <div class="form-floating">
+                            <input id="filtroFechaHasta" type="date" class="form-control" aria-label="Fecha Hasta">
+                            <label for="filtroFechaHasta">Fecha Hasta</label>
+                        </div>
+                    </div>
+                    <div class="col-2">
                         <div class="form-floating">
                             <input id="filtroDescripcion" type="text" class="form-control" aria-label="Descripción" style="text-transform: uppercase;">
                             <label for="filtroDescripcion">Descripción</label>
                         </div>
                     </div>
-                    <div class="col-2 text-end">
-                        <button title="Buscar" class="btn btn-primary btn-lg" onclick="filtrosEstrados.buscar(); return false;" id="button-buscar"><span class="mdi mdi-magnify"></span></button>
-                        <button title="Limpiar" class="btn btn-warning btn-lg" type="reset" onclick="filtrosEstrados.limpiar();" id="button-limpiar"><span class="mdi mdi-broom"></span></button>
+                    <div class="col-2">
+                    </div>
+                    <div class="{% if mostrar_filtro_autoridad_clave %}col-2{% else %}col-4{% endif %} text-end">
+                        <button title="Buscar" class="btn btn-primary btn-lg" onclick="filtrosDTEstrados.buscar(); return false;" id="button-buscar"><span class="iconify" data-icon="mdi:magnify"></span></button>
+                        <button title="Limpiar" class="btn btn-warning btn-lg" type="reset" onclick="filtrosDTEstrados.limpiar();" id="button-limpiar"><span class="iconify" data-icon="mdi:broom"></span></button>
                     </div>
                 </form>
             </div>
@@ -46,7 +62,8 @@
         <table id="estrados_datatable" class="table {% if estatus == 'B'%}table-dark{% endif %} display nowrap" style="width:100%">
             <thead>
                 <tr>
-                    <th>Clave</th>
+                    <th>Fecha</th>
+                    <th>Autoridad</th>
                     <th>Descripción</th>
                 </tr>
             </thead>
@@ -60,26 +77,40 @@
     <script>
         // DataTable Estrados
         const constructorDataTable = new ConfigDataTable( '{{ csrf_token() }}' );
-        let configDataTable = constructorDataTable.config();
-        configDataTable['ajax']['url'] = "{{ url_for('estrados.datatable_json') }}";
-        configDataTable['ajax']['data'] = {{ filtros }};
-        configDataTable['columns'] = [
-            { data: 'detalle' },
-            { data: 'descripcion' }
+        let configDTEstrados = constructorDataTable.config();
+        configDTEstrados['ajax']['url'] = '/estrados/datatable_json';
+        configDTEstrados['ajax']['data'] = {{ filtros }};
+        configDTEstrados['columns'] = [
+            { data: "fecha" },
+            { data: "autoridad_clave" },
+            { data: "detalle" },
         ];
-        configDataTable['columnDefs'] = [
+        configDTEstrados['columnDefs'] = [
             {
-                targets: 0, // detalle
+                targets: 0, // fecha
+                type: "date",
+                render: function (data, type, row) {
+                    return moment(data).format('YYYY-MM-DD');
+                }
+            },
+            {
+                targets: 2, // detalle
                 data: null,
                 render: function(data, type, row, meta) {
-                    return '<a href="' + data.url + '">' + data.clave + '</a>';
+                    let interior = data.descripcion;
+                    if (data.descripcion.length > 48) {
+                        interior = '<span title="' + data.descripcion + '">' + data.descripcion.substring(0, 48) + '…</span>';
+                    }
+                    return '<a href="' + data.url + '">' + interior + '</a>';
                 }
             }
         ];
         // Filtros Estrados
-        const filtrosEstrados = new FiltrosDataTable('#estrados_datatable', configDataTable);
-        filtrosEstrados.agregarInput('filtroClave', 'clave');
-        filtrosEstrados.agregarInput('filtroDescripcion', 'descripcion');
-        filtrosEstrados.precargar();
+        const filtrosDTEstrados = new FiltrosDataTable('#estrados_datatable', configDTEstrados);
+        {% if mostrar_filtro_autoridad_clave %}filtrosDTEstrados.agregarInput('filtroAutoridadClave', 'autoridad_clave');{% endif %}
+        filtrosDTEstrados.agregarInput('filtroFechaDesde', 'fecha_desde');
+        filtrosDTEstrados.agregarInput('filtroFechaHasta', 'fecha_hasta');
+        filtrosDTEstrados.agregarInput('filtroDescripcion', 'descripcion');
+        filtrosDTEstrados.precargar();
     </script>
 {% endblock %}

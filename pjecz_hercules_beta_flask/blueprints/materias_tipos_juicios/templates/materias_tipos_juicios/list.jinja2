@@ -6,12 +6,18 @@
 
 {% block topbar_actions %}
     {% call topbar.page_buttons(titulo) %}
+        {% if current_user.can_view('MATERIAS') %}
+            {{ topbar.button('Materias', url_for('materias.list_active'), 'mdi:tag') }}
+        {% endif %}
+        {% if current_user.can_view('SENTENCIAS') %}
+            {{ topbar.button('V.P. de Sentencias', url_for('sentencias.list_active'), 'mdi:gavel') }}
+        {% endif %}
         {% if current_user.can_admin('MATERIAS TIPOS JUICIOS') %}
             {% if estatus == 'A' %}{{ topbar.button_list_inactive('Inactivos', url_for('materias_tipos_juicios.list_inactive')) }}{% endif %}
             {% if estatus == 'B' %}{{ topbar.button_list_active('Activos', url_for('materias_tipos_juicios.list_active')) }}{% endif %}
         {% endif %}
         {% if current_user.can_insert('MATERIAS TIPOS JUICIOS') %}
-            {{ topbar.button_new('Nuevo Materia Tipo de Juicio', url_for('materias_tipos_juicios.new')) }}
+            {{ topbar.button_new('Nuevo Tipo de Juicio', url_for('materias_tipos_juicios.new')) }}
         {% endif %}
     {% endcall %}
 {% endblock %}
@@ -21,22 +27,22 @@
         <!-- Filtros MateriasTiposJuicios -->
         <div class="row">
             <div class="col">
-                <form class="row g-1 mb-3" id="filtradorForm" onsubmit="filtrosMateriasTiposJuicios.buscar(); return false;">
+                <form class="row g-1 mb-3" id="filtradorForm" onsubmit="filtrosDTMateriasTiposJuicios.buscar(); return false;">
                     <div class="col-4">
                         <div class="form-floating">
-                            <input id="filtroClave" type="text" class="form-control" aria-label="Clave" style="text-transform: uppercase;">
-                            <label for="filtroClave">Clave</label>
+                            <input id="filtroMateriaNombre" type="text" class="form-control" aria-label="Materia" style="text-transform: uppercase;">
+                            <label for="filtroMateriaNombre">Materia</label>
                         </div>
                     </div>
                     <div class="col-6">
                         <div class="form-floating">
-                            <input id="filtroDescripcion" type="text" class="form-control" aria-label="Descripción" style="text-transform: uppercase;">
-                            <label for="filtroDescripcion">Descripción</label>
+                            <input id="filtroDescripcion" type="text" class="form-control" aria-label="Tipo de Juicio" style="text-transform: uppercase;">
+                            <label for="filtroDescripcion">Tipo de Juicio</label>
                         </div>
                     </div>
                     <div class="col-2 text-end">
-                        <button title="Buscar" class="btn btn-primary btn-lg" onclick="filtrosMateriasTiposJuicios.buscar(); return false;" id="button-buscar"><span class="mdi mdi-magnify"></span></button>
-                        <button title="Limpiar" class="btn btn-warning btn-lg" type="reset" onclick="filtrosMateriasTiposJuicios.limpiar();" id="button-limpiar"><span class="mdi mdi-broom"></span></button>
+                        <button title="Buscar" class="btn btn-primary btn-lg" onclick="filtrosDTMateriasTiposJuicios.buscar(); return false;" id="button-buscar"><span class="mdi mdi-magnify"></span></button>
+                        <button title="Limpiar" class="btn btn-warning btn-lg" type="reset" onclick="filtrosDTMateriasTiposJuicios.limpiar();" id="button-limpiar"><span class="mdi mdi-broom"></span></button>
                     </div>
                 </form>
             </div>
@@ -59,26 +65,26 @@
     <script>
         // DataTable MateriasTiposJuicios
         const constructorDataTable = new ConfigDataTable( '{{ csrf_token() }}' );
-        let configDataTable = constructorDataTable.config();
-        configDataTable['ajax']['url'] = "{{ url_for('materias_tipos_juicios.datatable_json') }}";
-        configDataTable['ajax']['data'] = {{ filtros }};
-        configDataTable['columns'] = [
+        let configDTMateriasTiposJuicios = constructorDataTable.config();
+        configDTMateriasTiposJuicios['ajax']['url'] = "{{ url_for('materias_tipos_juicios.datatable_json') }}";
+        configDTMateriasTiposJuicios['ajax']['data'] = {{ filtros }};
+        configDTMateriasTiposJuicios['columns'] = [
             { data: 'detalle' },
-            { data: 'descripcion' }
+            { data: 'materia_nombre' }
         ];
-        configDataTable['columnDefs'] = [
+        configDTMateriasTiposJuicios['columnDefs'] = [
             {
                 targets: 0, // detalle
                 data: null,
                 render: function(data, type, row, meta) {
-                    return '<a href="' + data.url + '">' + data.clave + '</a>';
+                    return '<a href="' + data.url + '">' + data.descripcion + '</a>';
                 }
             }
         ];
         // Filtros MateriasTiposJuicios
-        const filtrosMateriasTiposJuicios = new FiltrosDataTable('#materias_tipos_juicios_datatable', configDataTable);
-        filtrosMateriasTiposJuicios.agregarInput('filtroClave', 'clave');
-        filtrosMateriasTiposJuicios.agregarInput('filtroDescripcion', 'descripcion');
-        filtrosMateriasTiposJuicios.precargar();
+        const filtrosDTMateriasTiposJuicios = new FiltrosDataTable('#materias_tipos_juicios_datatable', configDTMateriasTiposJuicios);
+        filtrosDTMateriasTiposJuicios.agregarInput('filtroMateriaNombre', 'materia_nombre');
+        filtrosDTMateriasTiposJuicios.agregarInput('filtroDescripcion', 'descripcion');
+        filtrosDTMateriasTiposJuicios.precargar();
     </script>
 {% endblock %}

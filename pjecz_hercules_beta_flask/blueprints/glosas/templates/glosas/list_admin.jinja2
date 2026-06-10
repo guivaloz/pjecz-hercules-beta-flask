@@ -26,22 +26,40 @@
         <!-- Filtros Glosas -->
         <div class="row">
             <div class="col">
-                <form class="row g-1 mb-3" id="filtradorForm" onsubmit="filtrosGlosas.buscar(); return false;">
-                    <div class="col-4">
+                <form class="row g-1 mb-3" id="filtradorForm" onsubmit="filtrosDTGlosas.buscar(); return false;">
+                    <div class="col-2">
                         <div class="form-floating">
-                            <input id="filtroClave" type="text" class="form-control" aria-label="Clave" style="text-transform: uppercase;">
-                            <label for="filtroClave">Clave</label>
+                            <input id="filtroAutoridadClave" type="text" class="form-control" aria-label="Autoridad clave" style="text-transform: uppercase;">
+                            <label for="filtroAutoridadClave">Autoridad clave</label>
                         </div>
                     </div>
-                    <div class="col-6">
+                    <div class="col-2">
+                        <div class="form-floating">
+                            <input id="filtroCreadoDesde" type="date" class="form-control" aria-label="Creado Desde">
+                            <label for="filtroCreadoDesde">Creado Desde</label>
+                        </div>
+                    </div>
+                    <div class="col-2">
+                        <div class="form-floating">
+                            <input id="filtroCreadoHasta" type="date" class="form-control" aria-label="Creado Hasta">
+                            <label for="filtroCreadoHasta">Creado Hasta</label>
+                        </div>
+                    </div>
+                    <div class="col-2">
                         <div class="form-floating">
                             <input id="filtroDescripcion" type="text" class="form-control" aria-label="Descripción" style="text-transform: uppercase;">
                             <label for="filtroDescripcion">Descripción</label>
                         </div>
                     </div>
+                    <div class="col-2">
+                        <div class="form-floating">
+                            <input id="filtroExpediente" type="text" class="form-control" aria-label="Expediente" style="text-transform: uppercase;">
+                            <label for="filtroExpediente">Expediente</label>
+                        </div>
+                    </div>
                     <div class="col-2 text-end">
-                        <button title="Buscar" class="btn btn-primary btn-lg" onclick="filtrosGlosas.buscar(); return false;" id="button-buscar"><span class="mdi mdi-magnify"></span></button>
-                        <button title="Limpiar" class="btn btn-warning btn-lg" type="reset" onclick="filtrosGlosas.limpiar();" id="button-limpiar"><span class="mdi mdi-broom"></span></button>
+                        <button title="Buscar" class="btn btn-primary btn-lg" onclick="filtrosDTGlosas.buscar(); return false;" id="button-buscar"><span class="iconify" data-icon="mdi:magnify"></span></button>
+                        <button title="Limpiar" class="btn btn-warning btn-lg" type="reset" onclick="filtrosDTGlosas.limpiar();" id="button-limpiar"><span class="iconify" data-icon="mdi:broom"></span></button>
                     </div>
                 </form>
             </div>
@@ -69,26 +87,58 @@
     <script>
         // DataTable Glosas
         const constructorDataTable = new ConfigDataTable( '{{ csrf_token() }}' );
-        let configDataTable = constructorDataTable.config();
-        configDataTable['ajax']['url'] = "{{ url_for('glosas.datatable_json') }}";
-        configDataTable['ajax']['data'] = {{ filtros }};
-        configDataTable['columns'] = [
-            { data: 'detalle' },
-            { data: 'descripcion' }
+        let configDTGlosas = constructorDataTable.config();
+        configDTGlosas['ajax']['url'] = "{{ url_for('glosas.datatable_json') }}";
+        configDTGlosas['ajax']['data'] = {{ filtros }};
+        configDTGlosas['columns'] = [
+            {data: 'detalle'},
+            {data: 'creado'},
+            {data: 'autoridad_clave'},
+            {data: 'fecha'},
+            {data: 'descripcion'},
+            {data: 'expediente'},
+            {data: 'tipo_juicio'}
         ];
-        configDataTable['columnDefs'] = [
+        configDTGlosas['columnDefs'] = [
             {
                 targets: 0, // detalle
                 data: null,
-                render: function(data, type, row, meta) {
-                    return '<a href="' + data.url + '">' + data.clave + '</a>';
+                render: function (data, type, row, meta) {
+                    return '<a href="' + data.url + '">' + data.id + '</a>';
+                }
+            },
+            {
+                targets: 1, // creado
+                data: null,
+                render: function (data, type, row, meta) {
+                    return moment.utc(data).local().format('YYYY-MM-DD HH:mm');
+                }
+            },
+            {
+                targets: 3, // fecha
+                type: "date",
+                render: function (data, type, row) {
+                    return moment(data).format('YYYY-MM-DD');
+                }
+            },
+            {
+                targets: 4, // descripcion
+                data: null,
+                render: function (data, type, row, meta) {
+                    if (data.length > 24) {
+                        return '<span title="' + data + '">' + data.substring(0, 24) + '…</span>';
+                    }
+                    return data;
                 }
             }
         ];
         // Filtros Glosas
-        const filtrosGlosas = new FiltrosDataTable('#glosas_datatable', configDataTable);
-        filtrosGlosas.agregarInput('filtroClave', 'clave');
-        filtrosGlosas.agregarInput('filtroDescripcion', 'descripcion');
-        filtrosGlosas.precargar();
+        const filtrosDTGlosas = new FiltrosDataTable('#glosas_datatable', configDTGlosas);
+        filtrosDTGlosas.agregarInput('filtroAutoridadClave', 'autoridad_clave');
+        filtrosDTGlosas.agregarInput('filtroCreadoDesde', 'creado_desde');
+        filtrosDTGlosas.agregarInput('filtroCreadoHasta', 'creado_hasta');
+        filtrosDTGlosas.agregarInput('filtroDescripcion', 'descripcion');
+        filtrosDTGlosas.agregarInput('filtroExpediente', 'expediente');
+        filtrosDTGlosas.precargar();
     </script>
 {% endblock %}
