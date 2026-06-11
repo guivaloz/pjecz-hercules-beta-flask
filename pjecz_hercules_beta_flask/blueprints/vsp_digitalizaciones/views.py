@@ -4,10 +4,12 @@ VASPEC Digitalizaciones, vistas
 
 from flask import Blueprint, current_app, flash, make_response, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
+from sqlalchemy import Date, func
 from werkzeug.exceptions import NotFound
 
 from pjecz_hercules_beta_flask.blueprints.autoridades.models import Autoridad
 from pjecz_hercules_beta_flask.blueprints.bitacoras.models import Bitacora
+from pjecz_hercules_beta_flask.blueprints.materias.models import Materia
 from pjecz_hercules_beta_flask.blueprints.modulos.models import Modulo
 from pjecz_hercules_beta_flask.blueprints.permisos.models import Permiso
 from pjecz_hercules_beta_flask.blueprints.usuarios.decorators import permission_required
@@ -170,35 +172,44 @@ def recover(vsp_digitalizacion_id):
 def get_totales_por_materia_por_anio_json():
     """Obtener un listado de totales por materia por año"""
 
-    # TODO: Obtener los totales (copiados, enviados) por materia por año
+    # Obtener la base de datos en current_app
+    db = current_app.extensions["database"].get_db()
+
+    # Consultar los totales (copiados, enviados) por materia por año
+    consulta = (
+        db.session.query(
+            Materia.nombre.label("materia"),
+            VspDigitalizacion.expediente_anio.label("anio"),
+            func.count(VspDigitalizacion.id).label("copiados_total"),
+            func.count(VspDigitalizacion.enviado).label("enviados_total"),
+        )
+        .join(
+            VspDigitalizacion,
+            Autoridad,
+            Materia,
+        )
+        .where(
+            VspDigitalizacion.estatus == "A",
+        )
+        .group_by(
+            Materia.nombre,
+            VspDigitalizacion.expediente_anio,
+        )
+        .all()
+    )
+
+    # Convertir la consulta a una lista de diccionarios
     totales = [
         {
-            "materia_nombre": "Mercantil",
-            "anio": 2023,
-            "copiados_total": 232,
-            "enviados_total": 146,
-        },
-        {
-            "materia_nombre": "Mercantil",
-            "anio": 2024,
-            "copiados_total": 366,
-            "enviados_total": 221,
-        },
-        {
-            "materia_nombre": "Laboral",
-            "anio": 2023,
-            "copiados_total": 1020,
-            "enviados_total": 810,
-        },
-        {
-            "materia_nombre": "Laboral",
-            "anio": 2024,
-            "copiados_total": 1736,
-            "enviados_total": 1300,
-        },
+            "materia_nombre": row.materia,
+            "anio": row.anio,
+            "copiados_total": row.copiados_total,
+            "enviados_total": row.enviados_total,
+        }
+        for row in consulta
     ]
 
-    # Entregar la URL
+    # Entregar la lista de totales
     return {
         "success": True,
         "message": "Entrega exitosa del listado de totales por materia",
