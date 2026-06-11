@@ -17,10 +17,10 @@
 {% endblock %}
 
 {% block content %}
-    {% call detail.card(title='Gráfico relacionados/existentes por materia y año') %}
+    {% call detail.card(title='Gráfico enviados/copiados por materia y año') %}
         <canvas id="dashboard_chart" style="max-height: 420px;"></canvas>
     {% endcall %}
-    {% call detail.card(title='Totales relacionados/existentes por materia y año') %}
+    {% call detail.card(title='Totales enviados/copiados por materia y año') %}
         <table id="dashboard_datatable" class="table display nowrap" style="width:100%"></table>
     {% endcall %}
 {% endblock %}
@@ -95,7 +95,7 @@
                     footer: (items) => {
                       const materia = materias[items[0].dataIndex];
                       const t = totalesPorMateria[materia];
-                      return `Total copiados: ${t.copiados}  |  Enviados: ${t.enviados}`;
+                      return `Total enviados: ${t.enviados} / copiados: ${t.copiados}`;
                     },
                   },
                 },

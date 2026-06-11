@@ -19,16 +19,27 @@
 
 {% block content %}
     {% call detail.card(estatus=vsp_digitalizacion.estatus) %}
+        {{ detail.label_value('Distrito', vsp_digitalizacion.autoridad.distrito.nombre) }}
+        {{ detail.label_value('Autoridad', vsp_digitalizacion.autoridad.descripcion) }}
         {{ detail.label_value_big('Expediente', vsp_digitalizacion.expediente) }}
         {{ detail.label_value('Descripción', vsp_digitalizacion.descripcion) }}
         {{ detail.label_value('Observaciones', vsp_digitalizacion.observaciones) }}
-        {{ detail.label_value('Creado', moment(vsp_digitalizacion.creado, local=False).format('DD MMM YYYY HH:mm')) }}
+        {# detail.label_value('Creado', moment(vsp_digitalizacion.creado, local=False).format('DD MMM YYYY HH:mm')) #}
     {% endcall %}
     {% call detail.card() %}
         {% if vsp_digitalizacion.tamano is not none and vsp_digitalizacion.tamano > 31457280 %}
-            <a href="" class="w-100 btn btn-lg btn-success my-2" id="downloadPDFButton" target="_blank">
-                <span class="iconify" data-icon="mdi:download"></span>
-                Descargar archivo PDF
+            <a href="" class="w-100 btn btn-lg btn-success my-2" id="downloadPDFButton" target="_blank" style="display: none;">
+                <span class="mdi mdi-download"></span>
+                Descargar archivo
+                {% set tamano = vsp_digitalizacion.tamano %}
+                {% if tamano >= 1048576 %}
+                    {% set tamano_legible = '%.2f MB' | format(tamano / 1048576) %}
+                {% elif tamano >= 1024 %}
+                    {% set tamano_legible = '%.2f KB' | format(tamano / 1024) %}
+                {% else %}
+                    {% set tamano_legible = tamano | string + ' bytes' %}
+                {% endif %}
+                {{ tamano_legible }}
             </a>
             <div class="alert alert-danger" role="alert" id="downloadPDFError" style="display: none;">
                 No se pudo obtener el enlace para descargar el archivo PDF.
@@ -60,12 +71,11 @@
                 if (data.success) {
                     // Si se obtiene la URL correctamente, se cambia el atributo href del botón para descargar el PDF
                     downloadPDFButton.setAttribute('href', data.url);
+                    downloadPDFButton.style.display = 'block';
                 } else {
                     // Si no se obtiene la URL, se muestra un mensaje de error
                     downloadPDFError.style.display = 'block';
                     downloadPDFError.textContent = data.message || 'No se pudo obtener el enlace para descargar el archivo PDF.';
-                    // Y se oculta el botón de descarga
-                    downloadPDFButton.style.display = 'none';
                 }
             })
             .catch(error => {
