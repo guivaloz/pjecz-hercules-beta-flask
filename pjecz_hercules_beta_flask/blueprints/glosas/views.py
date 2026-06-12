@@ -659,7 +659,7 @@ def recover(glosa_id):
 
     # Validar que se pueda recuperar
     if glosa.estatus == "A":
-        flash("No puede eliminar esta Glosa porque ya está activa.", "success")
+        flash("No puede recuperar esta Glosa porque ya está activa.", "success")
         return redirect(detalle_url)
 
     # Definir la descripción para la bitácora

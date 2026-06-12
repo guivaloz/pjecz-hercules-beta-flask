@@ -76,10 +76,11 @@ class Autoridad(database.Model, UniversalMixin):
         Enum(*ORGANOS_JURISDICCIONALES, name="autoridades_organos_jurisdiccionales", native_enum=False),
         index=True,
     )
-    directorio_edictos: Mapped[str] = mapped_column(String(256), default="")
-    directorio_glosas: Mapped[str] = mapped_column(String(256), default="")
-    directorio_listas_de_acuerdos: Mapped[str] = mapped_column(String(256), default="")
-    directorio_sentencias: Mapped[str] = mapped_column(String(256), default="")
+    directorio_edictos: Mapped[str] = mapped_column(String(256), default="", server_default="")
+    directorio_estrados: Mapped[str] = mapped_column(String(256), default="", server_default="")
+    directorio_glosas: Mapped[str] = mapped_column(String(256), default="", server_default="")
+    directorio_listas_de_acuerdos: Mapped[str] = mapped_column(String(256), default="", server_default="")
+    directorio_sentencias: Mapped[str] = mapped_column(String(256), default="", server_default="")
     audiencia_categoria: Mapped[str] = mapped_column(
         Enum(*AUDIENCIAS_CATEGORIAS, name="autoridades_audiencias_categorias", native_enum=False),
         index=True,
@@ -91,8 +92,8 @@ class Autoridad(database.Model, UniversalMixin):
     pagina_pie_url: Mapped[Optional[str]]
     tabla_renglon_color: Mapped[Optional[str]]
     tablero_icono: Mapped[Optional[str]]
-    destinatarios_emails: Mapped[Optional[str]] = mapped_column(String(1024), nullable=True)
-    con_copias_emails: Mapped[Optional[str]] = mapped_column(String(1024), nullable=True)
+    destinatarios_emails: Mapped[Optional[str]] = mapped_column(String(1024))
+    con_copias_emails: Mapped[Optional[str]] = mapped_column(String(1024))
 
     # Hijos
     # arc_documentos: Mapped[List["ArcDocumento"]] = relationship(back_populates="autoridad")
