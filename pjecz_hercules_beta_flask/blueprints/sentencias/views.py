@@ -296,7 +296,9 @@ def list_inactive():
 def detail(sentencia_id):
     """Detalle de un Sentencia"""
     sentencia = Sentencia.query.get_or_404(sentencia_id)
-    return render_template("sentencias/detail.jinja2", sentencia=sentencia)
+    title = f"{sentencia.descripcion[:24]}…" if len(sentencia.descripcion) > 24 else sentencia.descripcion
+    title = f"{title} del {sentencia.autoridad.clave}"
+    return render_template("sentencias/detail.jinja2", sentencia=sentencia, title=title)
 
 
 @sentencias.route("/sentencias/nuevo", methods=["GET", "POST"])

@@ -21,6 +21,7 @@ MODULOS_EN_NAVEGACION = [
     "OFICINAS",
     "OFI DOCUMENTOS",
     "SENTENCIAS",
+    "TAREAS",
     "USUARIOS",
 ]
 

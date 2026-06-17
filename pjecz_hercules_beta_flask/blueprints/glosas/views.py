@@ -251,7 +251,9 @@ def list_inactive():
 def detail(glosa_id):
     """Detalle de un Glosa"""
     glosa = Glosa.query.get_or_404(glosa_id)
-    return render_template("glosas/detail.jinja2", glosa=glosa)
+    title = f"{glosa.descripcion[:24]}…" if len(glosa.descripcion) > 24 else glosa.descripcion
+    title = f"{title} del {glosa.autoridad.clave}"
+    return render_template("glosas/detail.jinja2", glosa=glosa, title=title)
 
 
 @glosas.route("/glosas/nuevo", methods=["GET", "POST"])

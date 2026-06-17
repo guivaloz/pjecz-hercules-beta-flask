@@ -268,7 +268,9 @@ def list_inactive():
 def detail(edicto_id):
     """Detalle de un Edicto"""
     edicto = Edicto.query.get_or_404(edicto_id)
-    return render_template("edictos/detail.jinja2", edicto=edicto)
+    title = f"{edicto.descripcion[:24]}…" if len(edicto.descripcion) > 24 else edicto.descripcion
+    title = f"{title} del {edicto.autoridad.clave}"
+    return render_template("edictos/detail.jinja2", edicto=edicto, title=title)
 
 
 @edictos.route("/edictos/nuevo", methods=["GET", "POST"])

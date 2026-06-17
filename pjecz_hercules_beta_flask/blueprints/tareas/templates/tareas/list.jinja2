@@ -30,18 +30,21 @@
 {% endblock %}
 
 {% block custom_javascript %}
-    {{ list.config_datatable() }}
+    <script src="{{ url_for('static', filename='js/datatables-constructor.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/datatables-filtros.js') }}"></script>
     <script>
-        configDataTable['ajax']['url'] = '/tareas/datatable_json';
-        configDataTable['ajax']['data'] = {{ filtros }};
-        configDataTable['columns'] = [
+        const constructorDataTable = new ConfigDataTable( '{{ csrf_token() }}' );
+        let configDTTareas = constructorDataTable.config();
+        configDTTareas['ajax']['url'] = "{{ url_for('tareas.datatable_json') }}";
+        configDTTareas['ajax']['data'] = {{ filtros }};
+        configDTTareas['columns'] = [
             { data: 'detalle' },
             { data: 'ha_terminado' },
             { data: 'mensaje' },
             { data: 'usuario' },
             { data: 'creado' },
         ];
-        configDataTable['columnDefs'] = [
+        configDTTareas['columnDefs'] = [
             {
                 targets: 0, // detalle
                 data: null,
@@ -78,6 +81,7 @@
                 }
             }
         ];
-        $('#tareas_datatable').DataTable(configDataTable);
+        const filtrosDTTareas = new FiltrosDataTable('#tareas_datatable', configDTTareas);
+        filtrosDTTareas.precargar();
     </script>
 {% endblock %}
