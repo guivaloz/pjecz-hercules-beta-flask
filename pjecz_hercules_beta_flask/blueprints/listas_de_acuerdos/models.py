@@ -27,8 +27,8 @@ class ListaDeAcuerdo(database.Model, UniversalMixin):
     # Columnas
     fecha: Mapped[date] = mapped_column(index=True)
     descripcion: Mapped[str] = mapped_column(String(256))
-    archivo: Mapped[str] = mapped_column(String(256), default="")
-    url: Mapped[str] = mapped_column(String(512), default="")
+    archivo: Mapped[str] = mapped_column(String(256), default="", server_default="")
+    url: Mapped[str] = mapped_column(String(512), default="", server_default="")
 
     def __repr__(self):
         """Representación"""

@@ -44,21 +44,21 @@ class Usuario(database.Model, UserMixin, UniversalMixin):
     nombres: Mapped[str] = mapped_column(String(256))
     apellido_paterno: Mapped[str] = mapped_column(String(256))
     apellido_materno: Mapped[str] = mapped_column(String(256))
-    curp: Mapped[str] = mapped_column(String(18), default="")
-    puesto: Mapped[str] = mapped_column(String(256), default="")
+    curp: Mapped[str] = mapped_column(String(18), default="", server_default="")
+    puesto: Mapped[str] = mapped_column(String(256), default="", server_default="")
     titulo: Mapped[Optional[str]] = mapped_column(String(32))
     workspace: Mapped[str] = mapped_column(Enum(*WORKSPACES, name="usuarios_workspaces", native_enum=False), index=True)
 
     # Columnas para el motor de firma electrónica
     efirma_registro_id: Mapped[Optional[int]]
-    efirma_contrasena: Mapped[Optional[str]] = mapped_column(String(256), default="")
+    efirma_contrasena: Mapped[Optional[str]] = mapped_column(String(256))
 
     # Columnas que NO aparecen en nuevo o editar porque vienen de otros lugares
-    email_personal: Mapped[str] = mapped_column(String(256), default="")
-    telefono: Mapped[str] = mapped_column(String(48), default="")
-    telefono_celular: Mapped[str] = mapped_column(String(48), default="")
-    extension: Mapped[str] = mapped_column(String(24), default="")
-    fotografia_url: Mapped[str] = mapped_column(String(512), default="")
+    email_personal: Mapped[str] = mapped_column(String(256), default="", server_default="")
+    telefono: Mapped[str] = mapped_column(String(48), default="", server_default="")
+    telefono_celular: Mapped[str] = mapped_column(String(48), default="", server_default="")
+    extension: Mapped[str] = mapped_column(String(24), default="", server_default="")
+    fotografia_url: Mapped[str] = mapped_column(String(512), default="", server_default="")
 
     # Columnas que NO deben ser expuestas
     api_key: Mapped[Optional[str]] = mapped_column(String(128))

@@ -27,11 +27,11 @@ class Tarea(database.Model, UniversalMixin):
     usuario: Mapped["Usuario"] = relationship(back_populates="tareas")
 
     # Columnas
-    archivo: Mapped[str] = mapped_column(String(256), default="")
+    archivo: Mapped[str] = mapped_column(String(256), default="", server_default="")
     comando: Mapped[str] = mapped_column(String(256), index=True)
     ha_terminado: Mapped[bool] = mapped_column(default=False)
-    mensaje: Mapped[str] = mapped_column(String(1024), default="")
-    url: Mapped[str] = mapped_column(String(512), default="")
+    mensaje: Mapped[str] = mapped_column(String(1024), default="", server_default="")
+    url: Mapped[str] = mapped_column(String(512), default="", server_default="")
 
     def get_rq_job(self):
         """Helper method that loads the RQ Job instance"""
