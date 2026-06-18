@@ -2,20 +2,34 @@
 {% import 'macros/form.jinja2' as f with context %}
 {% import 'macros/topbar.jinja2' as topbar %}
 
-{% block title %}Nuevo Glosa{% endblock %}
+{% block title %}Nueva Glosa para {{ autoridad.clave }}{% endblock %}
+
+{% block custom_head %}
+    {{ f.drop_zone_css() }}
+{% endblock %}
 
 {% block topbar_actions %}
-    {{ topbar.page('Nuevo Glosa') }}
+    {{ topbar.page('Nuevo Glosa para ' + autoridad.clave) }}
 {% endblock %}
 
 {% block content %}
     {% call f.card() %}
-        {% call f.form_tag('glosas.new', fid='glosa_form') %}
+        {% set form_kwargs = {'autoridad_id': autoridad.id} %}
+        {% call f.form_tag_multipart('glosas.new_with_autoridad_id', fid='glosa_form', **form_kwargs) %}
+            {% call f.form_group(form.distrito, readonly=true) %}{% endcall %}
+            {% call f.form_group(form.autoridad, readonly=true) %}{% endcall %}
+            {% call f.form_group(form.fecha) %}{% endcall %}
+            {% call f.form_group(form.tipo_juicio) %}{% endcall %}
             {% call f.form_group(form.descripcion) %}{% endcall %}
+            {% call f.form_group(form.expediente) %}{% endcall %}
+            {% call f.drop_zone_wrapper() %}
+                {% call f.form_group(form.archivo, class='dropzone') %}{% endcall %}
+            {% endcall %}
             {% call f.form_group(form.guardar) %}{% endcall %}
         {% endcall %}
     {% endcall %}
 {% endblock %}
 
 {% block custom_javascript %}
+    {{ f.drop_zone_js() }}
 {% endblock %}

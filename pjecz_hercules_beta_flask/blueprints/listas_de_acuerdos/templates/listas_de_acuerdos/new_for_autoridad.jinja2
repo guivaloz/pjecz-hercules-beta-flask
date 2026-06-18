@@ -2,20 +2,34 @@
 {% import 'macros/form.jinja2' as f with context %}
 {% import 'macros/topbar.jinja2' as topbar %}
 
-{% block title %}Nuevo Lista de Acuerdos{% endblock %}
+{% block title %}Nueva Lista de Acuerdos para {{ autoridad.clave }}{% endblock %}
+
+{% block custom_head %}
+    {{ f.drop_zone_css() }}
+{% endblock %}
 
 {% block topbar_actions %}
-    {{ topbar.page('Nuevo Lista de Acuerdos') }}
+    {{ topbar.page('Nueva Lista de Acuerdos para ' + autoridad.clave) }}
 {% endblock %}
 
 {% block content %}
     {% call f.card() %}
-        {% call f.form_tag('listas_de_aceurdos.new', fid='lista_de_acuerdo_form') %}
-            {% call f.form_group(form.descripcion) %}{% endcall %}
+        {% set form_kwargs = {'autoridad_id': autoridad.id} %}
+        {% call f.form_tag_multipart('listas_de_acuerdos.new_with_autoridad_id', fid='lista_de_acuerdo_form', **form_kwargs) %}
+            {% call f.form_group(form.distrito, readonly=true) %}{% endcall %}
+            {% call f.form_group(form.autoridad, readonly=true) %}{% endcall %}
+            {% call f.form_group(form.fecha) %}{% endcall %}
+            {% if con_materia %}
+                {% call f.form_group(form.materia) %}{% endcall %}
+            {% endif %}
+            {% call f.drop_zone_wrapper() %}
+                {% call f.form_group(form.archivo, class="dropzone") %}{% endcall %}
+            {% endcall %}
             {% call f.form_group(form.guardar) %}{% endcall %}
         {% endcall %}
     {% endcall %}
 {% endblock %}
 
 {% block custom_javascript %}
+    {{ f.drop_zone_js() }}
 {% endblock %}

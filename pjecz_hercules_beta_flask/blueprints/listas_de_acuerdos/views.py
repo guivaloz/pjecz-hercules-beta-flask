@@ -299,6 +299,7 @@ def detail(lista_de_acuerdo_id):
 @permission_required(MODULO, Permiso.CREAR)
 def new():
     """Subir ListaDeAcuerdo como Juzgado"""
+    utc_tz = pytz.utc
     local_tz = pytz.timezone(current_app.config["TZ"])
 
     # Validar autoridad
@@ -317,7 +318,7 @@ def new():
         return redirect(url_for("listas_de_acuerdos.list_active"))
 
     # Google App Engine usa tiempo universal, sin esta correccion las fechas de la noche cambian al dia siguiente
-    ahora_utc = datetime.now(timezone("UTC"))
+    ahora_utc = datetime.now(utc_tz)
     ahora_mx_coah = ahora_utc.astimezone(local_tz)
 
     # Definir la fecha límite para el juzgado
@@ -476,6 +477,8 @@ def new():
 @permission_required(MODULO, Permiso.ADMINISTRAR)
 def new_with_autoridad_id(autoridad_id):
     """Subir ListaDeAcuerdo para una autoridad como administrador"""
+    utc_tz = pytz.utc
+    local_tz = pytz.timezone(current_app.config["TZ"])
 
     # Validar autoridad
     autoridad = Autoridad.query.get_or_404(autoridad_id)
@@ -496,7 +499,7 @@ def new_with_autoridad_id(autoridad_id):
         return redirect(url_for("autoridades.detail", autoridad_id=autoridad.id))
 
     # Google App Engine usa tiempo universal, sin esta correccion las fechas de la noche cambian al dia siguiente
-    ahora_utc = datetime.now(timezone("UTC"))
+    ahora_utc = datetime.now(utc_tz)
     ahora_mx_coah = ahora_utc.astimezone(local_tz)
 
     # Para validar la fecha

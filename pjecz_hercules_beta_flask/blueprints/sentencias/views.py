@@ -456,10 +456,7 @@ def new():
         "sentencias/new.jinja2",
         form=form,
         autoridad=autoridad,
-        materias=Materia.query.filter_by(en_sentencias=True).filter_by(estatus="A").order_by(Materia.id).all(),
-        materias_tipos_juicios=MateriaTipoJuicio.query.filter_by(estatus="A")
-        .order_by(MateriaTipoJuicio.materia_id, MateriaTipoJuicio.descripcion)
-        .all(),
+        materia_por_defecto_id=autoridad.materia_id,
     )
 
 
@@ -625,10 +622,7 @@ def new_with_autoridad_id(autoridad_id):
         "sentencias/new_for_autoridad.jinja2",
         form=form,
         autoridad=autoridad,
-        materias=Materia.query.filter_by(en_sentencias=True).filter_by(estatus="A").order_by(Materia.id).all(),
-        materias_tipos_juicios=MateriaTipoJuicio.query.filter_by(estatus="A")
-        .order_by(MateriaTipoJuicio.materia_id, MateriaTipoJuicio.descripcion)
-        .all(),
+        materia_por_defecto_id=autoridad.materia_id,
     )
 
 
@@ -733,15 +727,7 @@ def edit(sentencia_id):
     form.es_perspectiva_genero.data = sentencia.es_perspectiva_genero
 
     # Entregar el formulario
-    return render_template(
-        "sentencias/edit.jinja2",
-        form=form,
-        sentencia=sentencia,
-        materias=Materia.query.filter_by(en_sentencias=True).filter_by(estatus="A").order_by(Materia.id).all(),
-        materias_tipos_juicios=MateriaTipoJuicio.query.filter_by(estatus="A")
-        .order_by(MateriaTipoJuicio.materia_id, MateriaTipoJuicio.descripcion)
-        .all(),
-    )
+    return render_template("sentencias/edit.jinja2", form=form, sentencia=sentencia)
 
 
 @sentencias.route("/sentencias/eliminar/<int:sentencia_id>")

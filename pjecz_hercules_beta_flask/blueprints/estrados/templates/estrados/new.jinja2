@@ -4,18 +4,27 @@
 
 {% block title %}Nuevo Estrado{% endblock %}
 
+{% block custom_head %}
+    {{ f.drop_zone_css() }}
+{% endblock %}
+
 {% block topbar_actions %}
     {{ topbar.page('Nuevo Estrado') }}
 {% endblock %}
 
 {% block content %}
     {% call f.card() %}
-        {% call f.form_tag('estrados.new', fid='estrado_form') %}
+        {% call f.form_tag_multipart('estrados.new', fid='estrado_form') %}
+            {% call f.form_group(form.fecha) %}{% endcall %}
             {% call f.form_group(form.descripcion) %}{% endcall %}
+            {% call f.drop_zone_wrapper() %}
+                {% call f.form_group(form.archivo, class='dropzone') %}{% endcall %}
+            {% endcall %}
             {% call f.form_group(form.guardar) %}{% endcall %}
         {% endcall %}
     {% endcall %}
 {% endblock %}
 
 {% block custom_javascript %}
+    {{ f.drop_zone_js() }}
 {% endblock %}

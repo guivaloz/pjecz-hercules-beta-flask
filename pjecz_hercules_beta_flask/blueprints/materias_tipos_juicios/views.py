@@ -2,6 +2,8 @@
 Materias Tipos de Juicios, vistas
 """
 
+import json
+
 from flask import Blueprint, flash, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
 
@@ -183,3 +185,27 @@ def recover(materia_tipo_juicio_id):
         bitacora.save()
         flash(bitacora.descripcion, "success")
     return redirect(url_for("materias_tipos_juicios.detail", materia_tipo_juicio_id=materia_tipo_juicio.id))
+
+
+@materias_tipos_juicios.route("/materias_tipos_juicios/select_json", methods=["GET", "POST"])
+def select_json():
+    """Proporcionar el JSON con los ids, descripciones para elegir con un select"""
+    # Consultar
+    consulta = MateriaTipoJuicio.query.filter_by(estatus="A")
+    # Filtrar
+    if "materia_id" in request.args:
+        materia_id = request.args["materia_id"]
+        consulta = consulta.filter_by(materia_id=materia_id)
+    # Ordenar
+    consulta = consulta.order_by(MateriaTipoJuicio.descripcion)
+    # Elaborar datos para Select
+    data = []
+    for resultado in consulta.all():
+        data.append(
+            {
+                "id": resultado.id,
+                "descripcion": resultado.descripcion,
+            }
+        )
+    # Entregar JSON
+    return json.dumps(data)

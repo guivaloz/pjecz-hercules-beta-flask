@@ -83,10 +83,6 @@ class AutoridadEditForm(FlaskForm):
         "Órgano Jurisdiccional", choices=Autoridad.ORGANOS_JURISDICCIONALES.items(), validators=[DataRequired()]
     )
     sede = SelectField("Sede (distrito geográfico para AJG)", choices=Autoridad.SEDES.items(), validators=[DataRequired()])
-    directorio_edictos = StringField("Directorio para edictos")  # Read only
-    directorio_glosas = StringField("Directorio para glosas")  # Read only
-    directorio_listas_de_acuerdos = StringField("Directorio para listas de acuerdos")  # Read only
-    directorio_sentencias = StringField("Directorio para sentencias")  # Read only
     limite_dias_listas_de_acuerdos = IntegerField("Límite días para listas de acuerdos", validators=[NumberRange(0, 365)])
     pagina_cabecera_url = StringField("URL imagen página cabecera")
     pagina_pie_url = StringField("URL imagen página pie")

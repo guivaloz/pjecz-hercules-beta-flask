@@ -146,20 +146,28 @@ def new():
             return render_template("autoridades/new.jinja2", form=form)
         # Consultar el distrito
         distrito = Distrito.query.get(form.distrito.data)
+        if distrito is None:
+            flash("Distrito no encontrado.", "warning")
+            return render_template("autoridades/new.jinja2", form=form)
         # Definir los directorios
-        ruta = ""
+        directorio_edictos = ""
+        directorio_estrados = ""
+        directorio_glosas = ""
+        directorio_listas_de_acuerdos = ""
+        directorio_sentencias = ""
         if form.es_jurisdiccional.data is True:
-            ruta = f"{distrito.clave}/{clave}"
-        directorio_edictos = ruta
-        directorio_glosas = ruta
-        directorio_listas_de_acuerdos = ruta
-        directorio_sentencias = ruta
+            directorio_edictos = f"{distrito.clave}/{clave}"
+            directorio_estrados = f"{distrito.clave}/{clave}"
+            if form.organo_jurisdiccional.data in ORGANOS_JURISDICCIONALES_CON_GLOSAS:
+                directorio_glosas = f"{distrito.clave}/{clave}"
+            directorio_listas_de_acuerdos = f"{distrito.clave}/{clave}"
+            directorio_sentencias = f"{distrito.clave}/{clave}"
         if form.es_notaria.data is True:
+            directorio_edictos = f"{distrito.clave}/{clave}"
+            directorio_estrados = ""
             directorio_glosas = ""
             directorio_listas_de_acuerdos = ""
             directorio_sentencias = ""
-        if form.organo_jurisdiccional.data not in ORGANOS_JURISDICCIONALES_CON_GLOSAS:
-            directorio_glosas = ""
         # Guardar
         autoridad = Autoridad(
             distrito_id=form.distrito.data,
@@ -180,6 +188,7 @@ def new():
             es_organo_especializado=form.es_organo_especializado.data,
             es_revisor_escrituras=form.es_revisor_escrituras.data,
             directorio_edictos=directorio_edictos,
+            directorio_estrados=directorio_estrados,
             directorio_glosas=directorio_glosas,
             directorio_listas_de_acuerdos=directorio_listas_de_acuerdos,
             directorio_sentencias=directorio_sentencias,
@@ -214,20 +223,28 @@ def edit(autoridad_id):
                 flash("La clave ya está en uso. Debe de ser única.", "warning")
         # Consultar el distrito
         distrito = Distrito.query.get(form.distrito.data)
+        if distrito is None:
+            flash("Distrito no encontrado.", "warning")
+            return render_template("autoridades/edit.jinja2", form=form, autoridad=autoridad)
         # Definir los directorios
-        ruta = ""
+        directorio_edictos = ""
+        directorio_estrados = ""
+        directorio_glosas = ""
+        directorio_listas_de_acuerdos = ""
+        directorio_sentencias = ""
         if form.es_jurisdiccional.data is True:
-            ruta = f"{distrito.clave}/{clave}"
-        directorio_edictos = ruta
-        directorio_glosas = ruta
-        directorio_listas_de_acuerdos = ruta
-        directorio_sentencias = ruta
+            directorio_edictos = f"{distrito.clave}/{clave}"
+            directorio_estrados = f"{distrito.clave}/{clave}"
+            if form.organo_jurisdiccional.data in ORGANOS_JURISDICCIONALES_CON_GLOSAS:
+                directorio_glosas = f"{distrito.clave}/{clave}"
+            directorio_listas_de_acuerdos = f"{distrito.clave}/{clave}"
+            directorio_sentencias = f"{distrito.clave}/{clave}"
         if form.es_notaria.data is True:
+            directorio_edictos = f"{distrito.clave}/{clave}"
+            directorio_estrados = ""
             directorio_glosas = ""
             directorio_listas_de_acuerdos = ""
             directorio_sentencias = ""
-        if form.organo_jurisdiccional.data not in ORGANOS_JURISDICCIONALES_CON_GLOSAS:
-            directorio_glosas = ""
         # Si es valido actualizar
         if es_valido:
             autoridad.distrito_id = form.distrito.data
@@ -250,6 +267,7 @@ def edit(autoridad_id):
             autoridad.organo_jurisdiccional = form.organo_jurisdiccional.data
             autoridad.sede = form.sede.data
             autoridad.directorio_edictos = directorio_edictos
+            autoridad.directorio_estrados = directorio_estrados
             autoridad.directorio_glosas = directorio_glosas
             autoridad.directorio_listas_de_acuerdos = directorio_listas_de_acuerdos
             autoridad.directorio_sentencias = directorio_sentencias
@@ -289,10 +307,6 @@ def edit(autoridad_id):
     form.audiencia_categoria.data = autoridad.audiencia_categoria
     form.organo_jurisdiccional.data = autoridad.organo_jurisdiccional
     form.sede.data = autoridad.sede
-    form.directorio_edictos.data = autoridad.directorio_edictos
-    form.directorio_glosas.data = autoridad.directorio_glosas
-    form.directorio_listas_de_acuerdos.data = autoridad.directorio_listas_de_acuerdos
-    form.directorio_sentencias.data = autoridad.directorio_sentencias
     form.limite_dias_listas_de_acuerdos.data = autoridad.limite_dias_listas_de_acuerdos
     form.pagina_cabecera_url.data = autoridad.pagina_cabecera_url
     form.pagina_pie_url.data = autoridad.pagina_pie_url
@@ -339,40 +353,36 @@ def recover(autoridad_id):
     return redirect(url_for("autoridades.detail", autoridad_id=autoridad.id))
 
 
-@autoridades.route("/autoridades/select_json/<int:distrito_id>", methods=["GET", "POST"])
-def query_autoridades_json(distrito_id):
-    """Proporcionar el JSON de autoridades para elegir con un Select"""
+@autoridades.route("/autoridades/select_json", methods=["GET", "POST"])
+def select_json():
+    """Proporcionar el JSON con los ids, descripciones cortas para elegir con un select"""
     # Consultar
-    consulta = Autoridad.query.filter_by(estatus="A").filter_by(distrito_id=distrito_id)
-    # Si viene es_archivo_solicitante como parametro en el URL como true o false
+    consulta = Autoridad.query.filter_by(estatus="A")
+    # Filtrar
+    if "distrito_id" in request.args:
+        distrito_id = request.args["distrito_id"]
+        consulta = consulta.filter_by(distrito_id=distrito_id)
     if "es_archivo_solicitante" in request.args:
         es_archivo_solicitante = request.args["es_archivo_solicitante"] == "true"
         consulta = consulta.filter_by(es_archivo_solicitante=es_archivo_solicitante)
-    # Si viene es_cemasc como parametro en el URL como true o false
     if "es_cemasc" in request.args:
         es_cemasc = request.args["es_cemasc"] == "true"
         consulta = consulta.filter_by(es_cemasc=es_cemasc)
-    # Si viene es_defensoria como parametro en el URL como true o false
     if "es_defensoria" in request.args:
         es_defensoria = request.args["es_defensoria"] == "true"
         consulta = consulta.filter_by(es_defensoria=es_defensoria)
-    # Si viene es_extinto como parametro en el URL como true o false
     if "es_extinto" in request.args:
         es_extinto = request.args["es_extinto"] == "true"
         consulta = consulta.filter_by(es_extinto=es_extinto)
-    # Si viene es_jurisdiccional como parametro en el URL como true o false
     if "es_jurisdiccional" in request.args:
         es_jurisdiccional = request.args["es_jurisdiccional"] == "true"
         consulta = consulta.filter_by(es_jurisdiccional=es_jurisdiccional)
-    # Si viene es_notaria como parametro en el URL como true o false
     if "es_notaria" in request.args:
         es_notaria = request.args["es_notaria"] == "true"
         consulta = consulta.filter_by(es_notaria=es_notaria)
-    # Si viene es_revisor_escrituras como parametro en el URL como true o false
     if "es_revisor_escrituras" in request.args:
         es_revisor_escrituras = request.args["es_revisor_escrituras"] == "true"
         consulta = consulta.filter_by(es_revisor_escrituras=es_revisor_escrituras)
-    # Si viene es_organo_especializado como parametro en el URL como true o false
     if "es_organo_especializado" in request.args:
         es_organo_especializado = request.args["es_organo_especializado"] == "true"
         consulta = consulta.filter_by(es_organo_especializado=es_organo_especializado)

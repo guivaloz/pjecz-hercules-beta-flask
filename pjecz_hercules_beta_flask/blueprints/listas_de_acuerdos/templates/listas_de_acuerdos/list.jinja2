@@ -98,7 +98,7 @@
                     } else if (data.semaforo > 1) {
                         bandera = 'flag'; color = 'red';
                     }
-                    return moment.utc(data.tiempo).local().format('DD MMM YYYY HH:mm') + ' <span style="color: ' + color +  ';" class="iconify" data-icon="mdi:' + bandera + '"></span>';
+                    return moment.utc(data.tiempo).local().format('DD MMM YYYY HH:mm') + ' <span style="color: ' + color +  ';" class="mdi mdi-' + bandera + '"></span>';
                 }
             }
         ];
