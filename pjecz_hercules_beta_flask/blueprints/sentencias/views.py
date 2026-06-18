@@ -42,6 +42,7 @@ from pjecz_hercules_beta_flask.lib.safe_string import (
     safe_string,
 )
 from pjecz_hercules_beta_flask.lib.storage import GoogleCloudStorage
+from pjecz_hercules_beta_flask.lib.time_to_text import dia_mes_anio
 
 MODULO = "SENTENCIAS"
 LIMITE_DIAS = 3650  # Diez años
@@ -894,3 +895,11 @@ def download_file_pdf(sentencia_id):
     response.headers["Content-Type"] = "application/pdf"
     response.headers["Content-Disposition"] = f"attachment; filename={sentencia.archivo}"
     return response
+
+
+@sentencias.route("/sentencias/acuses/<id_hashed>")
+def checkout(id_hashed):
+    """Acuse"""
+    sentencia = Sentencia.query.get_or_404(Sentencia.decode_id(id_hashed))
+    dia, mes, ano = dia_mes_anio(sentencia.creado)
+    return render_template("sentencias/checkout.jinja2", sentencia=sentencia, dia=dia, mes=mes.upper(), ano=ano)

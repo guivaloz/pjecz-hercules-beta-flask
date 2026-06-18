@@ -38,6 +38,7 @@ from pjecz_hercules_beta_flask.lib.safe_string import (
     safe_string,
 )
 from pjecz_hercules_beta_flask.lib.storage import GoogleCloudStorage
+from pjecz_hercules_beta_flask.lib.time_to_text import dia_mes_anio
 
 MODULO = "EDICTOS"
 LIMITE_DIAS = 365  # Un anio
@@ -821,3 +822,11 @@ def download_file_pdf(edicto_id):
     response.headers["Content-Type"] = "application/pdf"
     response.headers["Content-Disposition"] = f"attachment; filename={edicto.archivo}"
     return response
+
+
+@edictos.route("/edictos/acuses/<id_hashed>")
+def checkout(id_hashed):
+    """Acuse"""
+    edicto = Edicto.query.get_or_404(Edicto.decode_id(id_hashed))
+    dia, mes, anio = dia_mes_anio(edicto.creado)
+    return render_template("edictos/checkout.jinja2", edicto=edicto, dia=dia, mes=mes.upper(), anio=anio)

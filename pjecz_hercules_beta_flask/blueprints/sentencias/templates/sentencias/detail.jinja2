@@ -63,7 +63,7 @@
         </div>
         <div class="row">
             <div class="col">
-                {# detail.button_md(label='Acuse', url=url_for('sentencias.checkout', id_hashed=sentencia.encode_id()), icon='mdi mdi-printer', target='_blank', color_class='btn-outline-secondary') #}
+                {{ detail.button_md(label='Acuse', url=url_for('sentencias.checkout', id_hashed=sentencia.encode_id()), icon='mdi mdi-printer', target='_blank', color_class='btn-outline-secondary') }}
             </div>
             <div class="col">
                 {{ detail.button_md(label='Descargar', url=url_for('sentencias.download_file_pdf', sentencia_id=sentencia.id), icon='mdi mdi-download') }}

@@ -33,6 +33,7 @@ from pjecz_hercules_beta_flask.lib.exceptions import (
 from pjecz_hercules_beta_flask.lib.google_cloud_storage import get_blob_name_from_url, get_file_from_gcs
 from pjecz_hercules_beta_flask.lib.safe_string import safe_clave, safe_message
 from pjecz_hercules_beta_flask.lib.storage import GoogleCloudStorage
+from pjecz_hercules_beta_flask.lib.time_to_text import dia_mes_anio
 
 MODULO = "LISTAS DE ACUERDOS"
 HORAS_BUENO = 14  # Bandera verde si se creó antes de 14 horas del día
@@ -805,3 +806,17 @@ def download_file_pdf(lista_de_acuerdo_id):
     response.headers["Content-Type"] = "application/pdf"
     response.headers["Content-Disposition"] = f"attachment; filename={lista_de_acuerdo.archivo}"
     return response
+
+
+@listas_de_acuerdos.route("/listas_de_acuerdos/acuses/<id_hashed>")
+def checkout(id_hashed):
+    """Acuse"""
+    lista_de_acuerdo = ListaDeAcuerdo.query.get_or_404(ListaDeAcuerdo.decode_id(id_hashed))
+    dia, mes, anio = dia_mes_anio(lista_de_acuerdo.creado)
+    return render_template(
+        "listas_de_acuerdos/checkout.jinja2",
+        lista_de_acuerdo=lista_de_acuerdo,
+        dia=dia,
+        mes=mes.upper(),
+        anio=anio,
+    )

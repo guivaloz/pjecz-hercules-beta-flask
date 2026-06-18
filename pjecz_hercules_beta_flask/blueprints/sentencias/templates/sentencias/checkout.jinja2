@@ -1,0 +1,35 @@
+{% extends 'layouts/checkout.jinja2' %}
+
+{% block title %}Constancia de Recepción de Documentos{% endblock %}
+
+{% block content %}
+    <div class="py-2">
+        <p>
+            Fecha {{ sentencia.creado }}<br>
+            ID VPS-{{ sentencia.id }}<br>
+            <strong>{{ sentencia.autoridad.descripcion }}</strong><br>
+            <strong>{{ sentencia.autoridad.distrito.nombre }}</strong>
+        </p>
+    </div>
+    <div class="text-center py-2">
+        <h3>P R E S E N T E</h3>
+    </div>
+    <div class="py-2">
+        <p>Por este medio se confirma la recepción de su documento:</p>
+        <ul>
+            <li>{{ sentencia.archivo }}</li>
+        </ul>
+        <p>Mismo que estará disponible en el sitio web del Poder Judicial de Coahuila de Zaragoza a la brevedad en:</p>
+        <ul>
+            <li><a href="https://www.pjecz.gob.mx/consultas/sentencias/" target="_blank">https://www.pjecz.gob.mx/consultas/sentencias/</a></li>
+        </ul>
+        <p>Lo anterior para los efectos legales que haya lugar.</p>
+    </div>
+    <div class="text-center py-2">
+        <p>A T E N T A M E N T E</p>
+        <strong>
+            SALTILLO, COAHUILA DE ZARAGOZA, A {{ dia }} DE {{ mes }} DE {{ anio }}<br>
+            DIRECCIÓN DE INFORMÁTICA
+        </strong>
+    </div>
+{% endblock %}
