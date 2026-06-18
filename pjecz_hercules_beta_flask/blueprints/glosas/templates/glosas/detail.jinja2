@@ -49,6 +49,16 @@
                 {{ detail.label_value('Creado', moment(glosa.creado, local=False).format('DD MMM YYYY HH:mm')) }}
             </div>
         </div>
+        <div class="row">
+            <div class="col">
+                {{ detail.button_md(label='Descargar', url=url_for('glosas.download_file_pdf', glosa_id=glosa.id), icon='mdi mdi-download') }}
+            </div>
+        </div>
+    {% endcall %}
+    {% call detail.card() %}
+        <object data="{{ url_for('glosas.view_file_pdf', glosa_id=glosa.id) }}" type="application/pdf" width="100%" height="600px">
+            <p class="mb-0">El navegador no puede mostrar el archivo PDF o no existe en el depósito.</p>
+        </object>
     {% endcall %}
 {% endblock %}
 

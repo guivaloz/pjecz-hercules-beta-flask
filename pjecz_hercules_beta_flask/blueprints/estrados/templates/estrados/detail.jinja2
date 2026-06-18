@@ -29,12 +29,18 @@
     {% call detail.card(estatus=estrado.estatus) %}
         {{ detail.label_value_big('Descripción', estrado.descripcion) }}
         {{ detail.label_value('Distrito', estrado.autoridad.distrito.nombre) }}
-        {{ detail.label_value('Autoridad', estrado.autoridad.descripcion) }}
-        {{ detail.label_value('Fecha', moment(estrado.fecha, local=True).format("DD MMM YYYY")) }}
-        {% if current_user.can_admin('ESTRADOS') %}
-            {{ detail.label_value_new_tab('Descargar como administrador PDF', estrado.archivo, url_for('estrados.download', url=estrado.url)) }}
+        {% if current_user.can_view("AUTORIDADES") %}
+            {{ detail.label_value('Autoridad', estrado.autoridad.descripcion, url_for('autoridades.detail', autoridad_id=estrado.autoridad_id)) }}
+        {% else %}
+            {{ detail.label_value('Autoridad', estrado.autoridad.descripcion) }}
         {% endif %}
+        {{ detail.label_value('Fecha', moment(estrado.fecha, local=True).format("DD MMM YYYY")) }}
         {{ detail.label_value('Creado', moment(estrado.creado).format('llll')) }}
+        <div class="row">
+            <div class="col">
+                {{ detail.button_md(label='Descargar', url=url_for('estrados.download_file_pdf', estrado_id=estrado.id), icon='mdi mdi-download') }}
+            </div>
+        </div>
     {% endcall %}
 {% endblock %}
 

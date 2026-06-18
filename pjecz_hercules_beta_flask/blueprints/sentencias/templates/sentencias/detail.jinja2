@@ -61,6 +61,19 @@
                 {{ detail.label_value('Creado', moment(sentencia.creado, local=False).format('DD MMM YYYY HH:mm')) }}
             </div>
         </div>
+        <div class="row">
+            <div class="col">
+                {# detail.button_md(label='Acuse', url=url_for('sentencias.checkout', id_hashed=sentencia.encode_id()), icon='mdi mdi-printer', target='_blank', color_class='btn-outline-secondary') #}
+            </div>
+            <div class="col">
+                {{ detail.button_md(label='Descargar', url=url_for('sentencias.download_file_pdf', sentencia_id=sentencia.id), icon='mdi mdi-download') }}
+            </div>
+        </div>
+    {% endcall %}
+    {% call detail.card() %}
+        <object data="{{ url_for('sentencias.view_file_pdf', sentencia_id=sentencia.id) }}" type="application/pdf" width="100%" height="600px">
+            <p class="mb-0">El navegador no puede mostrar el archivo PDF o no existe en el depósito.</p>
+        </object>
     {% endcall %}
 {% endblock %}
 

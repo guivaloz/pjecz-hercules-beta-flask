@@ -50,6 +50,19 @@
                 {{ detail.label_value('Creado', moment(edicto.creado, local=False).format('DD MMM YYYY HH:mm')) }}
             </div>
         </div>
+        <div class="row">
+            <div class="col">
+                {# detail.button_md(label='Acuse', url=url_for('edictos.checkout', id_hashed=edicto.encode_id()), icon='mdi mdi-printer', target='_blank', color_class='btn-outline-secondary') #}
+            </div>
+            <div class="col">
+                {{ detail.button_md(label='Descargar PDF', url=url_for('edictos.download_file_pdf', edicto_id=edicto.id), icon='mdi mdi-download') }}
+            </div>
+        </div>
+    {% endcall %}
+    {% call detail.card() %}
+        <object data="{{ url_for('edictos.view_file_pdf', edicto_id=edicto.id) }}" type="application/pdf" width="100%" height="600px">
+            <p class="mb-0">El navegador no puede mostrar el archivo PDF o no existe en el depósito.</p>
+        </object>
     {% endcall %}
 {% endblock %}
 

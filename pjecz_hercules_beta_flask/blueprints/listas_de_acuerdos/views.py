@@ -290,8 +290,7 @@ def list_inactive():
 def detail(lista_de_acuerdo_id):
     """Detalle de un Lista de Acuerdo"""
     lista_de_acuerdo = ListaDeAcuerdo.query.get_or_404(lista_de_acuerdo_id)
-    title = f"{lista_de_acuerdo.descripcion[:24]}…" if len(lista_de_acuerdo.descripcion) > 24 else lista_de_acuerdo.descripcion
-    title = f"{title} del {lista_de_acuerdo.autoridad.clave}"
+    title = f"Lista de Acuerdos {lista_de_acuerdo.fecha.strftime('%Y-%m-%d')} del {lista_de_acuerdo.autoridad.clave}"
     return render_template("listas_de_acuerdos/detail.jinja2", lista_de_acuerdo=lista_de_acuerdo, title=title)
 
 
