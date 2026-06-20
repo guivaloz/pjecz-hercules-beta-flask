@@ -96,7 +96,7 @@ class Autoridad(database.Model, UniversalMixin):
     con_copias_emails: Mapped[Optional[str]] = mapped_column(String(1024))
 
     # Hijos
-    # arc_documentos: Mapped[List["ArcDocumento"]] = relationship(back_populates="autoridad")
+    arc_documentos: Mapped[List["ArcDocumento"]] = relationship(back_populates="autoridad")
     # arc_remesas: Mapped[List["ArcRemesa"]] = relationship(back_populates="autoridad")
     # arc_solicitudes: Mapped[List["ArcSolicitud"]] = relationship(back_populates="autoridad")
     # audiencias: Mapped[List["Audiencia"]] = relationship(back_populates="autoridad")
