@@ -3,6 +3,7 @@ CLI Usuarios
 """
 
 import os
+from datetime import datetime, timedelta
 
 from dotenv import load_dotenv
 from rich.console import Console
@@ -11,7 +12,8 @@ from typer import Typer
 from pjecz_hercules_beta_flask.app import app
 from pjecz_hercules_beta_flask.blueprints.usuarios.models import Usuario
 from pjecz_hercules_beta_flask.config.extensions import pwd_context
-from pjecz_hercules_beta_flask.lib.cryptography import convert_string_to_fernet_key, simmetric_crypt, simmetric_decrypt
+from pjecz_hercules_beta_flask.lib.cryptography import simmetric_crypt, simmetric_decrypt
+from pjecz_hercules_beta_flask.lib.pwgen import generar_api_key
 
 # Cargar variables de entorno
 load_dotenv()
@@ -58,6 +60,24 @@ def mostrar_efirma_contrasena(email: str):
         return
     console.print(f"[green]Usuario: {usuario.email}[/green]")
     console.print(f"[green]Contraseña e-firma: {efirma_contrasena}[/green]")
+
+
+@usuarios.command()
+def nueva_api_key(email: str, dias: int = 365):
+    """Nueva API key para un usuario existente"""
+    console = Console()
+    usuario = Usuario.query.filter(Usuario.email == email).first()
+    if usuario is None:
+        console.print(f"[red]El usuario con email {email} no existe.[/red]")
+        return
+    api_key = generar_api_key(usuario.id, usuario.email)
+    api_key_expiracion = datetime.now() + timedelta(days=dias)
+    usuario.api_key = api_key
+    usuario.api_key_expiracion = api_key_expiracion
+    usuario.save()
+    console.print(f"[green]API key generada para el usuario [/green][white]{usuario.email}[/white]")
+    console.print(f"[green]API key: [/green][white]{api_key}[/white]")
+    console.print(f"[green]API key expira en: [/green][white]{api_key_expiracion.strftime('%Y-%m-%d')}[/white]")
 
 
 @usuarios.command()
