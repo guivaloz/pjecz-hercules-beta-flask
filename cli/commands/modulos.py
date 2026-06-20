@@ -2,8 +2,11 @@
 CLI Modulos
 """
 
+import os
 import re
+import sys
 
+from dotenv import load_dotenv
 from rich.console import Console
 from typer import Typer
 
@@ -25,6 +28,10 @@ MODULOS_EN_NAVEGACION = [
     "USUARIOS",
 ]
 
+# Cargar variables de entorno
+load_dotenv()
+DEPLOYMENT_ENVIRONMENT = os.getenv("DEPLOYMENT_ENVIRONMENT", "DEVELOPMENT").upper()
+
 # Inicializar la aplicación
 app.app_context().push()
 
@@ -35,6 +42,9 @@ modulos = Typer()
 def actualizar_iconos():
     """Actualiza los iconos de los módulos, de 'mdi:ICONO' a 'mdi mid-ICONO' y desactiva de la navegación si no lo está"""
     console = Console()
+    if DEPLOYMENT_ENVIRONMENT != "DEVELOPMENT":
+        console.print(f"[red]PROHIBIDO: No se inicializa porque DEPLOYMENT_ENVIRONMENT es {DEPLOYMENT_ENVIRONMENT}.")
+        sys.exit(1)
     contador = 0
     for modulo in Modulo.query.order_by(Modulo.nombre).all():
         hay_cambios = False

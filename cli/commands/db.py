@@ -47,7 +47,7 @@ USUARIOS_ROLES_CSV = "seed/usuarios_roles.csv"
 
 # Cargar variables de entorno
 load_dotenv()
-DEPLOYMENT_ENVIRONMENT = os.getenv("DEPLOYMENT_ENVIRONMENT", "DEVELOPMENT")
+DEPLOYMENT_ENVIRONMENT = os.getenv("DEPLOYMENT_ENVIRONMENT", "DEVELOPMENT").upper()
 DB_USER = os.getenv("DB_USER")
 DB_PASS = os.getenv("DB_PASS")
 DB_HOST = os.getenv("DB_HOST", "localhost")
@@ -1537,8 +1537,8 @@ def respaldar_usuarios_roles():
 def inicializar():
     """Inicializar la base de datos"""
     console = Console()
-    if DEPLOYMENT_ENVIRONMENT == "PRODUCTION":
-        console.print("[red]PROHIBIDO: No se inicializa porque este es el servidor de producción.")
+    if DEPLOYMENT_ENVIRONMENT != "DEVELOPMENT":
+        console.print(f"[red]PROHIBIDO: No se inicializa porque DEPLOYMENT_ENVIRONMENT es {DEPLOYMENT_ENVIRONMENT}.")
         sys.exit(1)
     database.drop_all()
     database.create_all()
@@ -1593,6 +1593,9 @@ def respaldar():
 def copiar():
     """Copiar tablas específicas de la BD de producción (túnel SSH) a la BD local"""
     console = Console()
+    if DEPLOYMENT_ENVIRONMENT != "DEVELOPMENT":
+        console.print(f"[red]PROHIBIDO: No se inicializa porque DEPLOYMENT_ENVIRONMENT es {DEPLOYMENT_ENVIRONMENT}.")
+        sys.exit(1)
     # Conectar a la BD de producción (túnel SSH)
     try:
         conn_pro = psycopg2.connect(
