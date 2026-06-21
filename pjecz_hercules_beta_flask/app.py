@@ -4,15 +4,33 @@ PJECZ Hercules Beta Flask
 
 from flask import Flask
 
+from pjecz_hercules_beta_flask.blueprints.abogados.views import abogados
+from pjecz_hercules_beta_flask.blueprints.arc_documentos.views import arc_documentos
+from pjecz_hercules_beta_flask.blueprints.arc_documentos_bitacoras.views import arc_documentos_bitacoras
+from pjecz_hercules_beta_flask.blueprints.arc_documentos_tipos.views import arc_documentos_tipos
+from pjecz_hercules_beta_flask.blueprints.arc_juzgados_extintos.views import arc_juzgados_extintos
+from pjecz_hercules_beta_flask.blueprints.arc_remesas.views import arc_remesas
+from pjecz_hercules_beta_flask.blueprints.arc_remesas_bitacoras.views import arc_remesas_bitacoras
+from pjecz_hercules_beta_flask.blueprints.arc_remesas_documentos.views import arc_remesas_documentos
+from pjecz_hercules_beta_flask.blueprints.audiencias.views import audiencias
 from pjecz_hercules_beta_flask.blueprints.autoridades.views import autoridades
+from pjecz_hercules_beta_flask.blueprints.autoridades_funcionarios.views import autoridades_funcionarios
 from pjecz_hercules_beta_flask.blueprints.bitacoras.views import bitacoras
 from pjecz_hercules_beta_flask.blueprints.bitacoras_apis.views import bitacoras_apis
+from pjecz_hercules_beta_flask.blueprints.centros_trabajos.views import centros_trabajos
 from pjecz_hercules_beta_flask.blueprints.distritos.views import distritos
 from pjecz_hercules_beta_flask.blueprints.domicilios.views import domicilios
 from pjecz_hercules_beta_flask.blueprints.edictos.views import edictos
 from pjecz_hercules_beta_flask.blueprints.entradas_salidas.views import entradas_salidas
 from pjecz_hercules_beta_flask.blueprints.estados.views import estados
 from pjecz_hercules_beta_flask.blueprints.estrados.views import estrados
+from pjecz_hercules_beta_flask.blueprints.exh_areas.views import exh_areas
+from pjecz_hercules_beta_flask.blueprints.exh_exhortos.views import exh_exhortos
+from pjecz_hercules_beta_flask.blueprints.exh_exhortos_archivos.views import exh_exhortos_archivos
+from pjecz_hercules_beta_flask.blueprints.exh_exhortos_partes.views import exh_exhortos_partes
+from pjecz_hercules_beta_flask.blueprints.exh_tipos_diligencias.views import exh_tipos_diligencias
+from pjecz_hercules_beta_flask.blueprints.funcionarios.views import funcionarios
+from pjecz_hercules_beta_flask.blueprints.funcionarios_oficinas.views import funcionarios_oficinas
 from pjecz_hercules_beta_flask.blueprints.glosas.views import glosas
 from pjecz_hercules_beta_flask.blueprints.listas_de_acuerdos.views import listas_de_acuerdos
 from pjecz_hercules_beta_flask.blueprints.materias.views import materias
@@ -25,9 +43,12 @@ from pjecz_hercules_beta_flask.blueprints.ofi_documentos_destinatarios.views imp
 from pjecz_hercules_beta_flask.blueprints.ofi_plantillas.views import ofi_plantillas
 from pjecz_hercules_beta_flask.blueprints.oficinas.views import oficinas
 from pjecz_hercules_beta_flask.blueprints.permisos.views import permisos
+from pjecz_hercules_beta_flask.blueprints.redams.views import redams
 from pjecz_hercules_beta_flask.blueprints.roles.views import roles
 from pjecz_hercules_beta_flask.blueprints.sentencias.views import sentencias
 from pjecz_hercules_beta_flask.blueprints.sistemas.views import sistemas
+from pjecz_hercules_beta_flask.blueprints.soportes_categorias.views import soportes_categorias
+from pjecz_hercules_beta_flask.blueprints.soportes_tickets.views import soportes_tickets
 from pjecz_hercules_beta_flask.blueprints.tareas.views import tareas
 from pjecz_hercules_beta_flask.blueprints.usuarios.models import Usuario
 from pjecz_hercules_beta_flask.blueprints.usuarios.views import usuarios

@@ -1,5 +1,5 @@
 """
-Centros Trabajos
+Centros Trabajos, modelos
 """
 
 from typing import List

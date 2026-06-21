@@ -1,5 +1,5 @@
 """
-Archivos Juzgados Extintos
+Archivos Juzgados Extintos, modelos
 """
 
 from typing import List

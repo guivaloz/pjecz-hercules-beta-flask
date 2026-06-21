@@ -1,5 +1,5 @@
 """
-Archivos Remesas Bitacoras
+Archivos Remesas Bitacoras, modelos
 """
 
 from sqlalchemy import Enum, ForeignKey, String

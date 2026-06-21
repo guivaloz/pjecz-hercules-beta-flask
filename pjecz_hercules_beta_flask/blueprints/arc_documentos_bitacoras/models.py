@@ -1,5 +1,5 @@
 """
-Archivos Documentos Bitacoras
+Archivos Documentos Bitacoras, modelos
 """
 
 from sqlalchemy import Enum, ForeignKey, String

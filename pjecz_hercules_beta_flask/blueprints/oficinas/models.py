@@ -46,7 +46,7 @@ class Oficina(database.Model, UniversalMixin):
     extension: Mapped[str] = mapped_column(String(24), default="", server_default="")
 
     # Hijos
-    # funcionarios_oficinas: Mapped[List["FuncionarioOficina"]] = relationship(back_populates="oficina")
+    funcionarios_oficinas: Mapped[List["FuncionarioOficina"]] = relationship(back_populates="oficina")
     usuarios: Mapped[List["Usuario"]] = relationship(back_populates="oficina")
 
     @property

@@ -1,5 +1,5 @@
 """
-Autoridades Funcionarios
+Autoridades Funcionarios, modelos
 """
 
 from sqlalchemy import ForeignKey, String

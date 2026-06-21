@@ -66,11 +66,11 @@ class Usuario(database.Model, UserMixin, UniversalMixin):
     contrasena: Mapped[Optional[str]] = mapped_column(String(256))
 
     # Hijos
-    # arc_documentos_bitacoras: Mapped[List["ArcDocumentoBitacora"]] = relationship(back_populates="usuario")
-    # arc_remesas: Mapped[List["ArcRemesa"]] = relationship(back_populates="usuario_asignado")
-    # arc_solicitudes_asignado: Mapped[List["ArcSolicitud"]] = relationship(back_populates="usuario_asignado")
-    # arc_solicitudes_bitacoras: Mapped[List["ArcSolicitudBitacora"]] = relationship(back_populates="usuario")
-    # arc_remesas_bitacoras: Mapped[List["ArcRemesaBitacora"]] = relationship(back_populates="usuario")
+    arc_documentos_bitacoras: Mapped[List["ArcDocumentoBitacora"]] = relationship(back_populates="usuario")
+    arc_remesas: Mapped[List["ArcRemesa"]] = relationship(back_populates="usuario_asignado")
+    arc_solicitudes_asignado: Mapped[List["ArcSolicitud"]] = relationship(back_populates="usuario_asignado")
+    arc_solicitudes_bitacoras: Mapped[List["ArcSolicitudBitacora"]] = relationship(back_populates="usuario")
+    arc_remesas_bitacoras: Mapped[List["ArcRemesaBitacora"]] = relationship(back_populates="usuario")
     bitacoras: Mapped[List["Bitacora"]] = relationship(back_populates="usuario")
     bitacoras_apis: Mapped[List["BitacoraAPI"]] = relationship(back_populates="usuario")
     # cid_procedimientos: Mapped[List["CIDProcedimiento"]] = relationship(back_populates="usuario")
@@ -84,7 +84,7 @@ class Usuario(database.Model, UserMixin, UniversalMixin):
     tareas: Mapped[List["Tarea"]] = relationship(back_populates="usuario")
     # usuarios_nominas: Mapped[List["UsuarioNomina"]] = relationship(back_populates="usuario")
     usuarios_roles: Mapped[List["UsuarioRol"]] = relationship(back_populates="usuario")
-    # soportes_tickets: Mapped[List["SoporteTicket"]] = relationship(back_populates="usuario")
+    soportes_tickets: Mapped[List["SoporteTicket"]] = relationship(back_populates="usuario")
 
     # Propiedades
     modulos_menu_principal_consultados = []

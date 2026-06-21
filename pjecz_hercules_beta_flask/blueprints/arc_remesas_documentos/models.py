@@ -1,5 +1,5 @@
 """
-Archivos Remesas Documentos
+Archivos Remesas Documentos, modelos
 """
 
 from sqlalchemy import Enum, ForeignKey, String

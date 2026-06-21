@@ -1,5 +1,5 @@
 """
-Funcionarios Oficinas
+Funcionarios Oficinas, modelos
 """
 
 from sqlalchemy import ForeignKey, String

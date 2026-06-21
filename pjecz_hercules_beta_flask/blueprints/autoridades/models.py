@@ -1,5 +1,5 @@
 """
-Autoridad
+Autoridad, modelos
 """
 
 from typing import List, Optional
@@ -97,18 +97,18 @@ class Autoridad(database.Model, UniversalMixin):
 
     # Hijos
     arc_documentos: Mapped[List["ArcDocumento"]] = relationship(back_populates="autoridad")
-    # arc_remesas: Mapped[List["ArcRemesa"]] = relationship(back_populates="autoridad")
-    # arc_solicitudes: Mapped[List["ArcSolicitud"]] = relationship(back_populates="autoridad")
-    # audiencias: Mapped[List["Audiencia"]] = relationship(back_populates="autoridad")
-    # autoridades_funcionarios: Mapped[List["AutoridadFuncionario"]] = relationship(back_populates="autoridad")
+    arc_remesas: Mapped[List["ArcRemesa"]] = relationship(back_populates="autoridad")
+    arc_solicitudes: Mapped[List["ArcSolicitud"]] = relationship(back_populates="autoridad")
+    audiencias: Mapped[List["Audiencia"]] = relationship(back_populates="autoridad")
+    autoridades_funcionarios: Mapped[List["AutoridadFuncionario"]] = relationship(back_populates="autoridad")
     # cid_areas_autoridades: Mapped[List["CIDAreaAutoridad"]] = relationship(back_populates="autoridad")
     # cid_procedimientos: Mapped[List["CIDProcedimiento"]] = relationship(back_populates="autoridad")
     edictos: Mapped[List["Edicto"]] = relationship(back_populates="autoridad")
     estrados: Mapped[List["Estrado"]] = relationship(back_populates="autoridad")
-    # exh_exhortos: Mapped[List["ExhExhorto"]] = relationship(back_populates="autoridad")
+    exh_exhortos: Mapped[List["ExhExhorto"]] = relationship(back_populates="autoridad")
     glosas: Mapped[List["Glosa"]] = relationship(back_populates="autoridad")
     listas_de_acuerdos: Mapped[List["ListaDeAcuerdo"]] = relationship(back_populates="autoridad")
-    # redam: Mapped[List["Redam"]] = relationship(back_populates="autoridad")
+    redam: Mapped[List["Redam"]] = relationship(back_populates="autoridad")
     sentencias: Mapped[List["Sentencia"]] = relationship(back_populates="autoridad")
     # ubicaciones_expedientes: Mapped[List["UbicacionExpediente"]] = relationship(back_populates="autoridad")
     usuarios: Mapped[List["Usuario"]] = relationship(back_populates="autoridad")
