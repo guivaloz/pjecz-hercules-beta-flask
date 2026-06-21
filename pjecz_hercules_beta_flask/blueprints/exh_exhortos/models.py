@@ -188,24 +188,24 @@ class ExhExhorto(database.Model, UniversalMixin):
     # Hijo: Promoventes
     # Contiene la definición del promovente o los promoventes del exhorto, que comúnmente será el representante legal o abogado.
     # Donde se debe especificar el correo electrónico para darle acceso a medios electrónicos.
-    exh_exhortos_promoventes: Mapped[List["ExhExhortoPromovente"]] = relationship(
-        "ExhExhortoPromovente", back_populates="exh_exhorto"
-    )
+    # exh_exhortos_promoventes: Mapped[List["ExhExhortoPromovente"]] = relationship(
+    #     "ExhExhortoPromovente", back_populates="exh_exhorto"
+    # )
 
     # Hijo: Actualizaciones
-    exh_exhortos_actualizaciones: Mapped[List["ExhExhortoActualizacion"]] = relationship(
-        "ExhExhortoActualizacion", back_populates="exh_exhorto"
-    )
+    # exh_exhortos_actualizaciones: Mapped[List["ExhExhortoActualizacion"]] = relationship(
+    #     "ExhExhortoActualizacion", back_populates="exh_exhorto"
+    # )
 
     # Hijo: Promociones
-    exh_exhortos_promociones: Mapped[List["ExhExhortoPromocion"]] = relationship(
-        "ExhExhortoPromocion", back_populates="exh_exhorto"
-    )
+    # exh_exhortos_promociones: Mapped[List["ExhExhortoPromocion"]] = relationship(
+    #     "ExhExhortoPromocion", back_populates="exh_exhorto"
+    # )
 
     # Hijo: Respuestas
-    exh_exhortos_respuestas: Mapped[List["ExhExhortoRespuesta"]] = relationship(
-        "ExhExhortoRespuesta", back_populates="exh_exhorto"
-    )
+    # exh_exhortos_respuestas: Mapped[List["ExhExhortoRespuesta"]] = relationship(
+    #     "ExhExhortoRespuesta", back_populates="exh_exhorto"
+    # )
 
     def __repr__(self):
         """Representación"""

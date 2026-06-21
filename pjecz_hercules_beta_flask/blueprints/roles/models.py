@@ -26,7 +26,7 @@ class Rol(database.Model, UniversalMixin):
     # Hijos
     permisos: Mapped[List["Permiso"]] = relationship(back_populates="rol")
     usuarios_roles: Mapped[List["UsuarioRol"]] = relationship(back_populates="rol")
-    # soportes_categorias_roles: Mapped[List["SoporteCategoria"]] = relationship(back_populates="rol")
+    soportes_categorias_roles: Mapped[List["SoporteCategoria"]] = relationship(back_populates="rol")
 
     def __repr__(self):
         """Representación"""

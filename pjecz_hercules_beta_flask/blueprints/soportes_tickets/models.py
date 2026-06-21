@@ -64,7 +64,7 @@ class SoporteTicket(database.Model, UniversalMixin):
     )
 
     # Hijos
-    soportes_adjuntos: Mapped[List["SoporteAdjunto"]] = relationship(back_populates="soporte_ticket")
+    # soportes_adjuntos: Mapped[List["SoporteAdjunto"]] = relationship(back_populates="soporte_ticket")
 
     def __repr__(self):
         """Representación"""

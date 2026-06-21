@@ -2,9 +2,9 @@
 REDAMS, modelos
 """
 
-from typing import List, Optional
+from datetime import date
 
-from sqlalchemy import Enum, ForeignKey, String
+from sqlalchemy import ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from pjecz_hercules_beta_flask.config.extensions import database
@@ -26,8 +26,8 @@ class Redam(database.Model, UniversalMixin):
 
     # Columnas
     nombre: Mapped[str] = mapped_column(String(256))
-    expediente: Mapped[str] = mapped_column(String(256), index=True)
-    fecha: Mapped[date] = mapped_column(Date(), index=True)
+    expediente: Mapped[str] = mapped_column(String(256))
+    fecha: Mapped[date]
     observaciones: Mapped[str] = mapped_column(String(1024))
 
     def __repr__(self):

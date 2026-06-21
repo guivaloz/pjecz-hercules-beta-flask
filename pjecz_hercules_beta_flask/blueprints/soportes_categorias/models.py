@@ -4,7 +4,7 @@ Soportes Categorias, modelos
 
 from typing import List, Optional
 
-from sqlalchemy import Enum, ForeignKey, String
+from sqlalchemy import Enum, ForeignKey, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from pjecz_hercules_beta_flask.config.extensions import database

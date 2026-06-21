@@ -12,6 +12,8 @@ from pjecz_hercules_beta_flask.blueprints.arc_juzgados_extintos.views import arc
 from pjecz_hercules_beta_flask.blueprints.arc_remesas.views import arc_remesas
 from pjecz_hercules_beta_flask.blueprints.arc_remesas_bitacoras.views import arc_remesas_bitacoras
 from pjecz_hercules_beta_flask.blueprints.arc_remesas_documentos.views import arc_remesas_documentos
+from pjecz_hercules_beta_flask.blueprints.arc_solicitudes.views import arc_solicitudes
+from pjecz_hercules_beta_flask.blueprints.arc_solicitudes_bitacoras.views import arc_solicitudes_bitacoras
 from pjecz_hercules_beta_flask.blueprints.audiencias.views import audiencias
 from pjecz_hercules_beta_flask.blueprints.autoridades.views import autoridades
 from pjecz_hercules_beta_flask.blueprints.autoridades_funcionarios.views import autoridades_funcionarios
@@ -63,15 +65,35 @@ app.add_url_rule("/favicon.ico", endpoint="sistemas.favicon")
 app.config.from_object(Settings())
 
 # Registrar blueprints
+app.register_blueprint(abogados)
+app.register_blueprint(arc_documentos)
+app.register_blueprint(arc_documentos_bitacoras)
+app.register_blueprint(arc_documentos_tipos)
+app.register_blueprint(arc_juzgados_extintos)
+app.register_blueprint(arc_remesas)
+app.register_blueprint(arc_remesas_bitacoras)
+app.register_blueprint(arc_remesas_documentos)
+app.register_blueprint(arc_solicitudes)
+app.register_blueprint(arc_solicitudes_bitacoras)
+app.register_blueprint(audiencias)
 app.register_blueprint(autoridades)
+app.register_blueprint(autoridades_funcionarios)
 app.register_blueprint(bitacoras)
 app.register_blueprint(bitacoras_apis)
+app.register_blueprint(centros_trabajos)
 app.register_blueprint(distritos)
 app.register_blueprint(domicilios)
 app.register_blueprint(edictos)
 app.register_blueprint(entradas_salidas)
 app.register_blueprint(estados)
 app.register_blueprint(estrados)
+app.register_blueprint(exh_areas)
+app.register_blueprint(exh_exhortos)
+app.register_blueprint(exh_exhortos_archivos)
+app.register_blueprint(exh_exhortos_partes)
+app.register_blueprint(exh_tipos_diligencias)
+app.register_blueprint(funcionarios)
+app.register_blueprint(funcionarios_oficinas)
 app.register_blueprint(glosas)
 app.register_blueprint(listas_de_acuerdos)
 app.register_blueprint(materias)
@@ -84,9 +106,12 @@ app.register_blueprint(ofi_documentos_adjuntos)
 app.register_blueprint(ofi_documentos_destinatarios)
 app.register_blueprint(ofi_plantillas)
 app.register_blueprint(permisos)
+app.register_blueprint(redams)
 app.register_blueprint(roles)
 app.register_blueprint(sentencias)
 app.register_blueprint(sistemas)
+app.register_blueprint(soportes_categorias)
+app.register_blueprint(soportes_tickets)
 app.register_blueprint(tareas)
 app.register_blueprint(usuarios)
 app.register_blueprint(usuarios_roles)

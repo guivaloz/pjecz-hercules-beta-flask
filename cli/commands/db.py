@@ -1546,7 +1546,7 @@ def inicializar():
 
 
 @db.command()
-def alimientar():
+def alimentar():
     """Alimentar la base de datos con los datos en los archivos CSV en la carpeta 'seed'"""
     console = Console()
     if DEPLOYMENT_ENVIRONMENT == "PRODUCTION":
@@ -1571,7 +1571,7 @@ def alimientar():
 def reiniciar():
     """Reiniciar la base de datos (inicializar y alimentar)"""
     inicializar()
-    alimientar()
+    alimentar()
 
 
 @db.command()
