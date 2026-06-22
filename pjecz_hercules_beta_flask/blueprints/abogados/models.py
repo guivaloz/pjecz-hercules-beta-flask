@@ -3,10 +3,9 @@ Abogados, modelos
 """
 
 from datetime import date
-from typing import List, Optional
 
-from sqlalchemy import Enum, ForeignKey, String
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy import String
+from sqlalchemy.orm import Mapped, mapped_column
 
 from pjecz_hercules_beta_flask.config.extensions import database
 from pjecz_hercules_beta_flask.lib.universal_mixin import UniversalMixin
