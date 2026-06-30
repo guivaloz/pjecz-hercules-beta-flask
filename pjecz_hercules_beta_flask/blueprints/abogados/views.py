@@ -2,9 +2,7 @@
 Abogados, vistas
 """
 
-import json
-
-from flask import Blueprint, abort, flash, redirect, render_template, request, url_for
+from flask import Blueprint, flash, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
 
 from pjecz_hercules_beta_flask.blueprints.abogados.forms import AbogadoForm

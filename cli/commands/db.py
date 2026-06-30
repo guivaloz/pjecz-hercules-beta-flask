@@ -387,30 +387,6 @@ def alimentar_autoridades():
             distrito_id = int(row["distrito_id"])
             materia_id = int(row["materia_id"])
             municipio_id = int(row["municipio_id"])
-            clave = safe_clave(row["clave"])
-            descripcion = safe_string(row["descripcion"], save_enie=True)
-            descripcion_corta = safe_string(row["descripcion_corta"], save_enie=True)
-            es_archivo_solicitante = row["es_archivo_solicitante"] == "1"
-            es_cemasc = row["es_archivo_solicitante"] == "1"
-            es_defensoria = row["es_archivo_solicitante"] == "1"
-            es_extinto = row["es_archivo_solicitante"] == "1"
-            es_jurisdiccional = row["es_jurisdiccional"] == "1"
-            es_notaria = row["es_notaria"] == "1"
-            es_organo_especializado = row["es_organo_especializado"] == "1"
-            es_revisor_escrituras = row["es_revisor_escrituras"] == "1"
-            organo_jurisdiccional = safe_string(row["organo_jurisdiccional"], save_enie=True)
-            directorio_edictos = row["directorio_edictos"]
-            directorio_glosas = row["directorio_glosas"]
-            directorio_listas_de_acuerdos = row["directorio_listas_de_acuerdos"]
-            directorio_sentencias = row["directorio_sentencias"]
-            audiencia_categoria = row["audiencia_categoria"]
-            limite_dias_listas_de_acuerdos = int(row["limite_dias_listas_de_acuerdos"])
-            try:
-                datawarehouse_id = int(row["datawarehouse_id"])
-            except ValueError:
-                datawarehouse_id = 0
-            sede = row["sede"]
-            estatus = row["estatus"]
             distrito = Distrito.query.get(distrito_id)
             if distrito is None:
                 console.print(f"[red]AVISO: distrito_id {distrito_id} no existe")
@@ -423,11 +399,42 @@ def alimentar_autoridades():
             if municipio is None:
                 console.print(f"[red]AVISO: municipio_id {municipio_id} no existe")
                 sys.exit(1)
+            clave = safe_clave(row["clave"])
+            datawarehouse_id = int(row["datawarehouse_id"]) if row["datawarehouse_id"].isdigit() else 0
+            datawarehouse_id_saji = int(row["datawarehouse_id_saji"]) if row["datawarehouse_id_saji"].isdigit() else 0
+            descripcion = safe_string(row["descripcion"], save_enie=True)
+            descripcion_corta = safe_string(row["descripcion_corta"], save_enie=True)
+            es_archivo_solicitante = row["es_archivo_solicitante"] == "1"
+            es_cemasc = row["es_archivo_solicitante"] == "1"
+            es_defensoria = row["es_archivo_solicitante"] == "1"
+            es_extinto = row["es_archivo_solicitante"] == "1"
+            es_jurisdiccional = row["es_jurisdiccional"] == "1"
+            es_notaria = row["es_notaria"] == "1"
+            es_organo_especializado = row["es_organo_especializado"] == "1"
+            es_revisor_escrituras = row["es_revisor_escrituras"] == "1"
+            es_vsp_digitalizaciones = row["es_vsp_digitalizaciones"] == "1"
+            organo_jurisdiccional = safe_string(row["organo_jurisdiccional"], save_enie=True)
+            directorio_edictos = row["directorio_edictos"]
+            directorio_glosas = row["directorio_glosas"]
+            directorio_listas_de_acuerdos = row["directorio_listas_de_acuerdos"]
+            directorio_sentencias = row["directorio_sentencias"]
+            audiencia_categoria = row["audiencia_categoria"]
+            limite_dias_listas_de_acuerdos = int(row["limite_dias_listas_de_acuerdos"])
+            sede = row["sede"]
+            pagina_cabecera_url = row["pagina_cabecera_url"]
+            pagina_pie_url = row["pagina_pie_url"]
+            tabla_renglon_color = row["tabla_renglon_color"]
+            tablero_icono = row["tablero_icono"]
+            destinatarios_emails = row["destinatarios_emails"]
+            con_copias_emails = row["con_copias_emails"]
+            estatus = row["estatus"]
             Autoridad(
                 distrito=distrito,
                 materia=materia,
                 municipio=municipio,
                 clave=clave,
+                datawarehouse_id=datawarehouse_id,
+                datawarehouse_id_saji=datawarehouse_id_saji,
                 descripcion=descripcion,
                 descripcion_corta=descripcion_corta,
                 es_archivo_solicitante=es_archivo_solicitante,
@@ -438,6 +445,7 @@ def alimentar_autoridades():
                 es_notaria=es_notaria,
                 es_organo_especializado=es_organo_especializado,
                 es_revisor_escrituras=es_revisor_escrituras,
+                es_vsp_digitalizaciones=es_vsp_digitalizaciones,
                 organo_jurisdiccional=organo_jurisdiccional,
                 directorio_edictos=directorio_edictos,
                 directorio_glosas=directorio_glosas,
@@ -445,8 +453,13 @@ def alimentar_autoridades():
                 directorio_sentencias=directorio_sentencias,
                 audiencia_categoria=audiencia_categoria,
                 limite_dias_listas_de_acuerdos=limite_dias_listas_de_acuerdos,
-                datawarehouse_id=datawarehouse_id,
                 sede=sede,
+                pagina_cabecera_url=pagina_cabecera_url,
+                pagina_pie_url=pagina_pie_url,
+                tabla_renglon_color=tabla_renglon_color,
+                tablero_icono=tablero_icono,
+                destinatarios_emails=destinatarios_emails,
+                con_copias_emails=con_copias_emails,
                 estatus=estatus,
             ).save()
             contador += 1
@@ -1110,6 +1123,8 @@ def respaldar_autoridades():
                 "materia_id",
                 "municipio_id",
                 "clave",
+                "datawarehouse_id",
+                "datawarehouse_id_saji",
                 "descripcion",
                 "descripcion_corta",
                 "es_archivo_solicitante",
@@ -1120,6 +1135,7 @@ def respaldar_autoridades():
                 "es_notaria",
                 "es_organo_especializado",
                 "es_revisor_escrituras",
+                "es_vsp_digitalizaciones",
                 "organo_jurisdiccional",
                 "directorio_edictos",
                 "directorio_glosas",
@@ -1127,8 +1143,13 @@ def respaldar_autoridades():
                 "directorio_sentencias",
                 "audiencia_categoria",
                 "limite_dias_listas_de_acuerdos",
-                "datawarehouse_id",
                 "sede",
+                "pagina_cabecera_url",
+                "pagina_pie_url",
+                "tabla_renglon_color",
+                "tablero_icono",
+                "destinatarios_emails",
+                "con_copias_emails",
                 "estatus",
             ]
         )
@@ -1140,6 +1161,8 @@ def respaldar_autoridades():
                     autoridad.materia_id,
                     autoridad.municipio_id,
                     autoridad.clave,
+                    autoridad.datawarehouse_id,
+                    autoridad.datawarehouse_id_saji,
                     autoridad.descripcion,
                     autoridad.descripcion_corta,
                     int(autoridad.es_archivo_solicitante),
@@ -1150,6 +1173,7 @@ def respaldar_autoridades():
                     int(autoridad.es_notaria),
                     int(autoridad.es_organo_especializado),
                     int(autoridad.es_revisor_escrituras),
+                    int(autoridad.es_vsp_digitalizaciones),
                     autoridad.organo_jurisdiccional,
                     autoridad.directorio_edictos,
                     autoridad.directorio_glosas,
@@ -1157,8 +1181,13 @@ def respaldar_autoridades():
                     autoridad.directorio_sentencias,
                     autoridad.audiencia_categoria,
                     autoridad.limite_dias_listas_de_acuerdos,
-                    autoridad.datawarehouse_id,
                     autoridad.sede,
+                    autoridad.pagina_cabecera_url,
+                    autoridad.pagina_pie_url,
+                    autoridad.tabla_renglon_color,
+                    autoridad.tablero_icono,
+                    autoridad.destinatarios_emails,
+                    autoridad.con_copias_emails,
                     autoridad.estatus,
                 ]
             )
