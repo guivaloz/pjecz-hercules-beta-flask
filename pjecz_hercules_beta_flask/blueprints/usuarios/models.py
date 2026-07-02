@@ -44,21 +44,21 @@ class Usuario(database.Model, UserMixin, UniversalMixin):
     nombres: Mapped[str] = mapped_column(String(256))
     apellido_paterno: Mapped[str] = mapped_column(String(256))
     apellido_materno: Mapped[str] = mapped_column(String(256))
-    curp: Mapped[str] = mapped_column(String(18), default="")
-    puesto: Mapped[str] = mapped_column(String(256), default="")
+    curp: Mapped[str] = mapped_column(String(18), default="", server_default="")
+    puesto: Mapped[str] = mapped_column(String(256), default="", server_default="")
     titulo: Mapped[Optional[str]] = mapped_column(String(32))
     workspace: Mapped[str] = mapped_column(Enum(*WORKSPACES, name="usuarios_workspaces", native_enum=False), index=True)
 
     # Columnas para el motor de firma electrónica
     efirma_registro_id: Mapped[Optional[int]]
-    efirma_contrasena: Mapped[Optional[str]] = mapped_column(String(256), default="")
+    efirma_contrasena: Mapped[Optional[str]] = mapped_column(String(256))
 
     # Columnas que NO aparecen en nuevo o editar porque vienen de otros lugares
-    email_personal: Mapped[str] = mapped_column(String(256), default="")
-    telefono: Mapped[str] = mapped_column(String(48), default="")
-    telefono_celular: Mapped[str] = mapped_column(String(48), default="")
-    extension: Mapped[str] = mapped_column(String(24), default="")
-    fotografia_url: Mapped[str] = mapped_column(String(512), default="")
+    email_personal: Mapped[str] = mapped_column(String(256), default="", server_default="")
+    telefono: Mapped[str] = mapped_column(String(48), default="", server_default="")
+    telefono_celular: Mapped[str] = mapped_column(String(48), default="", server_default="")
+    extension: Mapped[str] = mapped_column(String(24), default="", server_default="")
+    fotografia_url: Mapped[str] = mapped_column(String(512), default="", server_default="")
 
     # Columnas que NO deben ser expuestas
     api_key: Mapped[Optional[str]] = mapped_column(String(128))
@@ -66,11 +66,11 @@ class Usuario(database.Model, UserMixin, UniversalMixin):
     contrasena: Mapped[Optional[str]] = mapped_column(String(256))
 
     # Hijos
-    # arc_documentos_bitacoras: Mapped[List["ArcDocumentoBitacora"]] = relationship(back_populates="usuario")
-    # arc_remesas: Mapped[List["ArcRemesa"]] = relationship(back_populates="usuario_asignado")
-    # arc_solicitudes_asignado: Mapped[List["ArcSolicitud"]] = relationship(back_populates="usuario_asignado")
-    # arc_solicitudes_bitacoras: Mapped[List["ArcSolicitudBitacora"]] = relationship(back_populates="usuario")
-    # arc_remesas_bitacoras: Mapped[List["ArcRemesaBitacora"]] = relationship(back_populates="usuario")
+    arc_documentos_bitacoras: Mapped[List["ArcDocumentoBitacora"]] = relationship(back_populates="usuario")
+    arc_remesas: Mapped[List["ArcRemesa"]] = relationship(back_populates="usuario_asignado")
+    arc_solicitudes_asignado: Mapped[List["ArcSolicitud"]] = relationship(back_populates="usuario_asignado")
+    arc_solicitudes_bitacoras: Mapped[List["ArcSolicitudBitacora"]] = relationship(back_populates="usuario")
+    arc_remesas_bitacoras: Mapped[List["ArcRemesaBitacora"]] = relationship(back_populates="usuario")
     bitacoras: Mapped[List["Bitacora"]] = relationship(back_populates="usuario")
     bitacoras_apis: Mapped[List["BitacoraAPI"]] = relationship(back_populates="usuario")
     # cid_procedimientos: Mapped[List["CIDProcedimiento"]] = relationship(back_populates="usuario")
@@ -84,7 +84,7 @@ class Usuario(database.Model, UserMixin, UniversalMixin):
     tareas: Mapped[List["Tarea"]] = relationship(back_populates="usuario")
     # usuarios_nominas: Mapped[List["UsuarioNomina"]] = relationship(back_populates="usuario")
     usuarios_roles: Mapped[List["UsuarioRol"]] = relationship(back_populates="usuario")
-    # soportes_tickets: Mapped[List["SoporteTicket"]] = relationship(back_populates="usuario")
+    soportes_tickets: Mapped[List["SoporteTicket"]] = relationship(back_populates="usuario")
 
     # Propiedades
     modulos_menu_principal_consultados = []

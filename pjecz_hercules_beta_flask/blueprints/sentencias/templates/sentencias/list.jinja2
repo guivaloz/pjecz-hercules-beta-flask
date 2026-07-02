@@ -27,14 +27,14 @@
         <div class="row">
             <div class="col">
                 <form class="row g-1 mb-3" id="filtradorForm" onsubmit="filtrosDTSentencias.buscar(); return false;">
-                    {% if mostrar_filtro_autoridad_clave %}
                     <div class="col-2">
+                        {% if mostrar_filtro_autoridad_clave %}
                         <div class="form-floating">
                             <input id="filtroAutoridadClave" type="text" class="form-control" aria-label="Autoridad clave" style="text-transform: uppercase;">
                             <label for="filtroAutoridadClave">Autoridad clave</label>
                         </div>
+                        {% endif %}
                     </div>
-                    {% endif %}
                     <div class="col-2">
                         <div class="form-floating">
                             <input id="filtroFechaDesde" type="date" class="form-control" aria-label="Fecha Desde">
@@ -59,9 +59,9 @@
                             <label for="filtroExpediente">Expediente</label>
                         </div>
                     </div>
-                    {% if mostrar_filtro_autoridad_clave %}<div class="col-2 text-end">{% else %}<div class="col-4 text-end">{% endif %}
-                        <button title="Buscar" class="btn btn-primary btn-lg" onclick="filtrosDTSentencias.buscar(); return false;" id="button-buscar"><span class="iconify" data-icon="mdi:magnify"></span></button>
-                        <button title="Limpiar" class="btn btn-warning btn-lg" type="reset" onclick="filtrosDTSentencias.limpiar();" id="button-limpiar"><span class="iconify" data-icon="mdi:broom"></span></button>
+                    <div class="col-2 text-end">
+                        <button title="Buscar" class="btn btn-primary btn-lg" onclick="filtrosDTSentencias.buscar(); return false;" id="button-buscar"><span class="mdi mdi-magnify"></span></button>
+                        <button title="Limpiar" class="btn btn-warning btn-lg" type="reset" onclick="filtrosDTSentencias.limpiar();" id="button-limpiar"><span class="mdi mdi-broom"></span></button>
                     </div>
                 </form>
             </div>

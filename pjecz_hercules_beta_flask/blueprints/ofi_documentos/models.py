@@ -54,7 +54,7 @@ class OfiDocumento(database.Model, UniversalMixin):
     contenido_sfdt: Mapped[Optional[JSONB]] = mapped_column(JSONB)
 
     # Columnas firma simple
-    firma_simple: Mapped[str] = mapped_column(String(256), default="")
+    firma_simple: Mapped[str] = mapped_column(String(256), default="", server_default="")
     firma_simple_tiempo: Mapped[Optional[datetime]]
     firma_simple_usuario_id: Mapped[Optional[int]]
 

@@ -36,7 +36,7 @@ class Domicilio(database.Model, UniversalMixin):
     completo: Mapped[str] = mapped_column(String(1024))
 
     # Hijos
-    # centros_trabajos: Mapped[List["CentroTrabajo"]] = relationship(back_populates="domicilio")
+    centros_trabajos: Mapped[List["CentroTrabajo"]] = relationship(back_populates="domicilio")
     oficinas: Mapped[List["Oficina"]] = relationship(back_populates="domicilio")
 
     def elaborar_completo(self):

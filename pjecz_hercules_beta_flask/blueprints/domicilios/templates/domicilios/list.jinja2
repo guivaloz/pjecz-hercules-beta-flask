@@ -63,7 +63,7 @@
         // DataTable Domicilios
         const constructorDataTable = new ConfigDataTable( '{{ csrf_token() }}' );
         let configDataTable = constructorDataTable.config();
-        configDataTable['ajax']['url'] = '/domicilios/datatable_json';
+        configDataTable['ajax']['url'] = "{{ url_for('domicilios.datatable_json') }}";
         configDataTable['ajax']['data'] = {{ filtros }};
         configDataTable['columns'] = [
             { data: "detalle" },

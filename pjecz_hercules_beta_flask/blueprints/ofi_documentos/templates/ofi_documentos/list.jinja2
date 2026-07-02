@@ -78,10 +78,10 @@
     <script>
         // DataTable Oficios
         const constructorDataTable = new ConfigDataTable( '{{ csrf_token() }}' );
-        let configDataTable = constructorDataTable.config();
-        configDataTable['ajax']['url'] = '/ofi_documentos/datatable_json';
-        configDataTable['ajax']['data'] = {{ filtros }};
-        configDataTable['columns'] = [
+        let configDTOfiDocumentos = constructorDataTable.config();
+        configDTOfiDocumentos['ajax']['url'] = "{{ url_for('ofi_documentos.datatable_json') }}";
+        configDTOfiDocumentos['ajax']['data'] = {{ filtros }};
+        configDTOfiDocumentos['columns'] = [
             { data: 'detalle' },
             { data: 'creado' },
             { data: 'folio' },
@@ -89,7 +89,7 @@
             { data: 'descripcion' },
             { data: 'estado' }
         ];
-        configDataTable['columnDefs'] = [
+        configDTOfiDocumentos['columnDefs'] = [
             {
                 targets: 0, // detalle
                 data: null,
@@ -161,7 +161,7 @@
             }
         ];
         // Colorear renglones
-        configDataTable['rowCallback'] = function( row, data )  {
+        configDTOfiDocumentos['rowCallback'] = function( row, data )  {
             if (data.detalle.icono == "ARCHIVADO") {
                 $(row).css("background-color", darkenColor(data.autoridad.color_renglon, 0.2));
             } else if (data.detalle.icono == "CANCELADO") {
@@ -176,7 +176,7 @@
             }
         };
         // Filtros Oficios
-        const filtrosOficios = new FiltrosDataTable('#ofi_documentos_datatable', configDataTable);
+        const filtrosOficios = new FiltrosDataTable('#ofi_documentos_datatable', configDTOfiDocumentos);
         filtrosOficios.agregarInput('filtroFolio', 'folio');
         filtrosOficios.agregarInput('filtroPropietario', 'propietario');
         filtrosOficios.agregarInput('filtroDescripcion', 'descripcion');

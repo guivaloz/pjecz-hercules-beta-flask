@@ -66,7 +66,7 @@
         // DataTable Oficinas
         const constructorDataTable = new ConfigDataTable( '{{ csrf_token() }}' );
         let configDTOficinas = constructorDataTable.config();
-        configDTOficinas['ajax']['url'] = '/oficinas/datatable_json';
+        configDTOficinas['ajax']['url'] = "{{ url_for('oficinas.datatable_json') }}";
         configDTOficinas['ajax']['data'] = {{ filtros }};
         configDTOficinas['columns'] = [
             { data: "detalle" },

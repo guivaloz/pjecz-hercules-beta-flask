@@ -69,16 +69,16 @@
     <script>
         // DataTable OfiPlantillas
         const constructorDataTable = new ConfigDataTable( '{{ csrf_token() }}' );
-        let configDataTable = constructorDataTable.config();
-        configDataTable['ajax']['url'] = '/ofi_plantillas/datatable_json';
-        configDataTable['ajax']['data'] = {{ filtros }};
-        configDataTable['columns'] = [
+        let configDTOfiPlantillas = constructorDataTable.config();
+        configDTOfiPlantillas['ajax']['url'] = "{{ url_for('ofi_plantillas.datatable_json') }}";
+        configDTOfiPlantillas['ajax']['data'] = {{ filtros }};
+        configDTOfiPlantillas['columns'] = [
             { data: 'detalle' },
             { data: 'descripcion' },
             { data: 'esta_archivado' },
             { data: 'esta_compartida' }
         ];
-        configDataTable['columnDefs'] = [
+        configDTOfiPlantillas['columnDefs'] = [
             {
                 targets: 0, // detalle
                 data: null,
@@ -118,7 +118,7 @@
             }
         ];
         // Filtros OfiPlantillas
-        const filtrosPlantillas = new FiltrosDataTable('#ofi_plantillas_datatable', configDataTable);
+        const filtrosPlantillas = new FiltrosDataTable('#ofi_plantillas_datatable', configDTOfiPlantillas);
         filtrosPlantillas.agregarInput('filtroDescripcion', 'descripcion');
         filtrosPlantillas.precargar();
     </script>

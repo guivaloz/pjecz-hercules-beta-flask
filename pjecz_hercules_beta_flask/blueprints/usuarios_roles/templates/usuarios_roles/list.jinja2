@@ -43,7 +43,7 @@
         // DataTable Usuarios-Roles
         const constructorDataTable = new ConfigDataTable( '{{ csrf_token() }}' );
         let configDTUsuariosRoles = constructorDataTable.config();
-        configDTUsuariosRoles['ajax']['url'] = '/usuarios_roles/datatable_json';
+        configDTUsuariosRoles['ajax']['url'] = "{{ url_for('usuarios_roles.datatable_json') }}";
         configDTUsuariosRoles['ajax']['data'] = {}; // Por defecto no se filtra nada
         configDTUsuariosRoles['columns'] = [
             { data: "detalle" },

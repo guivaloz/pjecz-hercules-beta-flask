@@ -46,8 +46,8 @@
                         </div>
                     </div>
                     <div class="col-6 text-end">
-                        <button title="Buscar" class="btn btn-primary btn-lg" onclick="filtrosDTListasDeAcuerdos.buscar(); return false;" id="button-buscar"><span class="iconify" data-icon="mdi:magnify"></span></button>
-                        <button title="Limpiar" class="btn btn-warning btn-lg" type="reset" onclick="filtrosDTListasDeAcuerdos.limpiar();" id="button-limpiar"><span class="iconify" data-icon="mdi:broom"></span></button>
+                        <button title="Buscar" class="btn btn-primary btn-lg" onclick="filtrosDTListasDeAcuerdos.buscar(); return false;" id="button-buscar"><span class="mdi mdi-magnify"></span></button>
+                        <button title="Limpiar" class="btn btn-warning btn-lg" type="reset" onclick="filtrosDTListasDeAcuerdos.limpiar();" id="button-limpiar"><span class="mdi mdi-broom"></span></button>
                     </div>
                 </form>
             </div>
@@ -102,7 +102,7 @@
                     } else if (data.semaforo > 1) {
                         bandera = 'flag'; color = 'red';
                     }
-                    return moment.utc(data.tiempo).local().format('YYYY-MM-DD HH:mm') + ' <span style="color: ' + color +  ';" class="iconify" data-icon="mdi:' + bandera + '"></span>';
+                    return moment.utc(data.tiempo).local().format('YYYY-MM-DD HH:mm') + ' <span style="color: ' + color +  ';" class="mdi mdi-' + bandera + '"></span>';
                 }
             },
             {

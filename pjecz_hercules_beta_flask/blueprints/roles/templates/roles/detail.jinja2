@@ -137,7 +137,7 @@
         <script>
             // DataTable Permisos
             let configDTPermisos = constructorDataTable.config();
-            configDTPermisos['ajax']['url'] = '/permisos/datatable_json';
+            configDTPermisos['ajax']['url'] = "{{ url_for('permisos.datatable_json') }}";
             configDTPermisos['ajax']['data'] = { 'estatus': "A", 'rol_id': {{ rol.id}} };
             configDTPermisos['columns'] = [
                 { data: "detalle" },
@@ -176,7 +176,7 @@
         <script>
             // DataTable UsuariosRoles
             let configDTUsuariosRoles = constructorDataTable.config();
-            configDTUsuariosRoles['ajax']['url'] = '/usuarios_roles/datatable_json';
+            configDTUsuariosRoles['ajax']['url'] = "{{ url_for('usuarios_roles.datatable_json') }}";
             configDTUsuariosRoles['ajax']['data'] = { 'estatus': "A", 'rol_id': {{ rol.id}} };
             configDTUsuariosRoles['columns'] = [
                 { data: "detalle" },
@@ -220,9 +220,9 @@
                         let myRow = 'usuario_rol_row_' + data.id;
                         let myOnClick = "toggleEstatus('#" + myId + "', '" + data.url + "', '#" + myRow + "')";
                         if (data.estatus === 'A') {
-                            return '<button id="' + myId + '" type="button" class="btn btn-sm btn-outline-primary" onclick="' + myOnClick + '"><span class="iconify" data-icon="mdi mdi-toggle-switch"></span></button>';
+                            return '<button id="' + myId + '" type="button" class="btn btn-sm btn-outline-primary" onclick="' + myOnClick + '"><span class="mdi mdi-toggle-switch"></span></button>';
                         } else {
-                            return '<button id="' + myId + '" type="button" class="btn btn-sm btn-light" onclick="' + myOnClick + '"><span class="iconify" data-icon="mdi mdi-toggle-switch-off"></span></button>';
+                            return '<button id="' + myId + '" type="button" class="btn btn-sm btn-light" onclick="' + myOnClick + '"><span class="mdi mdi-toggle-switch-off"></span></button>';
                         }
                     }
                 }
@@ -264,12 +264,12 @@
                             if (data.estatus === 'A') {
                                 $(id).removeClass('btn-light');
                                 $(id).addClass('btn-outline-primary'); // Color azul
-                                $(id).html('<span class="iconify" data-icon="mdi mdi-toggle-switch"></span>'); // Icono toggle-switch
+                                $(id).html('<span class="mdi mdi-toggle-switch"></span>'); // Icono toggle-switch
                                 $(row).removeClass('table-secondary');
                             } else {
                                 $(id).removeClass('btn-outline-primary');
                                 $(id).addClass('btn-light'); // Color gris
-                                $(id).html('<span class="iconify" data-icon="mdi mdi-toggle-switch-off"></span>'); // Icono toggle-switch-off
+                                $(id).html('<span class="mdi mdi-toggle-switch-off"></span>'); // Icono toggle-switch-off
                                 $(row).addClass('table-secondary');
                             }
                             console.log(data.message);

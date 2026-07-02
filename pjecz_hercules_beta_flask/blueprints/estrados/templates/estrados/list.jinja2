@@ -52,8 +52,8 @@
                     <div class="col-2">
                     </div>
                     <div class="{% if mostrar_filtro_autoridad_clave %}col-2{% else %}col-4{% endif %} text-end">
-                        <button title="Buscar" class="btn btn-primary btn-lg" onclick="filtrosDTEstrados.buscar(); return false;" id="button-buscar"><span class="iconify" data-icon="mdi:magnify"></span></button>
-                        <button title="Limpiar" class="btn btn-warning btn-lg" type="reset" onclick="filtrosDTEstrados.limpiar();" id="button-limpiar"><span class="iconify" data-icon="mdi:broom"></span></button>
+                        <button title="Buscar" class="btn btn-primary btn-lg" onclick="filtrosDTEstrados.buscar(); return false;" id="button-buscar"><span class="mdi mdi-magnify"></span></button>
+                        <button title="Limpiar" class="btn btn-warning btn-lg" type="reset" onclick="filtrosDTEstrados.limpiar();" id="button-limpiar"><span class="mdi mdi-broom"></span></button>
                     </div>
                 </form>
             </div>
@@ -63,7 +63,6 @@
             <thead>
                 <tr>
                     <th>Fecha</th>
-                    <th>Autoridad</th>
                     <th>Descripción</th>
                 </tr>
             </thead>
@@ -78,11 +77,10 @@
         // DataTable Estrados
         const constructorDataTable = new ConfigDataTable( '{{ csrf_token() }}' );
         let configDTEstrados = constructorDataTable.config();
-        configDTEstrados['ajax']['url'] = '/estrados/datatable_json';
+        configDTEstrados['ajax']['url'] = "{{ url_for('estrados.datatable_json') }}";
         configDTEstrados['ajax']['data'] = {{ filtros }};
         configDTEstrados['columns'] = [
             { data: "fecha" },
-            { data: "autoridad_clave" },
             { data: "detalle" },
         ];
         configDTEstrados['columnDefs'] = [
@@ -94,7 +92,7 @@
                 }
             },
             {
-                targets: 2, // detalle
+                targets: 1, // detalle
                 data: null,
                 render: function(data, type, row, meta) {
                     let interior = data.descripcion;

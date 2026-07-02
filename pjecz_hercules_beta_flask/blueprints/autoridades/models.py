@@ -1,5 +1,5 @@
 """
-Autoridad
+Autoridad, modelos
 """
 
 from typing import List, Optional
@@ -76,10 +76,11 @@ class Autoridad(database.Model, UniversalMixin):
         Enum(*ORGANOS_JURISDICCIONALES, name="autoridades_organos_jurisdiccionales", native_enum=False),
         index=True,
     )
-    directorio_edictos: Mapped[str] = mapped_column(String(256), default="")
-    directorio_glosas: Mapped[str] = mapped_column(String(256), default="")
-    directorio_listas_de_acuerdos: Mapped[str] = mapped_column(String(256), default="")
-    directorio_sentencias: Mapped[str] = mapped_column(String(256), default="")
+    directorio_edictos: Mapped[str] = mapped_column(String(256), default="", server_default="")
+    directorio_estrados: Mapped[str] = mapped_column(String(256), default="", server_default="")
+    directorio_glosas: Mapped[str] = mapped_column(String(256), default="", server_default="")
+    directorio_listas_de_acuerdos: Mapped[str] = mapped_column(String(256), default="", server_default="")
+    directorio_sentencias: Mapped[str] = mapped_column(String(256), default="", server_default="")
     audiencia_categoria: Mapped[str] = mapped_column(
         Enum(*AUDIENCIAS_CATEGORIAS, name="autoridades_audiencias_categorias", native_enum=False),
         index=True,
@@ -91,23 +92,23 @@ class Autoridad(database.Model, UniversalMixin):
     pagina_pie_url: Mapped[Optional[str]]
     tabla_renglon_color: Mapped[Optional[str]]
     tablero_icono: Mapped[Optional[str]]
-    destinatarios_emails: Mapped[Optional[str]] = mapped_column(String(1024), nullable=True)
-    con_copias_emails: Mapped[Optional[str]] = mapped_column(String(1024), nullable=True)
+    destinatarios_emails: Mapped[Optional[str]] = mapped_column(String(1024))
+    con_copias_emails: Mapped[Optional[str]] = mapped_column(String(1024))
 
     # Hijos
-    # arc_documentos: Mapped[List["ArcDocumento"]] = relationship(back_populates="autoridad")
-    # arc_remesas: Mapped[List["ArcRemesa"]] = relationship(back_populates="autoridad")
-    # arc_solicitudes: Mapped[List["ArcSolicitud"]] = relationship(back_populates="autoridad")
-    # audiencias: Mapped[List["Audiencia"]] = relationship(back_populates="autoridad")
-    # autoridades_funcionarios: Mapped[List["AutoridadFuncionario"]] = relationship(back_populates="autoridad")
+    arc_documentos: Mapped[List["ArcDocumento"]] = relationship(back_populates="autoridad")
+    arc_remesas: Mapped[List["ArcRemesa"]] = relationship(back_populates="autoridad")
+    arc_solicitudes: Mapped[List["ArcSolicitud"]] = relationship(back_populates="autoridad")
+    audiencias: Mapped[List["Audiencia"]] = relationship(back_populates="autoridad")
+    autoridades_funcionarios: Mapped[List["AutoridadFuncionario"]] = relationship(back_populates="autoridad")
     # cid_areas_autoridades: Mapped[List["CIDAreaAutoridad"]] = relationship(back_populates="autoridad")
     # cid_procedimientos: Mapped[List["CIDProcedimiento"]] = relationship(back_populates="autoridad")
     edictos: Mapped[List["Edicto"]] = relationship(back_populates="autoridad")
     estrados: Mapped[List["Estrado"]] = relationship(back_populates="autoridad")
-    # exh_exhortos: Mapped[List["ExhExhorto"]] = relationship(back_populates="autoridad")
+    exh_exhortos: Mapped[List["ExhExhorto"]] = relationship(back_populates="autoridad")
     glosas: Mapped[List["Glosa"]] = relationship(back_populates="autoridad")
     listas_de_acuerdos: Mapped[List["ListaDeAcuerdo"]] = relationship(back_populates="autoridad")
-    # redam: Mapped[List["Redam"]] = relationship(back_populates="autoridad")
+    redam: Mapped[List["Redam"]] = relationship(back_populates="autoridad")
     sentencias: Mapped[List["Sentencia"]] = relationship(back_populates="autoridad")
     # ubicaciones_expedientes: Mapped[List["UbicacionExpediente"]] = relationship(back_populates="autoridad")
     usuarios: Mapped[List["Usuario"]] = relationship(back_populates="autoridad")

@@ -66,7 +66,7 @@
         // DataTable Distritos
         const constructorDataTable = new ConfigDataTable( '{{ csrf_token() }}' );
         let configDTDistritos = constructorDataTable.config();
-        configDTDistritos['ajax']['url'] = '/distritos/datatable_json';
+        configDTDistritos['ajax']['url'] = "{{ url_for('distritos.datatable_json') }}";
         configDTDistritos['ajax']['data'] = {{ filtros }};
         configDTDistritos['columns'] = [
             { data: 'detalle' },

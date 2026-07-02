@@ -42,6 +42,7 @@ from pjecz_hercules_beta_flask.lib.safe_string import (
     safe_string,
 )
 from pjecz_hercules_beta_flask.lib.storage import GoogleCloudStorage
+from pjecz_hercules_beta_flask.lib.time_to_text import dia_mes_anio
 
 MODULO = "SENTENCIAS"
 LIMITE_DIAS = 3650  # Diez años
@@ -207,7 +208,7 @@ def admin_datatable_json():
                     "url": url_for("sentencias.detail", sentencia_id=sentencia.id),
                 },
                 "creado": sentencia.creado.strftime("%Y-%m-%dT%H:%M:%S"),
-                "autoridad": sentencia.autoridad.clave,
+                "autoridad_clave": sentencia.autoridad.clave,
                 "fecha": sentencia.fecha.strftime("%Y-%m-%d 00:00:00"),
                 "sentencia": sentencia.sentencia,
                 "expediente": sentencia.expediente,
@@ -296,7 +297,8 @@ def list_inactive():
 def detail(sentencia_id):
     """Detalle de un Sentencia"""
     sentencia = Sentencia.query.get_or_404(sentencia_id)
-    return render_template("sentencias/detail.jinja2", sentencia=sentencia)
+    title = f"V.P. de Sentencia {sentencia.sentencia} del {sentencia.autoridad.clave}"
+    return render_template("sentencias/detail.jinja2", sentencia=sentencia, title=title)
 
 
 @sentencias.route("/sentencias/nuevo", methods=["GET", "POST"])
@@ -454,10 +456,7 @@ def new():
         "sentencias/new.jinja2",
         form=form,
         autoridad=autoridad,
-        materias=Materia.query.filter_by(en_sentencias=True).filter_by(estatus="A").order_by(Materia.id).all(),
-        materias_tipos_juicios=MateriaTipoJuicio.query.filter_by(estatus="A")
-        .order_by(MateriaTipoJuicio.materia_id, MateriaTipoJuicio.descripcion)
-        .all(),
+        materia_por_defecto_id=autoridad.materia_id,
     )
 
 
@@ -623,10 +622,7 @@ def new_with_autoridad_id(autoridad_id):
         "sentencias/new_for_autoridad.jinja2",
         form=form,
         autoridad=autoridad,
-        materias=Materia.query.filter_by(en_sentencias=True).filter_by(estatus="A").order_by(Materia.id).all(),
-        materias_tipos_juicios=MateriaTipoJuicio.query.filter_by(estatus="A")
-        .order_by(MateriaTipoJuicio.materia_id, MateriaTipoJuicio.descripcion)
-        .all(),
+        materia_por_defecto_id=autoridad.materia_id,
     )
 
 
@@ -646,7 +642,7 @@ def edit(sentencia_id):
             flash("No puede editar registros ajenos.", "warning")
             return redirect(url_for("sentencias.list_active"))
         # Si fue creado hace más de LIMITES_DIAS_EDITAR
-        if sentencia.creado < datetime.now(tz=local_tz) - timedelta(days=LIMITE_DIAS_EDITAR):
+        if sentencia.creado < datetime.now() - timedelta(days=LIMITE_DIAS_EDITAR):
             flash(f"Ya no puede editar porque fue creado hace más de {LIMITE_DIAS_EDITAR} dias.", "warning")
             return redirect(url_for("sentencias.detail", sentencia_id=sentencia.id))
 
@@ -731,15 +727,7 @@ def edit(sentencia_id):
     form.es_perspectiva_genero.data = sentencia.es_perspectiva_genero
 
     # Entregar el formulario
-    return render_template(
-        "sentencias/edit.jinja2",
-        form=form,
-        sentencia=sentencia,
-        materias=Materia.query.filter_by(en_sentencias=True).filter_by(estatus="A").order_by(Materia.id).all(),
-        materias_tipos_juicios=MateriaTipoJuicio.query.filter_by(estatus="A")
-        .order_by(MateriaTipoJuicio.materia_id, MateriaTipoJuicio.descripcion)
-        .all(),
-    )
+    return render_template("sentencias/edit.jinja2", form=form, sentencia=sentencia)
 
 
 @sentencias.route("/sentencias/eliminar/<int:sentencia_id>")
@@ -779,7 +767,7 @@ def delete(sentencia_id):
         return redirect(detalle_url)
 
     # Si fue creado hace menos del límite de días
-    if sentencia.creado >= datetime.now(tz=local_tz) - timedelta(days=LIMITE_DIAS_ELIMINAR):
+    if sentencia.creado >= datetime.now() - timedelta(days=LIMITE_DIAS_ELIMINAR):
         sentencia.delete()
         bitacora = Bitacora(
             modulo=Modulo.query.filter_by(nombre=MODULO).first(),
@@ -833,7 +821,7 @@ def recover(sentencia_id):
         return redirect(detalle_url)
 
     # Si fue creado hace menos del límite de días
-    if sentencia.creado >= datetime.now(tz=local_tz) - timedelta(days=LIMITE_DIAS_RECUPERAR):
+    if sentencia.creado >= datetime.now() - timedelta(days=LIMITE_DIAS_RECUPERAR):
         sentencia.recover()
         bitacora = Bitacora(
             modulo=Modulo.query.filter_by(nombre=MODULO).first(),
@@ -893,3 +881,11 @@ def download_file_pdf(sentencia_id):
     response.headers["Content-Type"] = "application/pdf"
     response.headers["Content-Disposition"] = f"attachment; filename={sentencia.archivo}"
     return response
+
+
+@sentencias.route("/sentencias/acuses/<id_hashed>")
+def checkout(id_hashed):
+    """Acuse"""
+    sentencia = Sentencia.query.get_or_404(Sentencia.decode_id(id_hashed))
+    dia, mes, ano = dia_mes_anio(sentencia.creado)
+    return render_template("sentencias/checkout.jinja2", sentencia=sentencia, dia=dia, mes=mes.upper(), ano=ano)

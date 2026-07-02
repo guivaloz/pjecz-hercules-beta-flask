@@ -1,0 +1,36 @@
+{% extends 'layouts/app.jinja2' %}
+{% import 'macros/detail.jinja2' as detail %}
+{% import 'macros/modals.jinja2' as modals %}
+{% import 'macros/topbar.jinja2' as topbar %}
+
+{% block title %}Abogado registrado {{ abogado.nombre }}{% endblock %}
+
+{% block topbar_actions %}
+    {% call topbar.page_buttons('Abogado registrado ' + abogado.nombre) %}
+        {{ topbar.button_previous('Abogados registrados ', url_for('abogados.list_active')) }}
+        {% if current_user.can_edit('ABOGADOS') %}
+        {{ topbar.button_edit('Editar', url_for('abogados.edit', abogado_id=abogado.id)) }}
+        {% endif %}
+        {% if current_user.can_admin('ABOGADOS') %}
+            {% if abogado.estatus == 'A' %}{{ topbar.button_delete('Eliminar', url_for('abogados.delete', abogado_id=abogado.id)) }}{% endif %}
+            {% if abogado.estatus == 'B' %}{{ topbar.button_recover('Recuperar', url_for('abogados.recover', abogado_id=abogado.id)) }}{% endif %}
+        {% endif %}
+    {% endcall %}
+{% endblock %}
+
+{% block content %}
+    {% call detail.card(estatus=abogado.estatus) %}
+        {{ detail.label_value_big('Nombre', abogado.nombre) }}
+        {{ detail.label_value('Fecha', abogado.fecha) }}
+        {{ detail.label_value('Número', abogado.numero) }}
+        {{ detail.label_value('Libro', abogado.libro) }}
+        {{ detail.label_value('Creado', moment(abogado.creado, local=False).format('DD MMM YYYY HH:mm')) }}
+    {% endcall %}
+{% endblock %}
+
+{% block custom_javascript %}
+    {% if current_user.can_admin('ABOGADOS') %}
+        {% if abogado.estatus == 'A' %}{{ modals.custom_javascript_delete('Eliminar', '¿Eliminar a ' + abogado.nombre + '?') }}{% endif %}
+        {% if abogado.estatus == 'B' %}{{ modals.custom_javascript_recover('Recuperar', '¿Recuperar a ' + abogado.nombre + '?') }}{% endif %}
+    {% endif %}
+{% endblock %}

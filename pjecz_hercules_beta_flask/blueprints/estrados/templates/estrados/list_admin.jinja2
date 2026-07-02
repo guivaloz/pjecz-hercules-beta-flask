@@ -56,8 +56,8 @@
                     <div class="col-2">
                     </div>
                     <div class="{% if mostrar_filtro_autoridad_clave %}col-2{% else %}col-4{% endif %} text-end">
-                        <button title="Buscar" class="btn btn-primary btn-lg" onclick="filtrosDTEdictos.buscar(); return false;" id="button-buscar"><span class="iconify" data-icon="mdi:magnify"></span></button>
-                        <button title="Limpiar" class="btn btn-warning btn-lg" type="reset" onclick="filtrosDTEdictos.limpiar();" id="button-limpiar"><span class="iconify" data-icon="mdi:broom"></span></button>
+                        <button title="Buscar" class="btn btn-primary btn-lg" onclick="filtrosDTEdictos.buscar(); return false;" id="button-buscar"><span class="mdi mdi-magnify"></span></button>
+                        <button title="Limpiar" class="btn btn-warning btn-lg" type="reset" onclick="filtrosDTEdictos.limpiar();" id="button-limpiar"><span class="mdi mdi-broom"></span></button>
                     </div>
                 </form>
             </div>
@@ -84,12 +84,12 @@
         // DataTable Estrados
         const constructorDataTable = new ConfigDataTable( '{{ csrf_token() }}' );
         let configDTEstrados = constructorDataTable.config();
-        configDTEstrados['ajax']['url'] = "{{ url_for('estrados.datatable_json') }}";
+        configDTEstrados['ajax']['url'] = "{{ url_for('estrados.admin_datatable_json') }}";
         configDTEstrados['ajax']['data'] = {{ filtros }};
         configDTEstrados['columns'] = [
             { data: "detalle" },
             { data: "creado" },
-            { data: "autoridad" },
+            { data: "autoridad_clave" },
             { data: "fecha" },
             { data: "descripcion" },
         ];

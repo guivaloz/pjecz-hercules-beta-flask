@@ -1,0 +1,14 @@
+# Ignore all files and directories starting with a dot
+.*
+
+# Ignore the Python virtual environment directory
+.venv/
+
+# Ignore the __pycache__ directories
+__pycache__/
+
+# Ignore log files
+*.log
+
+# Ignore the requirements.txt file
+requirements.txt

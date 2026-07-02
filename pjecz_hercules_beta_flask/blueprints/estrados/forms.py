@@ -8,8 +8,8 @@ from wtforms import DateField, FileField, StringField, SubmitField
 from wtforms.validators import DataRequired, Length
 
 
-class EdictoNewForm(FlaskForm):
-    """Formulario para nuevo Edicto"""
+class EstradoNewForm(FlaskForm):
+    """Formulario para nuevo Estrado"""
 
     distrito = StringField("Distrito")  # Read only
     autoridad = StringField("Autoridad")  # Read only
@@ -19,8 +19,8 @@ class EdictoNewForm(FlaskForm):
     guardar = SubmitField("Guardar")
 
 
-class EdictoEditForm(FlaskForm):
-    """Formulario para editar Edicto"""
+class EstradoEditForm(FlaskForm):
+    """Formulario para editar Estrado"""
 
     fecha = DateField("Fecha", validators=[DataRequired()])
     descripcion = StringField("Descripcion", validators=[DataRequired(), Length(max=256)])

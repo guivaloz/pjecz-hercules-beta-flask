@@ -59,15 +59,15 @@
     <script>
         // DataTable entradas_salidas
         const constructorDataTable = new ConfigDataTable( '{{ csrf_token() }}' );
-        let configDataTable = constructorDataTable.config();
-        configDataTable['ajax']['url'] = '/entradas_salidas/datatable_json';
-        configDataTable['ajax']['data'] = {{ filtros }};
-        configDataTable['columns'] = [
+        let configDTEntradasSalidas = constructorDataTable.config();
+        configDTEntradasSalidas['ajax']['url'] = "{{ url_for('entradas_salidas.datatable_json') }}";
+        configDTEntradasSalidas['ajax']['data'] = {{ filtros }};
+        configDTEntradasSalidas['columns'] = [
             { data: "creado" },
             { data: "tipo" },
             { data: "usuario" }
         ];
-        configDataTable['columnDefs'] = [
+        configDTEntradasSalidas['columnDefs'] = [
             {
                 targets: 0, // creado
                 type: "date",
@@ -84,7 +84,7 @@
             }
         ];
         // Filtros bitacoras
-        const filtrosEntradasSalidas = new FiltrosDataTable('#entradas_salidas_datatable', configDataTable);
+        const filtrosEntradasSalidas = new FiltrosDataTable('#entradas_salidas_datatable', configDTEntradasSalidas);
         filtrosEntradasSalidas.agregarInput('filtroEntradasSalidasUsuarioId', 'usuario_id');
         filtrosEntradasSalidas.precargar();
     </script>

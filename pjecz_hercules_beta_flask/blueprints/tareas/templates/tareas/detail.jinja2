@@ -30,7 +30,7 @@
         <pre class="pt-3">{{ tarea.mensaje }}</pre>
         {% if tarea.url %}
             <a type="button" class="w-100 btn btn-lg btn-success my-2" href="{{ url_for('tareas.download_xlsx', tarea_id=tarea.id) }}" target="_blank">
-                <span class="iconify" data-icon="mdi mdi-file-download" style="font-size: 2.0em; margin-right: 4px;"></span>
+                <span class="mdi mdi-file-download" style="font-size: 2.0em; margin-right: 4px;"></span>
                 {{ tarea.archivo }}
             </a>
         {% endif %}

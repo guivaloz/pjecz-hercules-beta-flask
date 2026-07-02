@@ -251,7 +251,9 @@ def list_inactive():
 def detail(glosa_id):
     """Detalle de un Glosa"""
     glosa = Glosa.query.get_or_404(glosa_id)
-    return render_template("glosas/detail.jinja2", glosa=glosa)
+    title = f"{glosa.descripcion[:24]}…" if len(glosa.descripcion) > 24 else glosa.descripcion
+    title = f"{title} del {glosa.autoridad.clave}"
+    return render_template("glosas/detail.jinja2", glosa=glosa, title=title)
 
 
 @glosas.route("/glosas/nuevo", methods=["GET", "POST"])
@@ -529,7 +531,7 @@ def edit(glosa_id):
             flash("No puede editar registros ajenos.", "warning")
             return redirect(url_for("glosas.list_active"))
         # Si fue creado hace más de LIMITES_DIAS_EDITAR
-        if glosa.creado < datetime.now(tz=local_tz) - timedelta(days=LIMITE_DIAS_EDITAR):
+        if glosa.creado < datetime.now() - timedelta(days=LIMITE_DIAS_EDITAR):
             flash(f"Ya no puede editar porque fue creado hace más de {LIMITE_DIAS_EDITAR} dias.", "warning")
             return redirect(url_for("glosas.detail", glosa_id=glosa.id))
 
@@ -630,7 +632,7 @@ def delete(glosa_id):
         return redirect(detalle_url)
 
     # Si fue creado hace menos del límite de días
-    if glosa.creado >= datetime.now(tz=local_tz) - timedelta(days=LIMITE_DIAS_ELIMINAR):
+    if glosa.creado >= datetime.now() - timedelta(days=LIMITE_DIAS_ELIMINAR):
         glosa.delete()
         bitacora = Bitacora(
             modulo=Modulo.query.filter_by(nombre=MODULO).first(),
@@ -659,7 +661,7 @@ def recover(glosa_id):
 
     # Validar que se pueda recuperar
     if glosa.estatus == "A":
-        flash("No puede eliminar esta Glosa porque ya está activa.", "success")
+        flash("No puede recuperar esta Glosa porque ya está activa.", "success")
         return redirect(detalle_url)
 
     # Definir la descripción para la bitácora
@@ -684,7 +686,7 @@ def recover(glosa_id):
         return redirect(detalle_url)
 
     # Si fue creado hace menos del límite de días
-    if glosa.creado >= datetime.now(tz=local_tz) - timedelta(days=LIMITE_DIAS_RECUPERAR):
+    if glosa.creado >= datetime.now() - timedelta(days=LIMITE_DIAS_RECUPERAR):
         glosa.recover()
         bitacora = Bitacora(
             modulo=Modulo.query.filter_by(nombre=MODULO).first(),

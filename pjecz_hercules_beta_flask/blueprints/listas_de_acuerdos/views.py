@@ -33,6 +33,7 @@ from pjecz_hercules_beta_flask.lib.exceptions import (
 from pjecz_hercules_beta_flask.lib.google_cloud_storage import get_blob_name_from_url, get_file_from_gcs
 from pjecz_hercules_beta_flask.lib.safe_string import safe_clave, safe_message
 from pjecz_hercules_beta_flask.lib.storage import GoogleCloudStorage
+from pjecz_hercules_beta_flask.lib.time_to_text import dia_mes_anio
 
 MODULO = "LISTAS DE ACUERDOS"
 HORAS_BUENO = 14  # Bandera verde si se creó antes de 14 horas del día
@@ -290,13 +291,15 @@ def list_inactive():
 def detail(lista_de_acuerdo_id):
     """Detalle de un Lista de Acuerdo"""
     lista_de_acuerdo = ListaDeAcuerdo.query.get_or_404(lista_de_acuerdo_id)
-    return render_template("listas_de_acuerdos/detail.jinja2", lista_de_acuerdo=lista_de_acuerdo)
+    title = f"Lista de Acuerdos {lista_de_acuerdo.fecha.strftime('%Y-%m-%d')} del {lista_de_acuerdo.autoridad.clave}"
+    return render_template("listas_de_acuerdos/detail.jinja2", lista_de_acuerdo=lista_de_acuerdo, title=title)
 
 
 @listas_de_acuerdos.route("/listas_de_acuerdos/nuevo", methods=["GET", "POST"])
 @permission_required(MODULO, Permiso.CREAR)
 def new():
     """Subir ListaDeAcuerdo como Juzgado"""
+    utc_tz = pytz.utc
     local_tz = pytz.timezone(current_app.config["TZ"])
 
     # Validar autoridad
@@ -315,7 +318,7 @@ def new():
         return redirect(url_for("listas_de_acuerdos.list_active"))
 
     # Google App Engine usa tiempo universal, sin esta correccion las fechas de la noche cambian al dia siguiente
-    ahora_utc = datetime.now(timezone("UTC"))
+    ahora_utc = datetime.now(utc_tz)
     ahora_mx_coah = ahora_utc.astimezone(local_tz)
 
     # Definir la fecha límite para el juzgado
@@ -474,6 +477,8 @@ def new():
 @permission_required(MODULO, Permiso.ADMINISTRAR)
 def new_with_autoridad_id(autoridad_id):
     """Subir ListaDeAcuerdo para una autoridad como administrador"""
+    utc_tz = pytz.utc
+    local_tz = pytz.timezone(current_app.config["TZ"])
 
     # Validar autoridad
     autoridad = Autoridad.query.get_or_404(autoridad_id)
@@ -494,7 +499,7 @@ def new_with_autoridad_id(autoridad_id):
         return redirect(url_for("autoridades.detail", autoridad_id=autoridad.id))
 
     # Google App Engine usa tiempo universal, sin esta correccion las fechas de la noche cambian al dia siguiente
-    ahora_utc = datetime.now(timezone("UTC"))
+    ahora_utc = datetime.now(utc_tz)
     ahora_mx_coah = ahora_utc.astimezone(local_tz)
 
     # Para validar la fecha
@@ -680,7 +685,7 @@ def delete(lista_de_acuerdo_id):
         return redirect(detalle_url)
 
     # Si fue creado hace menos del límite de días
-    if lista_de_acuerdo.creado >= datetime.now(tz=local_tz) - timedelta(days=LIMITE_DIAS_ELIMINAR):
+    if lista_de_acuerdo.creado >= datetime.now() - timedelta(days=LIMITE_DIAS_ELIMINAR):
         lista_de_acuerdo.delete()
         bitacora = Bitacora(
             modulo=Modulo.query.filter_by(nombre=MODULO).first(),
@@ -804,3 +809,17 @@ def download_file_pdf(lista_de_acuerdo_id):
     response.headers["Content-Type"] = "application/pdf"
     response.headers["Content-Disposition"] = f"attachment; filename={lista_de_acuerdo.archivo}"
     return response
+
+
+@listas_de_acuerdos.route("/listas_de_acuerdos/acuses/<id_hashed>")
+def checkout(id_hashed):
+    """Acuse"""
+    lista_de_acuerdo = ListaDeAcuerdo.query.get_or_404(ListaDeAcuerdo.decode_id(id_hashed))
+    dia, mes, anio = dia_mes_anio(lista_de_acuerdo.creado)
+    return render_template(
+        "listas_de_acuerdos/checkout.jinja2",
+        lista_de_acuerdo=lista_de_acuerdo,
+        dia=dia,
+        mes=mes.upper(),
+        anio=anio,
+    )

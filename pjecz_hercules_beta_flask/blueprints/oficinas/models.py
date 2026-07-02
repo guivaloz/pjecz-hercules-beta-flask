@@ -42,11 +42,11 @@ class Oficina(database.Model, UniversalMixin):
     apertura: Mapped[time]
     cierre: Mapped[time]
     limite_personas: Mapped[int]
-    telefono: Mapped[str] = mapped_column(String(48), default="")
-    extension: Mapped[str] = mapped_column(String(24), default="")
+    telefono: Mapped[str] = mapped_column(String(48), default="", server_default="")
+    extension: Mapped[str] = mapped_column(String(24), default="", server_default="")
 
     # Hijos
-    # funcionarios_oficinas: Mapped[List["FuncionarioOficina"]] = relationship(back_populates="oficina")
+    funcionarios_oficinas: Mapped[List["FuncionarioOficina"]] = relationship(back_populates="oficina")
     usuarios: Mapped[List["Usuario"]] = relationship(back_populates="oficina")
 
     @property

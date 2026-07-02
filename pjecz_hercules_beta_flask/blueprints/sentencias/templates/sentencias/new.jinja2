@@ -2,20 +2,73 @@
 {% import 'macros/form.jinja2' as f with context %}
 {% import 'macros/topbar.jinja2' as topbar %}
 
-{% block title %}Nuevo Sentencia{% endblock %}
+{% block title %}Nueva V.P. de Sentencia{% endblock %}
+
+{% block custom_head %}
+    {{ f.drop_zone_css() }}
+{% endblock %}
 
 {% block topbar_actions %}
-    {{ topbar.page('Nuevo Sentencia') }}
+    {{ topbar.page('Nueva V.P. de Sentencia') }}
 {% endblock %}
 
 {% block content %}
     {% call f.card() %}
-        {% call f.form_tag('sentencias.new', fid='sentencia_form') %}
+        {% call f.form_tag_multipart('sentencias.new', fid='sentencia_form') %}
+            <div class="row">
+                <div class="col-md-6">
+                    {% call f.form_group(form.sentencia) %}{% endcall %}
+                    {% call f.form_group(form.sentencia_fecha) %}{% endcall %}
+                </div>
+                <div class="col-md-6">
+                    {% call f.form_group(form.expediente) %}{% endcall %}
+                    {% call f.form_group(form.fecha) %}{% endcall %}
+                </div>
+            </div>
+            {% call f.form_group(form.materia) %}{% endcall %}
+            {% call f.form_group(form.materia_tipo_juicio) %}{% endcall %}
             {% call f.form_group(form.descripcion) %}{% endcall %}
+            {% call f.form_group(form.es_perspectiva_genero) %}{% endcall %}
+            {% call f.drop_zone_wrapper() %}
+                {% call f.form_group(form.archivo, class='dropzone') %}{% endcall %}
+            {% endcall %}
             {% call f.form_group(form.guardar) %}{% endcall %}
         {% endcall %}
     {% endcall %}
 {% endblock %}
 
 {% block custom_javascript %}
+    {{ f.drop_zone_js() }}
+    <!-- Select Materia-Materia Tipo de Juicio -->
+    <script>
+        const materiaSelect = document.getElementById('materia');
+        const materiaTipoJuicioSelect = document.getElementById('materia_tipo_juicio');
+        // Cargar las opciones del select materia
+        fetch("{{ url_for('materias.select_json') }}")
+            .then(response => response.json())
+            .then(data => {
+                data.forEach(materia => {
+                    const option = document.createElement('option');
+                    option.value = materia.id;
+                    option.text = materia.nombre;
+                    materiaSelect.appendChild(option);
+                });
+                materiaSelect.value = {{ materia_por_defecto_id }}; // Seleccionar la materia por defecto
+                materiaSelect.dispatchEvent(new Event('change'));
+            });
+        // Cargar las opciones del select materia_tipo_juicio, si la materia cambia
+        materiaSelect.addEventListener('change', () => {
+            fetch(`{{ url_for('materias_tipos_juicios.select_json') }}?materia_id=${materiaSelect.value}`)
+                .then(response => response.json())
+                .then(data => {
+                    materiaTipoJuicioSelect.innerHTML = '';
+                    data.forEach(materia_tipo_juicio => {
+                        const option = document.createElement('option');
+                        option.value = materia_tipo_juicio.id;
+                        option.text = materia_tipo_juicio.descripcion;
+                        materiaTipoJuicioSelect.appendChild(option);
+                    });
+                });
+        });
+    </script>
 {% endblock %}

@@ -64,7 +64,7 @@
             // DataTable Municipios
             const constructorDataTable = new ConfigDataTable( '{{ csrf_token() }}' );
             let configDTMunicipios = constructorDataTable.config();
-            configDTMunicipios['ajax']['url'] = '/municipios/datatable_json';
+            configDTMunicipios['ajax']['url'] = "{{ url_for('municipios.datatable_json') }}";
             configDTMunicipios['ajax']['data'] = { estatus: "A", estado_id: {{ estado.id}} };
             configDTMunicipios['columns'] = [
                 { data: 'detalle' },

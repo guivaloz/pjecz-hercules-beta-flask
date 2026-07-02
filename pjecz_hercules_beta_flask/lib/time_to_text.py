@@ -28,7 +28,7 @@ def mes_en_palabra(mes_numero=None):
     return MESES[hoy.month]
 
 
-def dia_mes_ano(fecha=None):
+def dia_mes_anio(fecha=None):
     """Entrega el dia en dos digitos, el mes en palabra y el año en cuatro digitos"""
     if isinstance(fecha, date) or isinstance(fecha, datetime):
         fecha_date = fecha

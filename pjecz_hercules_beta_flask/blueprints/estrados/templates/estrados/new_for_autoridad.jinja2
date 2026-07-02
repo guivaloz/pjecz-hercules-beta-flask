@@ -2,20 +2,32 @@
 {% import 'macros/form.jinja2' as f with context %}
 {% import 'macros/topbar.jinja2' as topbar %}
 
-{% block title %}Nuevo Estrado{% endblock %}
+{% block title %}Nuevo Estrado para {{ autoridad.clave }}{% endblock %}
+
+{% block custom_head %}
+    {{ f.drop_zone_css() }}
+{% endblock %}
 
 {% block topbar_actions %}
-    {{ topbar.page('Nuevo Estrado') }}
+    {{ topbar.page('Nuevo Estrado para ' + autoridad.clave) }}
 {% endblock %}
 
 {% block content %}
     {% call f.card() %}
-        {% call f.form_tag('estrados.new', fid='estrado_form') %}
+        {% set form_kwargs = {'autoridad_id': autoridad.id} %}
+        {% call f.form_tag_multipart('estrados.new_with_autoridad_id', fid='estrado_form', **form_kwargs) %}
+            {% call f.form_group(form.distrito, readonly=true) %}{% endcall %}
+            {% call f.form_group(form.autoridad, readonly=true) %}{% endcall %}
+            {% call f.form_group(form.fecha) %}{% endcall %}
             {% call f.form_group(form.descripcion) %}{% endcall %}
+            {% call f.drop_zone_wrapper() %}
+                {% call f.form_group(form.archivo, class='dropzone') %}{% endcall %}
+            {% endcall %}
             {% call f.form_group(form.guardar) %}{% endcall %}
         {% endcall %}
     {% endcall %}
 {% endblock %}
 
 {% block custom_javascript %}
+    {{ f.drop_zone_js() }}
 {% endblock %}

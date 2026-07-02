@@ -12,6 +12,7 @@
     {% call f.card() %}
         {% set form_kwargs = {'estrado_id': estrado.id} %}
         {% call f.form_tag('estrados.edit', fid='estrado_form', **form_kwargs) %}
+            {% call f.form_group(form.fecha) %}{% endcall %}
             {% call f.form_group(form.descripcion) %}{% endcall %}
             {% call f.form_group(form.guardar) %}{% endcall %}
         {% endcall %}

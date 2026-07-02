@@ -38,6 +38,7 @@ from pjecz_hercules_beta_flask.lib.safe_string import (
     safe_string,
 )
 from pjecz_hercules_beta_flask.lib.storage import GoogleCloudStorage
+from pjecz_hercules_beta_flask.lib.time_to_text import dia_mes_anio
 
 MODULO = "EDICTOS"
 LIMITE_DIAS = 365  # Un anio
@@ -188,7 +189,7 @@ def admin_datatable_json():
                     "url": url_for("edictos.detail", edicto_id=edicto.id),
                 },
                 "creado": edicto.creado.strftime("%Y-%m-%dT%H:%M:%S"),
-                "autoridad": edicto.autoridad.clave,
+                "autoridad_clave": edicto.autoridad.clave,
                 "fecha": edicto.fecha.strftime("%Y-%m-%d 00:00:00"),
                 "descripcion": edicto.descripcion,
                 "expediente": edicto.expediente,
@@ -268,7 +269,9 @@ def list_inactive():
 def detail(edicto_id):
     """Detalle de un Edicto"""
     edicto = Edicto.query.get_or_404(edicto_id)
-    return render_template("edictos/detail.jinja2", edicto=edicto)
+    title = f"{edicto.descripcion[:24]}…" if len(edicto.descripcion) > 24 else edicto.descripcion
+    title = f"{title} del {edicto.autoridad.clave}"
+    return render_template("edictos/detail.jinja2", edicto=edicto, title=title)
 
 
 @edictos.route("/edictos/nuevo", methods=["GET", "POST"])
@@ -585,7 +588,7 @@ def edit(edicto_id):
             flash("No puede editar registros ajenos.", "warning")
             return redirect(url_for("edictos.list_active"))
         # Si fue creado hace más de LIMITES_DIAS_EDITAR
-        if edicto.creado < datetime.now(tz=local_tz) - timedelta(days=LIMITE_DIAS_EDITAR):
+        if edicto.creado < datetime.now() - timedelta(days=LIMITE_DIAS_EDITAR):
             flash(f"Ya no puede editar porque fue creado hace más de {LIMITE_DIAS_EDITAR} dias.", "warning")
             return redirect(url_for("edictos.detail", edicto_id=edicto.id))
 
@@ -705,7 +708,7 @@ def delete(edicto_id):
         return redirect(detalle_url)
 
     # Si fue creado hace menos del limite de dias
-    if edicto.creado >= datetime.now(tz=local_tz) - timedelta(days=LIMITE_DIAS_ELIMINAR):
+    if edicto.creado >= datetime.now() - timedelta(days=LIMITE_DIAS_ELIMINAR):
         edicto.delete()
         bitacora = Bitacora(
             modulo=Modulo.query.filter_by(nombre=MODULO).first(),
@@ -759,7 +762,7 @@ def recover(edicto_id):
         return redirect(detalle_url)
 
     # Si fue creado hace menos del límite de días
-    if edicto.creado >= datetime.now(tz=local_tz) - timedelta(days=LIMITE_DIAS_RECUPERAR):
+    if edicto.creado >= datetime.now() - timedelta(days=LIMITE_DIAS_RECUPERAR):
         edicto.recover()
         bitacora = Bitacora(
             modulo=Modulo.query.filter_by(nombre=MODULO).first(),
@@ -819,3 +822,11 @@ def download_file_pdf(edicto_id):
     response.headers["Content-Type"] = "application/pdf"
     response.headers["Content-Disposition"] = f"attachment; filename={edicto.archivo}"
     return response
+
+
+@edictos.route("/edictos/acuses/<id_hashed>")
+def checkout(id_hashed):
+    """Acuse"""
+    edicto = Edicto.query.get_or_404(Edicto.decode_id(id_hashed))
+    dia, mes, anio = dia_mes_anio(edicto.creado)
+    return render_template("edictos/checkout.jinja2", edicto=edicto, dia=dia, mes=mes.upper(), anio=anio)
