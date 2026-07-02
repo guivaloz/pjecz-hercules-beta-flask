@@ -685,7 +685,7 @@ def delete(lista_de_acuerdo_id):
         return redirect(detalle_url)
 
     # Si fue creado hace menos del límite de días
-    if lista_de_acuerdo.creado >= datetime.now(tz=local_tz) - timedelta(days=LIMITE_DIAS_ELIMINAR):
+    if lista_de_acuerdo.creado >= datetime.now() - timedelta(days=LIMITE_DIAS_ELIMINAR):
         lista_de_acuerdo.delete()
         bitacora = Bitacora(
             modulo=Modulo.query.filter_by(nombre=MODULO).first(),

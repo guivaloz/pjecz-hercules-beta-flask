@@ -30,12 +30,7 @@ from pjecz_hercules_beta_flask.lib.exceptions import (
     MyUnknownExtensionError,
 )
 from pjecz_hercules_beta_flask.lib.google_cloud_storage import get_blob_name_from_url, get_file_from_gcs
-from pjecz_hercules_beta_flask.lib.safe_string import (
-    safe_clave,
-    safe_expediente,
-    safe_message,
-    safe_string,
-)
+from pjecz_hercules_beta_flask.lib.safe_string import safe_clave, safe_message, safe_string
 from pjecz_hercules_beta_flask.lib.storage import GoogleCloudStorage
 
 MODULO = "ESTRADOS"
@@ -90,13 +85,10 @@ def datatable_json():
     for resultado in registros:
         data.append(
             {
+                "fecha": resultado.fecha.strftime("%Y-%m-%d 00:00:00"),
                 "detalle": {
-                    "fecha": resultado.fecha.strftime("%Y-%m-%d 00:00:00"),
-                    "autoridad_clave": resultado.autoridad.clave,
-                    "detalle": {
-                        "descripcion": resultado.descripcion,
-                        "url": url_for("edictos.detail", edicto_id=resultado.id),
-                    },
+                    "descripcion": resultado.descripcion,
+                    "url": url_for("estrados.detail", estrado_id=resultado.id),
                 },
             }
         )
@@ -492,7 +484,7 @@ def edit(estrado_id):
             flash("No puede editar registros ajenos.", "warning")
             return redirect(url_for("estrados.list_active"))
         # Si fue creado hace más de LIMITES_DIAS_EDITAR
-        if estrado.creado < datetime.now(tz=local_tz) - timedelta(days=LIMITE_DIAS_EDITAR):
+        if estrado.creado < datetime.now() - timedelta(days=LIMITE_DIAS_EDITAR):
             flash(f"Ya no puede editar porque fue creado hace más de {LIMITE_DIAS_EDITAR} dias.", "warning")
             return redirect(url_for("estrados.detail", estrado_id=estrado.id))
 
@@ -528,7 +520,7 @@ def edit(estrado_id):
                 modulo=Modulo.query.filter_by(nombre=MODULO).first(),
                 usuario=current_user,
                 descripcion=safe_message(f"Editado el Estrado de {estrado.autoridad.clave} sobre {estrado.descripcion}"),
-                url=url_for("glosas.detail", glosa_id=estrado.id),
+                url=url_for("estrados.detail", estrado_id=estrado.id),
             )
             bitacora.save()
             flash(bitacora.descripcion, "success")
@@ -539,7 +531,7 @@ def edit(estrado_id):
     form.descripcion.data = estrado.descripcion
 
     # Entregar el formulario
-    return render_template("glosas/edit.jinja2", form=form, glosa=estrado)
+    return render_template("estrados/edit.jinja2", form=form, estrado=estrado)
 
 
 @estrados.route("/estrados/eliminar/<int:estrado_id>")
@@ -579,7 +571,7 @@ def delete(estrado_id):
         return redirect(detalle_url)
 
     # Si fue creado hace menos del límite de días
-    if estrado.creado >= datetime.now(tz=local_tz) - timedelta(days=LIMITE_DIAS_ELIMINAR):
+    if estrado.creado >= datetime.now() - timedelta(days=LIMITE_DIAS_ELIMINAR):
         estrado.delete()
         bitacora = Bitacora(
             modulo=Modulo.query.filter_by(nombre=MODULO).first(),
@@ -633,7 +625,7 @@ def recover(estrado_id):
         return redirect(detalle_url)
 
     # Si fue creado hace menos del límite de días
-    if estrado.creado >= datetime.now(tz=local_tz) - timedelta(days=LIMITE_DIAS_RECUPERAR):
+    if estrado.creado >= datetime.now() - timedelta(days=LIMITE_DIAS_RECUPERAR):
         estrado.recover()
         bitacora = Bitacora(
             modulo=Modulo.query.filter_by(nombre=MODULO).first(),

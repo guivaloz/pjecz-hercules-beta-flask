@@ -80,10 +80,10 @@
     <script>
         // DataTable OfiPlantillas
         const constructorDataTable = new ConfigDataTable( '{{ csrf_token() }}' );
-        let configDataTable = constructorDataTable.config();
-        configDataTable['ajax']['url'] = '/ofi_plantillas/datatable_json';
-        configDataTable['ajax']['data'] = {{ filtros }};
-        configDataTable['columns'] = [
+        let configDTPlantillas = constructorDataTable.config();
+        configDTPlantillas['ajax']['url'] = "{{ url_for('ofi_plantillas.datatable_json') }}";
+        configDTPlantillas['ajax']['data'] = {{ filtros }};
+        configDTPlantillas['columns'] = [
             { data: 'detalle' },
             { data: 'descripcion' },
             { data: 'propietario' },
@@ -91,7 +91,7 @@
             { data: 'toggle_esta_archivado' },
             { data: 'toggle_esta_compartida' }
         ];
-        configDataTable['columnDefs'] = [
+        configDTPlantillas['columnDefs'] = [
             {
                 targets: 0, // detalle
                 data: null,
@@ -179,13 +179,13 @@
             }
         ];
         // Colorear renglones
-        configDataTable['rowCallback'] = function( row, data )  {
+        configDTPlantillas['rowCallback'] = function( row, data )  {
             if (data.autoridad.color_renglon)   {
                 $(row).css("background-color", data.autoridad.color_renglon);
             }
         };
         // Filtros OfiPlantillas
-        const filtrosPlantillas = new FiltrosDataTable('#ofi_plantillas_datatable', configDataTable);
+        const filtrosPlantillas = new FiltrosDataTable('#ofi_plantillas_datatable', configDTPlantillas);
         filtrosPlantillas.agregarInput('filtroDescripcion', 'descripcion');
         filtrosPlantillas.agregarInput('filtroPropietario', 'propietario');
         filtrosPlantillas.agregarInput('filtroAutoridad', 'autoridad');

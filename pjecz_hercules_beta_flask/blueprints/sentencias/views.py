@@ -208,7 +208,7 @@ def admin_datatable_json():
                     "url": url_for("sentencias.detail", sentencia_id=sentencia.id),
                 },
                 "creado": sentencia.creado.strftime("%Y-%m-%dT%H:%M:%S"),
-                "autoridad": sentencia.autoridad.clave,
+                "autoridad_clave": sentencia.autoridad.clave,
                 "fecha": sentencia.fecha.strftime("%Y-%m-%d 00:00:00"),
                 "sentencia": sentencia.sentencia,
                 "expediente": sentencia.expediente,
@@ -642,7 +642,7 @@ def edit(sentencia_id):
             flash("No puede editar registros ajenos.", "warning")
             return redirect(url_for("sentencias.list_active"))
         # Si fue creado hace más de LIMITES_DIAS_EDITAR
-        if sentencia.creado < datetime.now(tz=local_tz) - timedelta(days=LIMITE_DIAS_EDITAR):
+        if sentencia.creado < datetime.now() - timedelta(days=LIMITE_DIAS_EDITAR):
             flash(f"Ya no puede editar porque fue creado hace más de {LIMITE_DIAS_EDITAR} dias.", "warning")
             return redirect(url_for("sentencias.detail", sentencia_id=sentencia.id))
 
@@ -767,7 +767,7 @@ def delete(sentencia_id):
         return redirect(detalle_url)
 
     # Si fue creado hace menos del límite de días
-    if sentencia.creado >= datetime.now(tz=local_tz) - timedelta(days=LIMITE_DIAS_ELIMINAR):
+    if sentencia.creado >= datetime.now() - timedelta(days=LIMITE_DIAS_ELIMINAR):
         sentencia.delete()
         bitacora = Bitacora(
             modulo=Modulo.query.filter_by(nombre=MODULO).first(),
@@ -821,7 +821,7 @@ def recover(sentencia_id):
         return redirect(detalle_url)
 
     # Si fue creado hace menos del límite de días
-    if sentencia.creado >= datetime.now(tz=local_tz) - timedelta(days=LIMITE_DIAS_RECUPERAR):
+    if sentencia.creado >= datetime.now() - timedelta(days=LIMITE_DIAS_RECUPERAR):
         sentencia.recover()
         bitacora = Bitacora(
             modulo=Modulo.query.filter_by(nombre=MODULO).first(),

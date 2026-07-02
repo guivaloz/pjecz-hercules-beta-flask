@@ -55,14 +55,14 @@
     <script>
         // DataTable Estados
         const constructorDataTable = new ConfigDataTable( '{{ csrf_token() }}' );
-        let configDataTable = constructorDataTable.config();
-        configDataTable['ajax']['url'] = '/estados/datatable_json';
-        configDataTable['ajax']['data'] = {{ filtros }};
-        configDataTable['columns'] = [
+        let configDTEstados = constructorDataTable.config();
+        configDTEstados['ajax']['url'] = "{{ url_for('estados.datatable_json') }}";
+        configDTEstados['ajax']['data'] = {{ filtros }};
+        configDTEstados['columns'] = [
             { data: 'detalle' },
             { data: 'nombre' }
         ];
-        configDataTable['columnDefs'] = [
+        configDTEstados['columnDefs'] = [
             {
                 targets: 0, // detalle
                 data: null,
@@ -72,7 +72,7 @@
             }
         ];
         // Filtros Estados
-        const filtrosEstados = new FiltrosDataTable('#estados_datatable', configDataTable);
+        const filtrosEstados = new FiltrosDataTable('#estados_datatable', configDTEstados);
         filtrosEstados.agregarInput('filtroClave', 'clave');
         filtrosEstados.agregarInput('filtroNombre', 'nombre');
         filtrosEstados.precargar();

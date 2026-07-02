@@ -79,7 +79,7 @@
         // DataTable Permisos
         const constructorDataTable = new ConfigDataTable( '{{ csrf_token() }}' );
         let configDTPermisos = constructorDataTable.config();
-        configDTPermisos['ajax']['url'] = '/permisos/datatable_json';
+        configDTPermisos['ajax']['url'] = "{{ url_for('permisos.datatable_json') }}";
         configDTPermisos['ajax']['data'] = {{ filtros }};
         configDTPermisos['columns'] = [
             { data: "detalle" },

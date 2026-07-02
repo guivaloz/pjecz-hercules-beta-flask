@@ -137,7 +137,7 @@
         <script>
             // DataTable Permisos
             let configDTPermisos = constructorDataTable.config();
-            configDTPermisos['ajax']['url'] = '/permisos/datatable_json';
+            configDTPermisos['ajax']['url'] = "{{ url_for('permisos.datatable_json') }}";
             configDTPermisos['ajax']['data'] = { 'estatus': "A", 'rol_id': {{ rol.id}} };
             configDTPermisos['columns'] = [
                 { data: "detalle" },
@@ -176,7 +176,7 @@
         <script>
             // DataTable UsuariosRoles
             let configDTUsuariosRoles = constructorDataTable.config();
-            configDTUsuariosRoles['ajax']['url'] = '/usuarios_roles/datatable_json';
+            configDTUsuariosRoles['ajax']['url'] = "{{ url_for('usuarios_roles.datatable_json') }}";
             configDTUsuariosRoles['ajax']['data'] = { 'estatus': "A", 'rol_id': {{ rol.id}} };
             configDTUsuariosRoles['columns'] = [
                 { data: "detalle" },

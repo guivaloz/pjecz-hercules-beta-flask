@@ -76,7 +76,7 @@
         // DataTable usuarios
         const constructorDataTable = new ConfigDataTable( '{{ csrf_token() }}' );
         let configDTUsuarios = constructorDataTable.config();
-        configDTUsuarios['ajax']['url'] = '/usuarios/datatable_json';
+        configDTUsuarios['ajax']['url'] = "{{ url_for('usuarios.datatable_json') }}";
         configDTUsuarios['ajax']['data'] = {{ filtros }};
         configDTUsuarios['columns'] = [
             { data: "detalle" },

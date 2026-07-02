@@ -531,7 +531,7 @@ def edit(glosa_id):
             flash("No puede editar registros ajenos.", "warning")
             return redirect(url_for("glosas.list_active"))
         # Si fue creado hace más de LIMITES_DIAS_EDITAR
-        if glosa.creado < datetime.now(tz=local_tz) - timedelta(days=LIMITE_DIAS_EDITAR):
+        if glosa.creado < datetime.now() - timedelta(days=LIMITE_DIAS_EDITAR):
             flash(f"Ya no puede editar porque fue creado hace más de {LIMITE_DIAS_EDITAR} dias.", "warning")
             return redirect(url_for("glosas.detail", glosa_id=glosa.id))
 
@@ -632,7 +632,7 @@ def delete(glosa_id):
         return redirect(detalle_url)
 
     # Si fue creado hace menos del límite de días
-    if glosa.creado >= datetime.now(tz=local_tz) - timedelta(days=LIMITE_DIAS_ELIMINAR):
+    if glosa.creado >= datetime.now() - timedelta(days=LIMITE_DIAS_ELIMINAR):
         glosa.delete()
         bitacora = Bitacora(
             modulo=Modulo.query.filter_by(nombre=MODULO).first(),
@@ -686,7 +686,7 @@ def recover(glosa_id):
         return redirect(detalle_url)
 
     # Si fue creado hace menos del límite de días
-    if glosa.creado >= datetime.now(tz=local_tz) - timedelta(days=LIMITE_DIAS_RECUPERAR):
+    if glosa.creado >= datetime.now() - timedelta(days=LIMITE_DIAS_RECUPERAR):
         glosa.recover()
         bitacora = Bitacora(
             modulo=Modulo.query.filter_by(nombre=MODULO).first(),

@@ -18,12 +18,11 @@
         {% else %}
             {{ topbar.button_previous('V.P. de S. de ' + sentencia.autoridad.clave, url_for('sentencias.list_active') + '?autoridad_clave=' + sentencia.autoridad.clave) }}
         {% endif %}
-        {# Los usuarios que pueden editar si les pertenece #}
+        {# Los usuarios que pueden editar, eliminar y recuperar si les pertenece o si son administradores #}
         {% if current_user.can_admin('SENTENCIAS') or (current_user.can_edit('SENTENCIAS') and current_user.autoridad_id == sentencia.autoridad_id) %}
             {{ topbar.button_edit('Editar', url_for('sentencias.edit', sentencia_id=sentencia.id)) }}
         {% endif %}
-        {# Los usuarios con permiso para insertar pueden eliminar y recuperar #}
-        {% if current_user.can_insert('SENTENCIAS') %}
+        {% if current_user.can_admin('SENTENCIAS') or (current_user.can_insert('SENTENCIAS') and current_user.autoridad_id == sentencia.autoridad_id) %}
             {% if sentencia.estatus == 'A' %}{{ topbar.button_delete('Eliminar', url_for('sentencias.delete', sentencia_id=sentencia.id)) }}{% endif %}
             {% if sentencia.estatus == 'B' %}{{ topbar.button_recover('Recuperar', url_for('sentencias.recover', sentencia_id=sentencia.id)) }}{% endif %}
         {% endif %}

@@ -72,7 +72,7 @@
         // DataTable autoridades
         const constructorDataTable = new ConfigDataTable( '{{ csrf_token() }}' );
         let configDTAutoridades = constructorDataTable.config();
-        configDTAutoridades['ajax']['url'] = '/autoridades/datatable_json';
+        configDTAutoridades['ajax']['url'] = "{{ url_for('autoridades.datatable_json') }}";
         configDTAutoridades['ajax']['data'] = {{ filtros }};
         configDTAutoridades['columns'] = [
             { data: "detalle" },

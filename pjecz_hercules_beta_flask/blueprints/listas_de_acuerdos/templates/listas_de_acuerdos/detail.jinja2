@@ -18,7 +18,7 @@
         {% else %}
             {{ topbar.button_previous('Listas de Acuerdos del ' + lista_de_acuerdo.autoridad.clave, url_for('listas_de_acuerdos.list_active') + '?autoridad_clave=' + lista_de_acuerdo.autoridad.clave) }}
         {% endif %}
-        {# Los usuarios con permiso para insertar pueden eliminar y recuperar #}
+        {# Los usuarios que pueden eliminar y recuperar si son administradores #}
         {% if current_user.can_insert('LISTAS DE ACUERDOS') %}
             {% if lista_de_acuerdo.estatus == 'A' %}{{ topbar.button_delete('Eliminar', url_for('listas_de_acuerdos.delete', lista_de_acuerdo_id=lista_de_acuerdo.id)) }}{% endif %}
             {% if lista_de_acuerdo.estatus == 'B' %}{{ topbar.button_recover('Recuperar', url_for('listas_de_acuerdos.recover', lista_de_acuerdo_id=lista_de_acuerdo.id)) }}{% endif %}

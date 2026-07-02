@@ -18,12 +18,11 @@
         {% else %}
             {{ topbar.button_previous('Glosas del ' + glosa.autoridad.clave, url_for('glosas.list_active') + '?autoridad_clave=' + glosa.autoridad.clave) }}
         {% endif %}
-        {# Los usuarios que pueden editar si les pertenece #}
+        {# Los usuarios que pueden editar, eliminar y recuperar si les pertenece o si son administradores #}
         {% if current_user.can_admin('GLOSAS') or (current_user.can_edit('GLOSAS') and current_user.autoridad_id == glosa.autoridad_id) %}
             {{ topbar.button_edit('Editar', url_for('glosas.edit', glosa_id=glosa.id)) }}
         {% endif %}
-        {# Los usuarios con permiso para insertar pueden eliminar y recuperar #}
-        {% if current_user.can_insert('GLOSAS') %}
+        {% if current_user.can_admin('GLOSAS') or (current_user.can_insert('GLOSAS') and current_user.autoridad_id == glosa.autoridad_id) %}
             {% if glosa.estatus == 'A' %}{{ topbar.button_delete('Eliminar', url_for('glosas.delete', glosa_id=glosa.id)) }}{% endif %}
             {% if glosa.estatus == 'B' %}{{ topbar.button_recover('Recuperar', url_for('glosas.recover', glosa_id=glosa.id)) }}{% endif %}
         {% endif %}

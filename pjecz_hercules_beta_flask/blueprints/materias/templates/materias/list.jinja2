@@ -41,16 +41,16 @@
     <script>
         // DataTable Materias
         const constructorDataTable = new ConfigDataTable( '{{ csrf_token() }}' );
-        let configDataTable = constructorDataTable.config();
-        configDataTable['ajax']['url'] = '/materias/datatable_json';
-        configDataTable['ajax']['data'] = {{ filtros }};
-        configDataTable['columns'] = [
+        let configDTMaterias = constructorDataTable.config();
+        configDTMaterias['ajax']['url'] = "{{ url_for('materias.datatable_json') }}";
+        configDTMaterias['ajax']['data'] = {{ filtros }};
+        configDTMaterias['columns'] = [
             { data: 'detalle' },
             { data: 'nombre' },
             { data: 'en_sentencias' },
             { data: 'en_exh_exhortos' }
         ];
-        configDataTable['columnDefs'] = [
+        configDTMaterias['columnDefs'] = [
             {
                 targets: 0, // detalle
                 data: null,
@@ -70,7 +70,7 @@
             },
         ];
         // Filtros Materias
-        const filtrosMaterias = new FiltrosDataTable('#materias_datatable', configDataTable);
+        const filtrosMaterias = new FiltrosDataTable('#materias_datatable', configDTMaterias);
         filtrosMaterias.precargar();
     </script>
 {% endblock %}

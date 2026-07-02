@@ -84,12 +84,12 @@
         // DataTable Estrados
         const constructorDataTable = new ConfigDataTable( '{{ csrf_token() }}' );
         let configDTEstrados = constructorDataTable.config();
-        configDTEstrados['ajax']['url'] = "{{ url_for('estrados.datatable_json') }}";
+        configDTEstrados['ajax']['url'] = "{{ url_for('estrados.admin_datatable_json') }}";
         configDTEstrados['ajax']['data'] = {{ filtros }};
         configDTEstrados['columns'] = [
             { data: "detalle" },
             { data: "creado" },
-            { data: "autoridad" },
+            { data: "autoridad_clave" },
             { data: "fecha" },
             { data: "descripcion" },
         ];

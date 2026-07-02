@@ -189,7 +189,7 @@ def admin_datatable_json():
                     "url": url_for("edictos.detail", edicto_id=edicto.id),
                 },
                 "creado": edicto.creado.strftime("%Y-%m-%dT%H:%M:%S"),
-                "autoridad": edicto.autoridad.clave,
+                "autoridad_clave": edicto.autoridad.clave,
                 "fecha": edicto.fecha.strftime("%Y-%m-%d 00:00:00"),
                 "descripcion": edicto.descripcion,
                 "expediente": edicto.expediente,
@@ -588,7 +588,7 @@ def edit(edicto_id):
             flash("No puede editar registros ajenos.", "warning")
             return redirect(url_for("edictos.list_active"))
         # Si fue creado hace más de LIMITES_DIAS_EDITAR
-        if edicto.creado < datetime.now(tz=local_tz) - timedelta(days=LIMITE_DIAS_EDITAR):
+        if edicto.creado < datetime.now() - timedelta(days=LIMITE_DIAS_EDITAR):
             flash(f"Ya no puede editar porque fue creado hace más de {LIMITE_DIAS_EDITAR} dias.", "warning")
             return redirect(url_for("edictos.detail", edicto_id=edicto.id))
 
@@ -708,7 +708,7 @@ def delete(edicto_id):
         return redirect(detalle_url)
 
     # Si fue creado hace menos del limite de dias
-    if edicto.creado >= datetime.now(tz=local_tz) - timedelta(days=LIMITE_DIAS_ELIMINAR):
+    if edicto.creado >= datetime.now() - timedelta(days=LIMITE_DIAS_ELIMINAR):
         edicto.delete()
         bitacora = Bitacora(
             modulo=Modulo.query.filter_by(nombre=MODULO).first(),
@@ -762,7 +762,7 @@ def recover(edicto_id):
         return redirect(detalle_url)
 
     # Si fue creado hace menos del límite de días
-    if edicto.creado >= datetime.now(tz=local_tz) - timedelta(days=LIMITE_DIAS_RECUPERAR):
+    if edicto.creado >= datetime.now() - timedelta(days=LIMITE_DIAS_RECUPERAR):
         edicto.recover()
         bitacora = Bitacora(
             modulo=Modulo.query.filter_by(nombre=MODULO).first(),

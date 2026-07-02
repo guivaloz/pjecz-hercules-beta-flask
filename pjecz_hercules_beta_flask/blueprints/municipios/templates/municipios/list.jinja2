@@ -56,15 +56,15 @@
     <script>
         // DataTable Municipios
         const constructorDataTable = new ConfigDataTable( '{{ csrf_token() }}' );
-        let configDataTable = constructorDataTable.config();
-        configDataTable['ajax']['url'] = '/municipios/datatable_json';
-        configDataTable['ajax']['data'] = {{ filtros }};
-        configDataTable['columns'] = [
+        let configDTMunicipios = constructorDataTable.config();
+        configDTMunicipios['ajax']['url'] = "{{ url_for('municipios.datatable_json') }}";
+        configDTMunicipios['ajax']['data'] = {{ filtros }};
+        configDTMunicipios['columns'] = [
             { data: 'estado_nombre' },
             { data: 'detalle' },
             { data: 'nombre' }
         ];
-        configDataTable['columnDefs'] = [
+        configDTMunicipios['columnDefs'] = [
             {
                 targets: 1, // detalle
                 data: null,
@@ -74,7 +74,7 @@
             }
         ];
         // Filtros Municipios
-        const filtrosMunicipios = new FiltrosDataTable('#municipios_datatable', configDataTable);
+        const filtrosMunicipios = new FiltrosDataTable('#municipios_datatable', configDTMunicipios);
         filtrosMunicipios.agregarInput('filtroClave', 'clave');
         filtrosMunicipios.agregarInput('filtroNombre', 'nombre');
         filtrosMunicipios.precargar();
