@@ -1,0 +1,31 @@
+{% extends 'layouts/app.jinja2' %}
+{% import 'macros/form.jinja2' as f with context %}
+{% import 'macros/topbar.jinja2' as topbar %}
+
+{% block title %}Editar Audiencia de la Materia Acusatorio Penal Oral {{ audiencia.id | string}}{% endblock %}
+
+{% block topbar_actions %}
+    {{ topbar.page('Editar Audiencia de la Materia Acusatorio Penal Oral ' + audiencia.id | string) }}
+{% endblock %}
+
+{% block content %}
+    {% call f.card() %}
+        {% set form_kwargs = {'audiencia_id': audiencia.id} %}
+        {% call f.form_tag('audiencias.edit_mapo', fid='audiencia_form', **form_kwargs) %}
+            {{ form.hidden_tag() }}
+            {# Comunes #}
+            {% call f.form_group(form.distrito, readonly=true) %}{% endcall %}
+            {% call f.form_group(form.autoridad, readonly=true) %}{% endcall %}
+            {% call f.form_group(form.tiempo_fecha) %}{% endcall %}
+            {% call f.form_group(form.tiempo_horas_minutos) %}{% endcall %}
+            {% call f.form_group(form.tipo_audiencia) %}{% endcall %}
+            {# Materia Acusatorio Penal Oral #}
+            {% call f.form_group(form.sala) %}{% endcall %}
+            {% call f.form_group(form.caracter) %}{% endcall %}
+            {% call f.form_group(form.causa_penal) %}{% endcall %}
+            {% call f.form_group(form.delitos) %}{% endcall %}
+            {# Botón guardar #}
+            {% call f.form_group(form.guardar) %}{% endcall %}
+        {% endcall %}
+    {% endcall %}
+{% endblock %}

@@ -1,0 +1,113 @@
+{% extends 'layouts/app.jinja2' %}
+{% import 'macros/list.jinja2' as list %}
+{% import 'macros/topbar.jinja2' as topbar %}
+
+{% block title %}{{ titulo }}{% endblock %}
+
+{% block topbar_actions %}
+    {% call topbar.page_buttons(titulo) %}
+        {% if autoridad %}
+            {% if current_user.can_admin('AUDIENCIAS') or (current_user.can_edit('AUDIENCIAS') and current_user.autoridad_id == autoridad.id) %}
+                {% if estatus == 'A' %}{{ topbar.button_list_inactive('Inactivos', url_for('audiencias.list_inactive')) }}{% endif %}
+                {% if estatus == 'B' %}{{ topbar.button_list_active('Activos', url_for('audiencias.list_active')) }}{% endif %}
+            {% endif %}
+            {% if current_user.can_insert('AUDIENCIAS') and current_user.autoridad_id == autoridad.id %}
+                {{ topbar.button_new('Nuevo Audiencia', url_for('audiencias.new')) }}
+            {% endif %}
+        {% endif %}
+    {% endcall %}
+{% endblock %}
+
+{% block content %}
+    {% call list.card() %}
+        <!-- Filtros Audiencias -->
+        <div class="row">
+            <div class="col">
+                <form class="row g-1 mb-3" id="filtradorForm" onsubmit="filtrosAudiencias.buscar(); return false;">
+                    <div class="col-2">
+                        <div class="form-floating">
+                            <input id="filtroTiempoDesde" type="datetime-local" class="form-control" aria-label="Tiempo Desde">
+                            <label for="filtroTiempoDesde">Tiempo Desde</label>
+                        </div>
+                    </div>
+                    <div class="col-2">
+                        <div class="form-floating">
+                            <input id="filtroTiempoHasta" type="datetime-local" class="form-control" aria-label="Tiempo Hasta">
+                            <label for="filtroTiempoHasta">Tiempo Hasta</label>
+                        </div>
+                    </div>
+                    <div class="col-3">
+                        <div class="form-floating">
+                            <input id="filtroTipoAudiencia" type="text" class="form-control" aria-label="Tipo audiencia" style="text-transform: uppercase;">
+                            <label for="filtroTipoAudiencia">Tipo audiencia</label>
+                        </div>
+                    </div>
+                    <div class="col-3">
+                        <div class="form-floating">
+                            <input id="filtroExpediente" type="text" class="form-control" aria-label="Expediente" style="text-transform: uppercase;">
+                            <label for="filtroExpediente">Expediente</label>
+                        </div>
+                    </div>
+                    <div class="col-2 text-end">
+                        <button title="Buscar" class="btn btn-primary btn-lg" onclick="filtrosAudiencias.buscar(); return false;" id="button-buscar"><span class="mdi mdi-magnify"></span></button>
+                        <button title="Limpiar" class="btn btn-warning btn-lg" type="reset" onclick="filtrosAudiencias.limpiar();" id="button-limpiar"><span class="mdi mdi-broom"></span></button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <!-- DataTable Audiencias -->
+        <table id="audiencias_datatable" class="table {% if estatus == 'B'%}table-dark{% endif %} display nowrap" style="width:100%">
+            <thead>
+                <tr>
+                    <th>Fecha y hora</th>
+                    <th>Tipo de audiencia</th>
+                    <th>Expediente</th>
+                    <th>Actor</th>
+                    <th>Demandado</th>
+                </tr>
+            </thead>
+        </table>
+    {% endcall %}
+{% endblock %}
+
+{% block custom_javascript %}
+    <script src="{{ url_for('static', filename='js/datatables-constructor.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/datatables-filtros.js') }}"></script>
+    <script>
+        // DataTable Audiencias
+        const constructorDataTable = new ConfigDataTable( '{{ csrf_token() }}' );
+        let configDataTable = constructorDataTable.config();
+        configDTAudiencias['ajax']['url'] = "{{ url_for('audiencias.datatable_json') }}";
+        configDTAudiencias['ajax']['data'] = {{ filtros }};
+        configDTAudiencias['columns'] = [
+            { data: "detalle" },
+            { data: "tipo_audiencia" },
+            { data: "expediente" },
+            { data: "actores" },
+            { data: "demandados" }
+        ];
+        configDTAudiencias['columnDefs'] = [
+            {
+                targets: 0,
+                data: null,
+                render: function(data, type, row, meta) {
+                    return '<a href="' + data.url + '">' + data.tiempo + '</a>';
+                }
+            },
+            {
+                targets: [3, 4],
+                data: null,
+                render: function(data, type, row, meta) {
+                    return (data.length > 20 ? data.substr(0, 20) + '…' : data);
+                }
+            }
+        ];
+        // Filtros Audiencias
+        const filtrosAudiencias = new FiltrosDataTable('#audiencias_datatable', configDTAudiencias);
+        filtrosAudiencias.agregarInput('filtroTiempoDesde', 'tiempo_desde');
+        filtrosAudiencias.agregarInput('filtroTiempoHasta', 'tiempo_hasta');
+        filtrosAudiencias.agregarInput('filtroTipoAudiencia', 'tipo_audiencia');
+        filtrosAudiencias.agregarInput('filtroExpediente', 'expediente');
+        filtrosAudiencias.precargar();
+    </script>
+{% endblock %}
