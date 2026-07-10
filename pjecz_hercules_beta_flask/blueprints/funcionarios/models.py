@@ -44,7 +44,6 @@ class Funcionario(database.Model, UniversalMixin):
     fotografia_url: Mapped[str] = mapped_column(String(512), default="")
 
     # Hijos
-    autoridades_funcionarios: Mapped[List["AutoridadFuncionario"]] = relationship(back_populates="funcionario")
     funcionarios_oficinas: Mapped[List["FuncionarioOficina"]] = relationship(back_populates="funcionario")
     soportes_tickets: Mapped[List["SoporteTicket"]] = relationship(back_populates="funcionario")
 

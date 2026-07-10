@@ -113,7 +113,6 @@ class Usuario(database.Model, UserMixin, UniversalMixin):
                         and permiso.estatus == "A"
                         and permiso.nivel > 0
                         and permiso.modulo.en_navegacion
-                        and permiso.modulo.en_plataforma_hercules
                     ):
                         modulos.append(permiso.modulo)
                         modulos_nombres.append(permiso.modulo.nombre)
