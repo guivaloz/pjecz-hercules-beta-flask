@@ -16,7 +16,6 @@ from pjecz_hercules_beta_flask.blueprints.arc_solicitudes.views import arc_solic
 from pjecz_hercules_beta_flask.blueprints.arc_solicitudes_bitacoras.views import arc_solicitudes_bitacoras
 from pjecz_hercules_beta_flask.blueprints.audiencias.views import audiencias
 from pjecz_hercules_beta_flask.blueprints.autoridades.views import autoridades
-from pjecz_hercules_beta_flask.blueprints.autoridades_funcionarios.views import autoridades_funcionarios
 from pjecz_hercules_beta_flask.blueprints.bitacoras.views import bitacoras
 from pjecz_hercules_beta_flask.blueprints.bitacoras_apis.views import bitacoras_apis
 from pjecz_hercules_beta_flask.blueprints.centros_trabajos.views import centros_trabajos
@@ -77,7 +76,6 @@ app.register_blueprint(arc_solicitudes)
 app.register_blueprint(arc_solicitudes_bitacoras)
 app.register_blueprint(audiencias)
 app.register_blueprint(autoridades)
-app.register_blueprint(autoridades_funcionarios)
 app.register_blueprint(bitacoras)
 app.register_blueprint(bitacoras_apis)
 app.register_blueprint(centros_trabajos)

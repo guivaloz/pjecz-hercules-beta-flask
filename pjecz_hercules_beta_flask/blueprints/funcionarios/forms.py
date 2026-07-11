@@ -7,7 +7,7 @@ from wtforms import BooleanField, DateField, SelectField, StringField, SubmitFie
 from wtforms.validators import DataRequired, Email, Length, Optional, Regexp
 
 from pjecz_hercules_beta_flask.blueprints.centros_trabajos.models import CentroTrabajo
-from lib.safe_string import CURP_REGEXP
+from pjecz_hercules_beta_flask.lib.safe_string import CURP_REGEXP
 
 
 class FuncionarioForm(FlaskForm):
