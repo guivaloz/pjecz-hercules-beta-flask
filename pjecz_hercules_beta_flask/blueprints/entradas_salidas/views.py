@@ -67,20 +67,15 @@ def datatable_json():
 @entradas_salidas.route("/entradas_salidas")
 def list_active():
     """Listado de Entradas-Salidas activos"""
-
-    # Definir filtros por defecto
+    # Valores por defecto
     filtros = {"estatus": "A"}
     titulo = "Entradas-Salidas"
-
     # Si viene usuario_id en la URL, agregar a los filtros
-    try:
-        usuario_id = int(request.args.get("usuario_id"))
+    usuario_id = request.args.get("usuario_id")
+    if usuario_id is not None:
         usuario = Usuario.query.get_or_404(usuario_id)
         filtros = {"estatus": "A", "usuario_id": usuario_id}
         titulo = f"Entradas-Salidas de {usuario.nombre}"
-    except TypeError, ValueError:
-        pass
-
     # Entregar
     return render_template(
         "entradas_salidas/list.jinja2",

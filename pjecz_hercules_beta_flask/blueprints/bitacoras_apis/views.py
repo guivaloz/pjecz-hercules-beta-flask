@@ -78,10 +78,8 @@ def list_active():
     filtros = {"estatus": "A"}
     titulo = "Bitácoras APIs"
     # Si viene usuario_id en la URL, agregar a los filtros
-    filtros = {"estatus": "A"}
     usuario_id = request.args.get("usuario_id")
-    titulo = "Bitácoras de APIs"
-    if usuario_id:
+    if usuario_id is not None:
         filtros["usuario_id"] = usuario_id
         usuario = Usuario.query.get_or_404(usuario_id)
         titulo = f"Bitácoras de APIs de {usuario.nombre}"

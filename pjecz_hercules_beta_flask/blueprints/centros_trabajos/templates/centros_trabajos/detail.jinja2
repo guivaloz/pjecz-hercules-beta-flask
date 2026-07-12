@@ -1,0 +1,141 @@
+{% extends 'layouts/app.jinja2' %}
+{% import 'macros/detail.jinja2' as detail %}
+{% import 'macros/modals.jinja2' as modals %}
+{% import 'macros/topbar.jinja2' as topbar %}
+
+{% block title %}Centro de Trabajo {{ centro_trabajo.clave }}{% endblock %}
+
+{% block topbar_actions %}
+    {% call topbar.page_buttons('Centro de Trabajo ' + centro_trabajo.clave) %}
+        {{ topbar.button_previous('Centros de Trabajo', url_for('centros_trabajos.list_active')) }}
+    {% endcall %}
+{% endblock %}
+
+{% block content %}
+    {% call detail.card(estatus=centro_trabajo.estatus) %}
+        {{ detail.label_value_big('Clave', centro_trabajo.clave) }}
+        {{ detail.label_value('Nombre', centro_trabajo.nombre) }}
+        {{ detail.label_value('Teléfono', centro_trabajo.telefono) }}
+        {% if current_user.can_view("DISTRITOS") %}
+            {{ detail.label_value('Distrito', centro_trabajo.distrito.nombre, url_for('distritos.detail', distrito_id=centro_trabajo.distrito_id)) }}
+        {% else %}
+            {{ detail.label_value('Distrito', centro_trabajo.distrito.nombre) }}
+        {% endif %}
+        {% if current_user.can_view("DOMICILIOS") %}
+            {{ detail.label_value('Domicilio', centro_trabajo.domicilio.completo, url_for('domicilios.detail', domicilio_id=centro_trabajo.domicilio_id)) }}
+        {% else %}
+            {{ detail.label_value('Domicilio', centro_trabajo.domicilio.completo) }}
+        {% endif %}
+    {% endcall %}
+    {% if current_user.can_view('FUNCIONARIOS') %}
+        {% call detail.card('Funcionarios') %}
+            <!-- Filtros Funcionarios -->
+            <div class="row">
+                <div class="col">
+                    <form class="row g-1 mb-3" id="filtradorForm" onsubmit="filtrosFuncionarios.buscar(); return false;">
+                        <div class="col-3">
+                            <div class="form-floating">
+                                <input id="filtroEmail" type="text" class="form-control" aria-label="Correo electrónico">
+                                <label for="filtroEmail">Correo electrónico</label>
+                            </div>
+                        </div>
+                        <div class="col-2">
+                            <div class="form-floating">
+                                <input id="filtroNombres" type="text" class="form-control" aria-label="Nombres" style="text-transform: uppercase;">
+                                <label for="filtroNombres">Nombres</label>
+                            </div>
+                        </div>
+                        <div class="col-2">
+                            <div class="form-floating">
+                                <input id="filtroApellidoPaterno" type="text" class="form-control" aria-label="Apellido Paterno" style="text-transform: uppercase;">
+                                <label for="filtroApellidoPaterno">Apellido Paterno</label>
+                            </div>
+                        </div>
+                        <div class="col-2">
+                            <div class="form-floating">
+                                <input id="filtroPuesto" type="text" class="form-control" aria-label="Puesto" style="text-transform: uppercase;">
+                                <label for="filtroPuesto">Puesto</label>
+                            </div>
+                        </div>
+                        <div class="col-3 text-end">
+                            <button title="Buscar" class="btn btn-primary btn-lg" onclick="filtrosFuncionarios.buscar(); return false;" id="button-buscar"><span class="mdi mdi-magnify"></span></button>
+                            <button title="Limpiar" class="btn btn-warning btn-lg" type="reset" onclick="filtrosFuncionarios.limpiar();" id="button-limpiar"><span class="mdi mdi-broom"></span></button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <!-- DataTable Funcionarios -->
+            <table id="funcionarios_datatable" class="table display nowrap" style="width:100%">
+                <thead>
+                    <tr>
+                        <th>Correo electrónico</th>
+                        <th>Nombre</th>
+                        <th>Puesto</th>
+                        <th>Teléfono</th>
+                        <th>Extensión</th>
+                    </tr>
+                </thead>
+            </table>
+        {% endcall %}
+    {% endif %}
+{% endblock %}
+
+{% block custom_javascript %}
+    <!-- Constructor de DataTables -->
+    <script src="{{ url_for('static', filename='js/datatables-constructor.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/datatables-filtros.js') }}"></script>
+    <script>
+        const constructorDataTable = new ConfigDataTable( '{{ csrf_token() }}' );
+    </script>
+    <!-- Funcionarios del Centro Trabajo -->
+    {% if current_user.can_view('FUNCIONARIOS') %}
+        <script>
+            // DataTable Funcionarios
+            let configDTFuncionarios = constructorDataTable.config();
+            configDTFuncionarios['ajax']['url'] = "{{ url_for('funcionarios.datatable_json') }}";
+            configDTFuncionarios['ajax']['data'] = { estatus: "A", centro_trabajo_id: '{{ centro_trabajo.id }}' };
+            configDTFuncionarios['columns'] = [
+                { data: "detalle" },
+                { data: "nombre" },
+                { data: "puesto" },
+                { data: "telefono" },
+                { data: "extension" }
+            ];
+            configDTFuncionarios['columnDefs'] = [
+                {
+                    targets: 0, // detalle
+                    data: null,
+                    render: function(data, type, row, meta) {
+                        return '<a href="' + data.url + '">' + data.email + '</a>';
+                    }
+                },
+                {
+                    targets: 1, // nombre
+                    data: null,
+                    render: function(data, type, row, meta){
+                        if (data.length > 24){
+                            return '<span title="' + data + '">' + data.substring(0, 24) + '…' + '</span>';
+                        }
+                        return data;
+                  }
+                },
+                {
+                    targets: 2, // puesto
+                    data: null,
+                    render: function(data, type, row, meta) {
+                        if (data.length > 24)
+                            return '<span title="' + data + '">' + data.substr(0, 24) + '…' + '</span>';
+                        return data;
+                    }
+                }
+            ];
+            // Filtros Funcionarios
+            const filtrosFuncionarios = new FiltrosDataTable('#funcionarios_datatable', configDTFuncionarios);
+            filtrosFuncionarios.agregarInput('filtroEmail', 'email');
+            filtrosFuncionarios.agregarInput('filtroNombres', 'nombres');
+            filtrosFuncionarios.agregarInput('filtroApellidoPaterno', 'apellido_paterno');
+            filtrosFuncionarios.agregarInput('filtroPuesto', 'puesto');
+            filtrosFuncionarios.precargar();
+        </script>
+    {% endif %}
+{% endblock %}

@@ -85,13 +85,11 @@ def list_active():
     filtros = {"estatus": "A"}
     titulo = "Bitácoras"
     # Si viene usuario_id en la URL, agregar a los filtros
-    try:
-        usuario_id = int(request.args.get("usuario_id"))
+    usuario_id = request.args.get("usuario_id")
+    if usuario_id is not None:
         usuario = Usuario.query.get_or_404(usuario_id)
         filtros = {"estatus": "A", "usuario_id": usuario_id}
         titulo = f"Bitácoras de {usuario.nombre}"
-    except TypeError, ValueError:
-        pass
     # Entregar
     return render_template(
         "bitacoras/list.jinja2",
