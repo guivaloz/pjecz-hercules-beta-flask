@@ -54,7 +54,7 @@
                     option.text = distrito.nombre;
                     distritoSelect.appendChild(option);
                 });
-                distritoSelect.value = {{ distrito_por_defecto_id }}; // Seleccionar el distrito por defecto
+                distritoSelect.value = {{ distrito_por_defecto.id }}; // Seleccionar el distrito por defecto
                 distritoSelect.dispatchEvent(new Event('change'));
             });
         // Cargar las opciones del select autoridad, si el distrito cambia
@@ -69,6 +69,9 @@
                         option.text = autoridad.descripcion_corta;
                         autoridadSelect.appendChild(option);
                     });
+                    if (distritoSelect.value == {{ distrito_por_defecto.id }}) {
+                        autoridadSelect.value = {{ autoridad_por_defecto.id }}; // Seleccionar la autoridad por defecto
+                    }
                 });
         });
     </script>

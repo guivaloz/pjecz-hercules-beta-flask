@@ -1,0 +1,60 @@
+{% extends 'layouts/app.jinja2' %}
+{% import 'macros/form.jinja2' as f with context %}
+{% import 'macros/topbar.jinja2' as topbar %}
+
+{% block title %}Editar Deudor Alimentario {{ redam.nombre }}{% endblock %}
+
+{% block topbar_actions %}
+    {{ topbar.page('Editar Deudor Alimentario ' + redam.nombre) }}
+{% endblock %}
+
+{% block content %}
+    {% call f.card() %}
+        {% set form_kwargs = {'redam_id': redam.id} %}
+        {% call f.form_tag('redams.edit', fid='redam_form', **form_kwargs) %}
+            {% call f.form_group(form.distrito) %}{% endcall %}
+            {% call f.form_group(form.autoridad) %}{% endcall %}
+            {% call f.form_group(form.nombre) %}{% endcall %}
+            {% call f.form_group(form.expediente) %}{% endcall %}
+            {% call f.form_group(form.fecha) %}{% endcall %}
+            {% call f.form_group(form.observaciones) %}{% endcall %}
+            {% call f.form_group(form.guardar) %}{% endcall %}
+        {% endcall %}
+    {% endcall %}
+{% endblock %}
+
+{% block custom_javascript %}
+    <!-- Select Distrito-Autoridad -->
+    <script>
+        const distritoSelect = document.getElementById('distrito');
+        const autoridadSelect = document.getElementById('autoridad');
+        // Cargar las opciones del select distrito
+        fetch("{{ url_for('distritos.select_json') }}")
+            .then(response => response.json())
+            .then(data => {
+                data.forEach(distrito => {
+                    const option = document.createElement('option');
+                    option.value = distrito.id;
+                    option.text = distrito.nombre;
+                    distritoSelect.appendChild(option);
+                });
+                distritoSelect.value = {{ redam.autoridad.distrito_id }}; // Seleccionar el distrito del redam
+                distritoSelect.dispatchEvent(new Event('change'));
+            });
+        // Cargar las opciones del select autoridad, si el distrito cambia
+        distritoSelect.addEventListener('change', () => {
+            fetch(`{{ url_for('autoridades.select_json') }}?distrito_id=${distritoSelect.value}`)
+                .then(response => response.json())
+                .then(data => {
+                    autoridadSelect.innerHTML = '';
+                    data.forEach(autoridad => {
+                        const option = document.createElement('option');
+                        option.value = autoridad.id;
+                        option.text = autoridad.descripcion_corta;
+                        autoridadSelect.appendChild(option);
+                    });
+                    autoridadSelect.value = {{ redam.autoridad_id }}; // Seleccionar la autoridad del redam
+                });
+        });
+    </script>
+{% endblock %}

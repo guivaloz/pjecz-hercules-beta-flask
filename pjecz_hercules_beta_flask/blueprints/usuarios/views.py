@@ -387,23 +387,15 @@ def new():
             bitacora.save()
             flash(bitacora.descripcion, "success")
             return redirect(bitacora.url)
-    # Consultar el distrito por defecto con clave ND
-    distrito_por_defecto_id = 1
-    distrito_por_defecto = Distrito.query.filter_by(clave="ND").first()
-    if distrito_por_defecto is not None:
-        distrito_por_defecto_id = distrito_por_defecto.id
-    # Consultar la oficina por defecto con clave ND
-    oficina_por_defecto = Oficina.query.filter_by(clave="ND").first()
-    if oficina_por_defecto is None:
-        oficina_por_defecto = None
     # Valores por defecto
     form.workspace.data = "COAHUILA"
     # Entregar
     return render_template(
         "usuarios/new.jinja2",
         form=form,
-        distrito_por_defecto_id=distrito_por_defecto_id,
-        oficina_por_defecto=oficina_por_defecto,
+        distrito_por_defecto=Distrito.query.filter_by(clave="ND").first(),
+        autoridad_por_defecto=Autoridad.query.filter_by(clave="ND").first(),
+        oficina_por_defecto=Oficina.query.filter_by(clave="ND").first(),
     )
 
 
