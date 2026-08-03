@@ -1,5 +1,5 @@
 """
-PJECZ Hercules Beta Flask
+PJECZ Hercules Beta Flask Application
 """
 
 from flask import Flask
@@ -58,68 +58,76 @@ from pjecz_hercules_beta_flask.blueprints.vsp_digitalizaciones.views import vsp_
 from pjecz_hercules_beta_flask.config.extensions import authentication, csrf, database, login_manager, moment
 from pjecz_hercules_beta_flask.config.settings import Settings
 
-# Crear la aplicación
-app = Flask(__name__, instance_relative_config=True)
-app.add_url_rule("/favicon.ico", endpoint="sistemas.favicon")
-app.config.from_object(Settings())
 
-# Registrar blueprints
-app.register_blueprint(abogados)
-app.register_blueprint(arc_documentos)
-app.register_blueprint(arc_documentos_bitacoras)
-app.register_blueprint(arc_documentos_tipos)
-app.register_blueprint(arc_juzgados_extintos)
-app.register_blueprint(arc_remesas)
-app.register_blueprint(arc_remesas_bitacoras)
-app.register_blueprint(arc_remesas_documentos)
-app.register_blueprint(arc_solicitudes)
-app.register_blueprint(arc_solicitudes_bitacoras)
-app.register_blueprint(audiencias)
-app.register_blueprint(autoridades)
-app.register_blueprint(bitacoras)
-app.register_blueprint(bitacoras_apis)
-app.register_blueprint(centros_trabajos)
-app.register_blueprint(distritos)
-app.register_blueprint(domicilios)
-app.register_blueprint(edictos)
-app.register_blueprint(entradas_salidas)
-app.register_blueprint(estados)
-app.register_blueprint(estrados)
-app.register_blueprint(exh_areas)
-app.register_blueprint(exh_exhortos)
-app.register_blueprint(exh_exhortos_archivos)
-app.register_blueprint(exh_exhortos_partes)
-app.register_blueprint(exh_tipos_diligencias)
-app.register_blueprint(funcionarios)
-app.register_blueprint(funcionarios_oficinas)
-app.register_blueprint(glosas)
-app.register_blueprint(listas_de_acuerdos)
-app.register_blueprint(materias)
-app.register_blueprint(materias_tipos_juicios)
-app.register_blueprint(modulos)
-app.register_blueprint(municipios)
-app.register_blueprint(oficinas)
-app.register_blueprint(ofi_documentos)
-app.register_blueprint(ofi_documentos_adjuntos)
-app.register_blueprint(ofi_documentos_destinatarios)
-app.register_blueprint(ofi_plantillas)
-app.register_blueprint(permisos)
-app.register_blueprint(redams)
-app.register_blueprint(roles)
-app.register_blueprint(sentencias)
-app.register_blueprint(sistemas)
-app.register_blueprint(soportes_categorias)
-app.register_blueprint(soportes_tickets)
-app.register_blueprint(tareas)
-app.register_blueprint(usuarios)
-app.register_blueprint(usuarios_roles)
-app.register_blueprint(vsp_digitalizaciones)
+def create_app():
+    """
+    Create and configure the Flask application.
+    """
 
-# Inicializar extensiones
-csrf.init_app(app)
-database.init_app(app)
-login_manager.init_app(app)
-moment.init_app(app)
+    # Crear la aplicación
+    app = Flask(__name__, instance_relative_config=True)
+    app.add_url_rule("/favicon.ico", endpoint="sistemas.favicon")
+    app.config.from_object(Settings())
 
-# Cargar el modelo de usuario para la autenticación
-authentication(Usuario)
+    # Registrar blueprints
+    app.register_blueprint(abogados)
+    app.register_blueprint(arc_documentos)
+    app.register_blueprint(arc_documentos_bitacoras)
+    app.register_blueprint(arc_documentos_tipos)
+    app.register_blueprint(arc_juzgados_extintos)
+    app.register_blueprint(arc_remesas)
+    app.register_blueprint(arc_remesas_bitacoras)
+    app.register_blueprint(arc_remesas_documentos)
+    app.register_blueprint(arc_solicitudes)
+    app.register_blueprint(arc_solicitudes_bitacoras)
+    app.register_blueprint(audiencias)
+    app.register_blueprint(autoridades)
+    app.register_blueprint(bitacoras)
+    app.register_blueprint(bitacoras_apis)
+    app.register_blueprint(centros_trabajos)
+    app.register_blueprint(distritos)
+    app.register_blueprint(domicilios)
+    app.register_blueprint(edictos)
+    app.register_blueprint(entradas_salidas)
+    app.register_blueprint(estados)
+    app.register_blueprint(estrados)
+    app.register_blueprint(exh_areas)
+    app.register_blueprint(exh_exhortos)
+    app.register_blueprint(exh_exhortos_archivos)
+    app.register_blueprint(exh_exhortos_partes)
+    app.register_blueprint(exh_tipos_diligencias)
+    app.register_blueprint(funcionarios)
+    app.register_blueprint(funcionarios_oficinas)
+    app.register_blueprint(glosas)
+    app.register_blueprint(listas_de_acuerdos)
+    app.register_blueprint(materias)
+    app.register_blueprint(materias_tipos_juicios)
+    app.register_blueprint(modulos)
+    app.register_blueprint(municipios)
+    app.register_blueprint(oficinas)
+    app.register_blueprint(ofi_documentos)
+    app.register_blueprint(ofi_documentos_adjuntos)
+    app.register_blueprint(ofi_documentos_destinatarios)
+    app.register_blueprint(ofi_plantillas)
+    app.register_blueprint(permisos)
+    app.register_blueprint(redams)
+    app.register_blueprint(roles)
+    app.register_blueprint(sentencias)
+    app.register_blueprint(sistemas)
+    app.register_blueprint(soportes_categorias)
+    app.register_blueprint(soportes_tickets)
+    app.register_blueprint(tareas)
+    app.register_blueprint(usuarios)
+    app.register_blueprint(usuarios_roles)
+    app.register_blueprint(vsp_digitalizaciones)
+
+    # Inicializar extensiones
+    csrf.init_app(app)
+    database.init_app(app)
+    login_manager.init_app(app)
+    moment.init_app(app)
+
+    # Cargar el modelo de usuario para la autenticación
+    authentication(Usuario)
+
+    return app

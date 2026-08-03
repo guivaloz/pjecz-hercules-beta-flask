@@ -35,10 +35,7 @@ def get_secret(secret_id: str, default: str = "") -> str:
         # Return the decoded payload
         return response.payload.data.decode("UTF-8")
     except:
-        pass
-
-    # Si no funciona lo anterior, entregar el valor por defecto
-    return default
+        return default # Si no funciona lo anterior, entregar el valor por defecto
 
 
 class Settings(BaseSettings):
@@ -68,20 +65,8 @@ class Settings(BaseSettings):
     SQLALCHEMY_DATABASE_URI: str = get_secret("SQLALCHEMY_DATABASE_URI")
     TZ: str = get_secret("TZ", "America/Mexico_City")
 
-    # Incrementar el tamaño de lo que se sube en los formularios
-    MAX_CONTENT_LENGTH: int = 24 * 1024 * 1024
-    MAX_FORM_MEMORY_SIZE: int = 24 * 1024 * 1024
 
-    class Config:
-        """Load configuration"""
-
-        @classmethod
-        def customise_sources(cls, init_settings, env_settings, file_secret_settings):
-            """Change the order of precedence of settings sources"""
-            return env_settings, file_secret_settings, init_settings
-
-
-@lru_cache()
+@lru_cache
 def get_settings() -> Settings:
     """Get Settings"""
     return Settings()
