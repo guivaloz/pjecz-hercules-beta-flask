@@ -7,7 +7,7 @@ import os
 from dotenv import load_dotenv
 
 load_dotenv()
-FLASK_APP = os.getenv("FLASK_APP", "pjecz_hercules_beta_flask.app") + ":create_app()"
+FLASK_APP = os.getenv("FLASK_APP", "pjecz_hercules_beta_flask.app") + ":create_app"
 FLASK_HOST = os.getenv("FLASK_HOST", "127.0.0.1")
 FLASK_PORT = int(os.getenv("FLASK_PORT", "5000"))
 FLASK_DEBUG = os.getenv("FLASK_DEBUG", "1")

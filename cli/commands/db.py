@@ -14,7 +14,7 @@ from rich.console import Console
 from rich.progress import Progress
 from typer import Typer
 
-from pjecz_hercules_beta_flask.app import app
+from pjecz_hercules_beta_flask.app import create_app
 from pjecz_hercules_beta_flask.blueprints.autoridades.models import Autoridad
 from pjecz_hercules_beta_flask.blueprints.distritos.models import Distrito
 from pjecz_hercules_beta_flask.blueprints.domicilios.models import Domicilio
@@ -60,6 +60,7 @@ PRODUCTION_DB_PORT = int(os.getenv("PRODUCTION_DB_PORT", "5432"))
 PRODUCTION_DB_NAME = os.getenv("PRODUCTION_DB_NAME")
 
 # Inicializar la aplicación
+app = create_app()
 app.app_context().push()
 
 db = Typer()
@@ -273,10 +274,10 @@ def alimentar_permisos():
                     nivel = int(row[columna])
                 except ValueError:
                     nivel = 0
-                if nivel < 0:
-                    nivel = 0
-                if nivel > 4:
-                    nivel = 4
+                nivel = max(0, nivel)
+                nivel = min(4, nivel)
+                if nivel == 0:
+                    continue
                 Permiso(
                     rol=rol,
                     modulo=modulo,

@@ -262,6 +262,7 @@ def list_inactive():
         estatus="B",
         filtros={"estatus": "B"},
         titulo="Edictos inactivos",
+        mostrar_filtro_autoridad_clave=True,
     )
 
 
