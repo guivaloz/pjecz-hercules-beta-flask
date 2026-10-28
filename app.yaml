@@ -6,7 +6,7 @@ automatic_scaling:
   min_instances: 1
   max_instances: 4
 service: plataforma-web-beta
-entrypoint: gunicorn -w 2 appserver:gunicorn_app
+entrypoint: gunicorn -w 2 --pythonpath src appserver:gunicorn_app
 env_variables:
   PROJECT_ID: justicia-digital-gob-mx
   SERVICE_PREFIX: pjecz_hercules_flask
