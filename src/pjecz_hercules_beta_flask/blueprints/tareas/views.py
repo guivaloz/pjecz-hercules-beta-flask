@@ -37,13 +37,13 @@ def datatable_json():
     consulta = Tarea.query
     # Primero filtrar por columnas propias
     if "estatus" in request.form:
-        consulta = consulta.filter_by(estatus=request.form["estatus"])
+        consulta = consulta.filter(Tarea.estatus == request.form["estatus"])
     else:
-        consulta = consulta.filter_by(estatus="A")
+        consulta = consulta.filter(Tarea.estatus == "A")
     if "comando" in request.form:
-        consulta = consulta.filter_by(comando=request.form["comando"])
+        consulta = consulta.filter(Tarea.comando == request.form["comando"])
     if "usuario_id" in request.form:
-        consulta = consulta.filter_by(usuario_id=request.form["usuario_id"])
+        consulta = consulta.filter(Tarea.usuario_id == request.form["usuario_id"])
     # Ordenar y paginar
     registros = consulta.order_by(Tarea.creado.desc()).offset(start).limit(rows_per_page).all()
     total = consulta.count()

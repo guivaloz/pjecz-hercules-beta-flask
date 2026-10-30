@@ -1,0 +1,127 @@
+{% extends 'layouts/app.jinja2' %}
+{% import 'macros/detail.jinja2' as detail %}
+{% import 'macros/modals.jinja2' as modals %}
+{% import 'macros/topbar.jinja2' as topbar %}
+
+{% block title %}<Singular> {{ <singular>.<link_column> }}{% endblock %}
+
+{% block topbar_actions %}
+    {% call topbar.page_buttons('<Singular> ' + <singular>.<link_column>) %}
+        {{ topbar.button_previous('<Plural>', url_for('<blueprint>.list_active')) }}
+        {% if current_user.can_edit('<MODULO>') %}
+            {{ topbar.button_edit('Editar', url_for('<blueprint>.edit', <singular>_id=<singular>.id)) }}
+        {% endif %}
+        {% if current_user.can_admin('<MODULO>') %}
+            {% if <singular>.estatus == 'A' %}{{ topbar.button_delete('Eliminar', url_for('<blueprint>.delete', <singular>_id=<singular>.id)) }}{% endif %}
+            {% if <singular>.estatus == 'B' %}{{ topbar.button_recover('Recuperar', url_for('<blueprint>.recover', <singular>_id=<singular>.id)) }}{% endif %}
+        {% endif %}
+    {% endcall %}
+{% endblock %}
+
+{% block content %}
+    {% call detail.card(estatus=<singular>.estatus) %}
+        {{ detail.label_value_big('Clave', <singular>.clave) }}
+        {{ detail.label_value('Nombre', <singular>.nombre) }}
+        {# (Segundo nivel) Enlace al detalle del padre #}
+        {% if current_user.can_view('<PARENT_MODULO>') %}
+            {{ detail.label_value('<Parent label>', <singular>.<parent>.<parent_label_column>, url_for('<parent_blueprint>.detail', <parent>_id=<singular>.<parent>_id)) }}
+        {% else %}
+            {{ detail.label_value('<Parent label>', <singular>.<parent>.<parent_label_column>) }}
+        {% endif %}
+        {{ detail.label_value_boolean('Es algo', <singular>.es_algo) }}
+    {% endcall %}
+{% endblock %}
+
+{% block custom_javascript %}
+    {% if current_user.can_admin('<MODULO>') %}
+        {% if <singular>.estatus == 'A' %}{{ modals.custom_javascript_delete('Eliminar', '¿Eliminar a ' + <singular>.<link_column> + '?') }}{% endif %}
+        {% if <singular>.estatus == 'B' %}{{ modals.custom_javascript_recover('Recuperar', '¿Recuperar a ' + <singular>.<link_column> + '?') }}{% endif %}
+    {% endif %}
+{% endblock %}
+
+{#
+================================================================================
+Embedded child DataTable
+--------------------------------------------------------------------------------
+Agregar al detail.jinja2 del PADRE para listar sus hijos (por ejemplo, en
+distritos/detail.jinja2 la tabla de oficinas). Aquí <singular> es el padre y
+<child*> el blueprint hijo.
+
+1) Dentro de {% block content %}, después de la tarjeta principal:
+
+    {% if current_user.can_view('<CHILD_MODULO>') and <singular>.estatus == 'A' %}
+        {% call detail.card('<Child plural>') %}
+            <!-- Filtros <Child plural> -->
+            <div class="row">
+                <div class="col">
+                    <form class="row g-1 mb-3" id="filtradorForm" onsubmit="filtros<ChildPluralCamel>.buscar(); return false;">
+                        <div class="col-2">
+                            <div class="form-floating">
+                                <input id="filtro<ChildSingularCamel>Clave" type="text" class="form-control" aria-label="Clave" style="text-transform: uppercase;">
+                                <label for="filtro<ChildSingularCamel>Clave">Clave</label>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="form-floating">
+                                <input id="filtro<ChildSingularCamel>Nombre" type="text" class="form-control" aria-label="Nombre" style="text-transform: uppercase;">
+                                <label for="filtro<ChildSingularCamel>Nombre">Nombre</label>
+                            </div>
+                        </div>
+                        <div class="col-6 text-end">
+                            <button title="Buscar" class="btn btn-primary btn-lg" onclick="filtros<ChildPluralCamel>.buscar(); return false;" id="button-buscar"><span class="mdi mdi-magnify"></span></button>
+                            <button title="Limpiar" class="btn btn-warning btn-lg" type="reset" onclick="filtros<ChildPluralCamel>.limpiar();" id="button-limpiar"><span class="mdi mdi-broom"></span></button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <!-- DataTable <Child plural> -->
+            <table id="<child_blueprint>_datatable" class="table display nowrap" style="width:100%">
+                <thead>
+                    <tr>
+                        <th>Clave</th>
+                        <th>Nombre</th>
+                    </tr>
+                </thead>
+            </table>
+        {% endcall %}
+    {% endif %}
+
+2) Dentro de {% block custom_javascript %}, después de los modales. Cargar los
+   scripts y declarar constructorDataTable UNA sola vez aunque haya varias tablas:
+
+    <script src="/static/js/datatables-constructor.js"></script>
+    <script src="/static/js/datatables-filtros.js"></script>
+    <script>
+        const constructorDataTable = new ConfigDataTable( '{{ csrf_token() }}' );
+    </script>
+    {% if current_user.can_view('<CHILD_MODULO>') and <singular>.estatus == 'A' %}
+        <script>
+            // DataTable <Child plural>
+            let configDT<ChildPluralCamel> = constructorDataTable.config();
+            configDT<ChildPluralCamel>['ajax']['url'] = "{{ url_for('<child_blueprint>.datatable_json') }}";
+            // id entero:
+            configDT<ChildPluralCamel>['ajax']['data'] = { 'estatus': "A", '<singular>_id': {{ <singular>.id }} };
+            // id UUID (con comillas):
+            // configDT<ChildPluralCamel>['ajax']['data'] = { 'estatus': "A", '<singular>_id': "{{ <singular>.id }}" };
+            configDT<ChildPluralCamel>['columns'] = [
+                { data: "detalle" },
+                { data: "nombre" }
+            ];
+            configDT<ChildPluralCamel>['columnDefs'] = [
+                {
+                    targets: 0, // detalle
+                    data: null,
+                    render: function(data, type, row, meta) {
+                        return '<a href="' + data.url + '">' + data.clave + '</a>';
+                    }
+                }
+            ];
+            // Filtros <Child plural>
+            const filtros<ChildPluralCamel> = new FiltrosDataTable('#<child_blueprint>_datatable', configDT<ChildPluralCamel>);
+            filtros<ChildPluralCamel>.agregarInput('filtro<ChildSingularCamel>Clave', 'clave');
+            filtros<ChildPluralCamel>.agregarInput('filtro<ChildSingularCamel>Nombre', 'nombre');
+            filtros<ChildPluralCamel>.precargar();
+        </script>
+    {% endif %}
+================================================================================
+#}

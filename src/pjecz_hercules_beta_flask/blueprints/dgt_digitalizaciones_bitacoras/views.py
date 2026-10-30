@@ -34,9 +34,9 @@ def datatable_json():
     consulta = DgtDigitalizacionBitacora.query
     # Primero filtrar por columnas propias
     if "estatus" in request.form:
-        consulta = consulta.filter_by(estatus=request.form["estatus"])
+        consulta = consulta.filter(DgtDigitalizacionBitacora.estatus == request.form["estatus"])
     else:
-        consulta = consulta.filter_by(estatus="A")
+        consulta = consulta.filter(DgtDigitalizacionBitacora.estatus == "A")
     if "dgt_digitalizacion_id" in request.form:
         consulta = consulta.filter(DgtDigitalizacionBitacora.dgt_digitalizacion_id == request.form["dgt_digitalizacion_id"])
     if "evento" in request.form:

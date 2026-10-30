@@ -35,9 +35,9 @@ def datatable_json():
     consulta = DgtPlataformaEndpointBitacora.query
     # Primero filtrar por columnas propias
     if "estatus" in request.form:
-        consulta = consulta.filter_by(estatus=request.form["estatus"])
+        consulta = consulta.filter(DgtPlataformaEndpointBitacora.estatus == request.form["estatus"])
     else:
-        consulta = consulta.filter_by(estatus="A")
+        consulta = consulta.filter(DgtPlataformaEndpointBitacora.estatus == "A")
     if "dgt_plataforma_endpoint_id" in request.form:
         dgt_plataforma_endpoint_id = safe_uuid(request.form["dgt_plataforma_endpoint_id"])
         if dgt_plataforma_endpoint_id != "":

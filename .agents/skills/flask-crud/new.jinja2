@@ -1,0 +1,21 @@
+{% extends 'layouts/app.jinja2' %}
+{% import 'macros/form.jinja2' as f with context %}
+{% import 'macros/topbar.jinja2' as topbar %}
+
+{% block title %}<Nuevo> <Singular>{% endblock %}
+
+{% block topbar_actions %}
+    {{ topbar.page('<Nuevo> <Singular>') }}
+{% endblock %}
+
+{% block content %}
+    {% call f.card() %}
+        {% call f.form_tag('<blueprint>.new', fid='<singular>_form') %}
+            {% call f.form_group(form.clave) %}{% endcall %}
+            {% call f.form_group(form.nombre) %}{% endcall %}
+            {% call f.form_group(form.<parent>) %}{% endcall %}
+            {% call f.form_group(form.es_algo) %}{% endcall %}
+            {% call f.form_group(form.guardar) %}{% endcall %}
+        {% endcall %}
+    {% endcall %}
+{% endblock %}

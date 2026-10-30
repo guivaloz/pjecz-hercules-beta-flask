@@ -38,9 +38,9 @@ def datatable_json():
     consulta = DgtPlataformaEndpoint.query
     # Primero filtrar por columnas propias
     if "estatus" in request.form:
-        consulta = consulta.filter_by(estatus=request.form["estatus"])
+        consulta = consulta.filter(DgtPlataformaEndpoint.estatus == request.form["estatus"])
     else:
-        consulta = consulta.filter_by(estatus="A")
+        consulta = consulta.filter(DgtPlataformaEndpoint.estatus == "A")
     if "dgt_plataforma_id" in request.form:
         dgt_plataforma_id = safe_uuid(request.form["dgt_plataforma_id"])
         if dgt_plataforma_id != "":
@@ -132,7 +132,7 @@ def new():
         dgt_plataforma_endpoint = DgtPlataformaEndpoint(
             dgt_plataforma_id=form.dgt_plataforma.data,
             descripcion=safe_string(form.descripcion.data, max_len=256, save_enie=True),
-            ruta=form.ruta.data.strip(),
+            ruta=str(form.ruta.data).strip(),
             proposito=form.proposito.data,
             metodo=form.metodo.data,
             payload_muestra=json.loads(form.payload_muestra.data) if (form.payload_muestra.data or "").strip() else {},
@@ -163,7 +163,7 @@ def edit(dgt_plataforma_endpoint_id):
     if form.validate_on_submit():
         dgt_plataforma_endpoint.dgt_plataforma_id = form.dgt_plataforma.data
         dgt_plataforma_endpoint.descripcion = safe_string(form.descripcion.data, max_len=256, save_enie=True)
-        dgt_plataforma_endpoint.ruta = form.ruta.data.strip()
+        dgt_plataforma_endpoint.ruta = str(form.ruta.data).strip()
         dgt_plataforma_endpoint.proposito = form.proposito.data
         dgt_plataforma_endpoint.metodo = form.metodo.data
         dgt_plataforma_endpoint.payload_muestra = json.loads(form.payload_muestra.data) if (form.payload_muestra.data or "").strip() else {}

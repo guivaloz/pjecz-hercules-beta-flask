@@ -34,11 +34,11 @@ def datatable_json():
     consulta = Municipio.query
     # Primero filtrar por columnas propias
     if "estatus" in request.form:
-        consulta = consulta.filter_by(estatus=request.form["estatus"])
+        consulta = consulta.filter(Municipio.estatus == request.form["estatus"])
     else:
-        consulta = consulta.filter_by(estatus="A")
+        consulta = consulta.filter(Municipio.estatus == "A")
     if "estado_id" in request.form:
-        consulta = consulta.filter_by(estado_id=request.form["estado_id"])
+        consulta = consulta.filter(Municipio.estado_id == request.form["estado_id"])
     if "clave" in request.form:
         try:
             clave = str(int(request.form["clave"])).zfill(3)

@@ -14,7 +14,7 @@ from pjecz_hercules_beta_flask.blueprints.modulos.models import Modulo
 from pjecz_hercules_beta_flask.blueprints.permisos.models import Permiso
 from pjecz_hercules_beta_flask.blueprints.usuarios.decorators import permission_required
 from pjecz_hercules_beta_flask.lib.datatables import get_datatable_parameters, output_datatable_json
-from pjecz_hercules_beta_flask.lib.safe_string import safe_message, safe_string, safe_uuid
+from pjecz_hercules_beta_flask.lib.safe_string import safe_clave, safe_message, safe_string, safe_uuid
 
 MODULO = "DGT PLATAFORMAS"
 
@@ -37,9 +37,9 @@ def datatable_json():
     consulta = DgtPlataforma.query
     # Primero filtrar por columnas propias
     if "estatus" in request.form:
-        consulta = consulta.filter_by(estatus=request.form["estatus"])
+        consulta = consulta.filter(DgtPlataforma.estatus == request.form["estatus"])
     else:
-        consulta = consulta.filter_by(estatus="A")
+        consulta = consulta.filter(DgtPlataforma.estatus == "A")
     if "clave" in request.form:
         try:
             clave = safe_clave(request.form["clave"], max_len=64)
@@ -113,7 +113,7 @@ def new():
     if form.validate_on_submit():
         clave = safe_clave(form.clave.data, max_len=64)
         descripcion = safe_string(form.descripcion.data, max_len=256, save_enie=True)
-        api_key = form.api_key.data.strip()
+        api_key = str(form.api_key.data).strip()
         # Validar que la clave no se repita
         if DgtPlataforma.query.filter_by(clave=clave).first():
             flash("Esa clave ya está en uso. Debe de ser única.", "warning")
@@ -170,7 +170,7 @@ def edit(dgt_plataforma_id):
         # Si es valido actualizar
         if es_valido:
             dgt_plataforma.descripcion = descripcion
-            dgt_plataforma.api_key = form.api_key.data.strip()
+            dgt_plataforma.api_key = str(form.api_key.data).strip()
             dgt_plataforma.save()
             bitacora = Bitacora(
                 modulo=Modulo.query.filter_by(nombre=MODULO).first(),

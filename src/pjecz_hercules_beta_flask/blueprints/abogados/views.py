@@ -35,11 +35,11 @@ def datatable_json():
     consulta = Abogado.query
     # Primero filtrar por columnas propias
     if "estatus" in request.form:
-        consulta = consulta.filter_by(estatus=request.form["estatus"])
+        consulta = consulta.filter(Abogado.estatus == request.form["estatus"])
     else:
-        consulta = consulta.filter_by(estatus="A")
+        consulta = consulta.filter(Abogado.estatus == "A")
     if "numero" in request.form:
-        consulta = consulta.filter_by(numero=safe_string(request.form["numero"]))
+        consulta = consulta.filter(Abogado.numero == safe_string(request.form["numero"]))
     if "nombre" in request.form:
         consulta = consulta.filter(Abogado.nombre.contains(safe_string(request.form["nombre"])))
     # Ordenar y paginar

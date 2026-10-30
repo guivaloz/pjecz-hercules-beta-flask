@@ -37,9 +37,9 @@ def datatable_json():
     consulta = Materia.query
     # Primero filtrar por columnas propias
     if "estatus" in request.form:
-        consulta = consulta.filter_by(estatus=request.form["estatus"])
+        consulta = consulta.filter(Materia.estatus == request.form["estatus"])
     else:
-        consulta = consulta.filter_by(estatus="A")
+        consulta = consulta.filter(Materia.estatus == "A")
     # Ordenar y paginar
     registros = consulta.order_by(Materia.nombre).offset(start).limit(rows_per_page).all()
     total = consulta.count()

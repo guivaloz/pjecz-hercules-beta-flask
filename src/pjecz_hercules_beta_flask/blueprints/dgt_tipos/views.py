@@ -37,9 +37,9 @@ def datatable_json():
     consulta = DgtTipo.query
     # Primero filtrar por columnas propias
     if "estatus" in request.form:
-        consulta = consulta.filter_by(estatus=request.form["estatus"])
+        consulta = consulta.filter(DgtTipo.estatus == request.form["estatus"])
     else:
-        consulta = consulta.filter_by(estatus="A")
+        consulta = consulta.filter(DgtTipo.estatus == "A")
     if "clave" in request.form:
         try:
             clave = safe_clave(request.form["clave"], max_len=64)

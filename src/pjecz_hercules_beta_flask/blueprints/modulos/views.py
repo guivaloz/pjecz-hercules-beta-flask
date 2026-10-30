@@ -34,13 +34,11 @@ def datatable_json():
     draw, start, rows_per_page = get_datatable_parameters()
     # Consultar
     consulta = Modulo.query
-    # Solo los modulos en Plataforma Hercules
-    # consulta = consulta.filter_by(en_plataforma_hercules=True)
     # Primero filtrar por columnas propias
     if "estatus" in request.form:
-        consulta = consulta.filter_by(estatus=request.form["estatus"])
+        consulta = consulta.filter(Modulo.estatus == request.form["estatus"])
     else:
-        consulta = consulta.filter_by(estatus="A")
+        consulta = consulta.filter(Modulo.estatus == "A")
     if "nombre" in request.form:
         nombre = safe_string(request.form["nombre"], save_enie=True)
         if nombre != "":

@@ -37,9 +37,9 @@ def datatable_json():
     consulta = Rol.query
     # Primero filtrar por columnas propias
     if "estatus" in request.form:
-        consulta = consulta.filter_by(estatus=request.form["estatus"])
+        consulta = consulta.filter(Rol.estatus == request.form["estatus"])
     else:
-        consulta = consulta.filter_by(estatus="A")
+        consulta = consulta.filter(Rol.estatus == "A")
     if "nombre" in request.form:
         nombre = safe_string(request.form["nombre"], save_enie=True)
         if nombre != "":

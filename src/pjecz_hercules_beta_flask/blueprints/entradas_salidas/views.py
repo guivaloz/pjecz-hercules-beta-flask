@@ -35,9 +35,9 @@ def datatable_json():
     consulta = EntradaSalida.query
     # Primero filtrar por columnas propias
     if "estatus" in request.form:
-        consulta = consulta.filter_by(estatus=request.form["estatus"])
+        consulta = consulta.filter(EntradaSalida.estatus == request.form["estatus"])
     else:
-        consulta = consulta.filter_by(estatus="A")
+        consulta = consulta.filter(EntradaSalida.estatus == "A")
     if "usuario_id" in request.form:
         try:
             usuario_id = int(request.form["usuario_id"])

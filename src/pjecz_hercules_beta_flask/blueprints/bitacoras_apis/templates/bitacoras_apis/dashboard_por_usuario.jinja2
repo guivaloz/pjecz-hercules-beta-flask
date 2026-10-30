@@ -154,55 +154,50 @@
               tabla.clear().rows.add(data).draw();
               return;
             }
+
+            const columns = [
+              {
+                data: "usuario_email",
+                render: (email, type, row) => {
+                  if (type !== "display") return email;
+                  const params = new URLSearchParams({ usuario_id: row.usuario_id });
+                  return `<a href="${listActiveUrl}?${params}">${email}</a>`;
+                },
+              },
+              { data: "autoridad_clave" },
+              {
+                data: "api_key_cuota_diaria",
+                render: (cuota) => cuota ?? "",
+              },
+              {
+                data: "api_key_expiracion",
+                render: (expiracion, type) => {
+                  if (!expiracion) return "";
+                  // Resaltar cuando la API key ya expiró
+                  if (type !== "display" || expiracion >= fechaATexto(new Date())) return expiracion;
+                  return `<span class="text-danger">${expiracion}</span>`;
+                },
+              },
+              {
+                data: "promedio_diario",
+                render: (promedio, type, row) => {
+                  // Resaltar cuando el promedio diario supera la cuota diaria
+                  if (type !== "display" || !row.api_key_cuota_diaria || promedio <= row.api_key_cuota_diaria) return promedio;
+                  return `<span class="text-danger fw-bold">${promedio}</span>`;
+                },
+              },
+              { data: "total" },
+            ]
+
             tabla = $("#dashboard_datatable").DataTable({
               data,
-              columns: [
-                {
-                  data: "usuario_email",
-                  render: (email, type, row) => {
-                    if (type !== "display") return email;
-                    const params = new URLSearchParams({ usuario_id: row.usuario_id });
-                    return `<a href="${listActiveUrl}?${params}">${email}</a>`;
-                  },
-                },
-                { data: "autoridad_clave" },
-                {
-                  data: "api_key_cuota_diaria",
-                  render: (cuota) => cuota ?? "",
-                },
-                {
-                  data: "api_key_expiracion",
-                  render: (expiracion, type) => {
-                    if (!expiracion) return "";
-                    // Resaltar cuando la API key ya expiró
-                    if (type !== "display" || expiracion >= fechaATexto(new Date())) return expiracion;
-                    return `<span class="text-danger">${expiracion}</span>`;
-                  },
-                },
-                {
-                  data: "promedio_diario",
-                  render: (promedio, type, row) => {
-                    // Resaltar cuando el promedio diario supera la cuota diaria
-                    if (type !== "display" || !row.api_key_cuota_diaria || promedio <= row.api_key_cuota_diaria) return promedio;
-                    return `<span class="text-danger fw-bold">${promedio}</span>`;
-                  },
-                },
-                { data: "total" },
-              ],
+              columns,
               order: [[5, "desc"]],
+              searching: false,
               responsive: true,
               scrollX: true,
-              paging: true,
-              pageLength: 25,
-              language: {
-                search: "Buscar:",
-                zeroRecords: "No se encontraron registros",
-                info: "Mostrando _START_ a _END_ de _TOTAL_ usuarios",
-                infoEmpty: "Sin registros",
-                infoFiltered: "(filtrado de _MAX_ usuarios)",
-                lengthMenu: "Mostrar _MENU_ usuarios",
-                paginate: { first: "Primera", last: "Última", next: "Siguiente", previous: "Anterior" },
-              },
+              paging: false,
+              language: { zeroRecords: "No se encontraron registros" },
             });
           })
           .catch((error) => console.error("Error al cargar el tablero:", error));
