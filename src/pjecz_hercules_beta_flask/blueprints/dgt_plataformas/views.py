@@ -40,6 +40,13 @@ def datatable_json():
         consulta = consulta.filter_by(estatus=request.form["estatus"])
     else:
         consulta = consulta.filter_by(estatus="A")
+    if "clave" in request.form:
+        try:
+            clave = safe_clave(request.form["clave"], max_len=64)
+            if clave != "":
+                consulta = consulta.filter(DgtPlataforma.clave.contains(clave))
+        except ValueError:
+            pass
     if "descripcion" in request.form:
         descripcion = safe_string(request.form["descripcion"], save_enie=True)
         if descripcion != "":
@@ -53,9 +60,10 @@ def datatable_json():
         data.append(
             {
                 "detalle": {
-                    "descripcion": item.descripcion,
+                    "clave": item.clave,
                     "url": url_for("dgt_plataformas.detail", dgt_plataforma_id=item.id),
                 },
+                "descripcion": item.descripcion,
                 "api_key_oculta": item.api_key_oculta,
             }
         )
@@ -103,14 +111,20 @@ def new():
     """Nueva DGT Plataforma"""
     form = DgtPlataformaForm()
     if form.validate_on_submit():
+        clave = safe_clave(form.clave.data, max_len=64)
         descripcion = safe_string(form.descripcion.data, max_len=256, save_enie=True)
         api_key = form.api_key.data.strip()
+        # Validar que la clave no se repita
+        if DgtPlataforma.query.filter_by(clave=clave).first():
+            flash("Esa clave ya está en uso. Debe de ser única.", "warning")
+            return render_template("dgt_plataformas/new.jinja2", form=form)
         # Validar que la descripción no se repita
         if DgtPlataforma.query.filter_by(descripcion=descripcion).first():
             flash("Esa descripción ya está en uso. Debe de ser única.", "warning")
             return render_template("dgt_plataformas/new.jinja2", form=form)
         # Guardar
         dgt_plataforma = DgtPlataforma(
+            clave=clave,
             descripcion=descripcion,
             api_key=api_key,
         )
@@ -139,6 +153,13 @@ def edit(dgt_plataforma_id):
     form = DgtPlataformaForm()
     if form.validate_on_submit():
         es_valido = True
+        # Si cambia la clave verificar que no este en uso
+        clave = safe_clave(form.clave.data, max_len=64)
+        if dgt_plataforma.clave != clave:
+            dgt_plataforma_existente = DgtPlataforma.query.filter_by(clave=clave).first()
+            if dgt_plataforma_existente and dgt_plataforma_existente.id != dgt_plataforma.id:
+                es_valido = False
+                flash("La clave ya está en uso. Debe de ser única.", "warning")
         # Si cambia la descripción verificar que no este en uso
         descripcion = safe_string(form.descripcion.data, max_len=256, save_enie=True)
         if dgt_plataforma.descripcion != descripcion:
@@ -160,6 +181,7 @@ def edit(dgt_plataforma_id):
             bitacora.save()
             flash(bitacora.descripcion, "success")
             return redirect(bitacora.url)
+    form.clave.data = dgt_plataforma.clave
     form.descripcion.data = dgt_plataforma.descripcion
     form.api_key.data = dgt_plataforma.api_key
     return render_template("dgt_plataformas/edit.jinja2", form=form, dgt_plataforma=dgt_plataforma)
@@ -183,7 +205,7 @@ def delete(dgt_plataforma_id):
                 autoridades_quitadas += 1
         # Al eliminar se guardan en la misma transacción la plataforma y sus autoridades
         dgt_plataforma.delete()
-        descripcion = f"Eliminada DGT Plataforma {dgt_plataforma.descripcion}"
+        descripcion = f"Eliminada DGT Plataforma {dgt_plataforma.clave}"
         if autoridades_quitadas > 0:
             descripcion += f" y se quitaron sus {autoridades_quitadas} autoridades"
         bitacora = Bitacora(
@@ -211,7 +233,7 @@ def recover(dgt_plataforma_id):
         bitacora = Bitacora(
             modulo=Modulo.query.filter_by(nombre=MODULO).first(),
             usuario=current_user,
-            descripcion=safe_message(f"Recuperada DGT Plataforma {dgt_plataforma.descripcion}"),
+            descripcion=safe_message(f"Recuperada DGT Plataforma {dgt_plataforma.clave}"),
             url=url_for("dgt_plataformas.detail", dgt_plataforma_id=dgt_plataforma.id),
         )
         bitacora.save()

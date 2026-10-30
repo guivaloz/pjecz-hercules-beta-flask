@@ -34,7 +34,8 @@
 {% block content %}
     {% call detail.card(estatus=dgt_plataforma.estatus) %}
         <div class="row">
-            {{ detail.label_value_big('Descripción', dgt_plataforma.descripcion) }}
+            {{ detail.label_value_big('Clave', dgt_plataforma.clave) }}
+            {{ detail.label_value('Descripción', dgt_plataforma.descripcion) }}
             {{ detail.label_value('API key', dgt_plataforma.api_key_oculta) }}
         </div>
     {% endcall %}
