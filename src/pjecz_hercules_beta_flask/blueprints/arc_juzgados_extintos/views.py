@@ -222,3 +222,17 @@ def recover(arc_juzgado_extinto_id):
         bitacora.save()
         flash(bitacora.descripcion, "success")
     return redirect(url_for("arc_juzgados_extintos.detail", arc_juzgado_extinto_id=arc_juzgado_extinto.id))
+
+
+@arc_juzgados_extintos.route("/arc_juzgados_extintos/select2_json", methods=["GET", "POST"])
+def select2_json():
+    """Proporcionar el JSON de juzgados extintos para elegir con un Select2"""
+    consulta = ArcJuzgadoExtinto.query.filter(ArcJuzgadoExtinto.estatus == "A")
+    if "searchString" in request.form:
+        clave = safe_clave(request.form["searchString"])
+        if clave != "":
+            consulta = consulta.filter(ArcJuzgadoExtinto.clave.contains(clave))
+    resultados = []
+    for juzgado in consulta.order_by(ArcJuzgadoExtinto.clave).limit(10).all():
+        resultados.append({"id": juzgado.id, "clave": juzgado.clave, "text": f"{juzgado.clave}: {juzgado.descripcion_corta}"})
+    return {"results": resultados, "pagination": {"more": False}}
