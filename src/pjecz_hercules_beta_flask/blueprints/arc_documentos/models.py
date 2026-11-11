@@ -17,6 +17,7 @@ class ArcDocumento(database.Model, UniversalMixin):
     UBICACIONES = {
         "NO DEFINIDO": "No Definido",
         "ARCHIVO": "Archivo",
+        "ARCHIVO DE TRAMITE": "Archivo de Trámite",
         "JUZGADO": "Juzgado",
         "REMESA": "Remesa",
     }

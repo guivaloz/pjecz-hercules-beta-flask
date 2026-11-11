@@ -1,0 +1,105 @@
+{% extends 'layouts/app.jinja2' %}
+{% import 'macros/list.jinja2' as list %}
+{% import 'macros/topbar.jinja2' as topbar %}
+
+{% block title %}{{ titulo }}{% endblock %}
+
+{% block topbar_actions %}
+    {% call topbar.page_buttons(titulo) %}
+        {% if current_user.can_view('DISTRITOS') %}
+            {{ topbar.button('Distritos', url_for('distritos.list_active'), 'mdi mdi-map') }}
+        {% endif %}
+        {% if current_user.can_admin('ARC JUZGADOS EXTINTOS') %}
+            {% if estatus == 'A' %}{{ topbar.button_list_inactive('Inactivos', url_for('arc_juzgados_extintos.list_inactive')) }}{% endif %}
+            {% if estatus == 'B' %}{{ topbar.button_list_active('Activos', url_for('arc_juzgados_extintos.list_active')) }}{% endif %}
+        {% endif %}
+        {% if current_user.can_insert('ARC JUZGADOS EXTINTOS') %}
+            {{ topbar.button_new('Nuevo Juzgado Extinto', url_for('arc_juzgados_extintos.new')) }}
+        {% endif %}
+    {% endcall %}
+{% endblock %}
+
+{% block content %}
+    {% call list.card() %}
+        <!-- Filtros ArcJuzgadosExtintos -->
+        <div class="row">
+            <div class="col">
+                <form class="row g-1 mb-3" id="filtradorForm" onsubmit="filtrosArcJuzgadosExtintos.buscar(); return false;">
+                    <div class="col-2">
+                        <div class="form-floating">
+                            <input id="filtroClave" type="text" class="form-control" aria-label="Clave" style="text-transform: uppercase;">
+                            <label for="filtroClave">Clave</label>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="form-floating">
+                            <input id="filtroDescripcionCorta" type="text" class="form-control" aria-label="Descripción corta" style="text-transform: uppercase;">
+                            <label for="filtroDescripcionCorta">Descripción corta</label>
+                        </div>
+                    </div>
+                    <div class="col-2">
+                        <div class="form-floating">
+                            <input id="filtroDistritoClave" type="text" class="form-control" aria-label="Distrito" style="text-transform: uppercase;">
+                            <label for="filtroDistritoClave">Distrito</label>
+                        </div>
+                    </div>
+                    <div class="col-4 text-end">
+                        <button title="Buscar" class="btn btn-primary btn-lg" onclick="filtrosArcJuzgadosExtintos.buscar(); return false;" id="button-buscar"><span class="mdi mdi-magnify"></span></button>
+                        <button title="Limpiar" class="btn btn-warning btn-lg" type="reset" onclick="filtrosArcJuzgadosExtintos.limpiar();" id="button-limpiar"><span class="mdi mdi-broom"></span></button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <!-- DataTable ArcJuzgadosExtintos -->
+        <table id="arc_juzgados_extintos_datatable" class="table {% if estatus == 'B'%}table-dark{% endif %} display nowrap" style="width:100%">
+            <thead>
+                <tr>
+                    <th>Clave</th>
+                    <th>Descripción corta</th>
+                    <th>Descripción</th>
+                    <th>Distrito</th>
+                </tr>
+            </thead>
+        </table>
+    {% endcall %}
+{% endblock %}
+
+{% block custom_javascript %}
+    <script src="/static/js/datatables-constructor.js"></script>
+    <script src="/static/js/datatables-filtros.js"></script>
+    <script>
+        // DataTable ArcJuzgadosExtintos
+        const constructorDataTable = new ConfigDataTable( '{{ csrf_token() }}' );
+        let configDTArcJuzgadosExtintos = constructorDataTable.config();
+        configDTArcJuzgadosExtintos['ajax']['url'] = "{{ url_for('arc_juzgados_extintos.datatable_json') }}";
+        configDTArcJuzgadosExtintos['ajax']['data'] = {{ filtros }};
+        configDTArcJuzgadosExtintos['columns'] = [
+            { data: "detalle" },
+            { data: "descripcion_corta" },
+            { data: "descripcion" },
+            { data: "distrito_clave" }
+        ];
+        configDTArcJuzgadosExtintos['columnDefs'] = [
+            {
+                targets: 0, // detalle
+                data: null,
+                render: function(data, type, row, meta) {
+                    return '<a href="' + data.url + '">' + data.clave + '</a>';
+                }
+            },
+            {
+                targets: [1, 2], // descripcion_corta, descripcion
+                data: null,
+                render: function(data, type, row, meta) {
+                    return (data.length > 48 ? data.substring(0, 48) + '…' : data);
+                }
+            }
+        ];
+        // Filtros ArcJuzgadosExtintos
+        const filtrosArcJuzgadosExtintos = new FiltrosDataTable('#arc_juzgados_extintos_datatable', configDTArcJuzgadosExtintos);
+        filtrosArcJuzgadosExtintos.agregarInput('filtroClave', 'clave');
+        filtrosArcJuzgadosExtintos.agregarInput('filtroDescripcionCorta', 'descripcion_corta');
+        filtrosArcJuzgadosExtintos.agregarInput('filtroDistritoClave', 'distrito_clave');
+        filtrosArcJuzgadosExtintos.precargar();
+    </script>
+{% endblock %}
