@@ -244,6 +244,6 @@ def select2_json():
         if nombre != "":
             consulta = consulta.filter(Modulo.nombre.contains(nombre))
     resultados = []
-    for modulo in consulta.order_by(Modulo.nombre).limit(10).all():
-        resultados.append({"id": modulo.id, "text": modulo.nombre})
+    for item in consulta.order_by(Modulo.nombre).limit(10).all():
+        resultados.append({"id": item.id, "text": item.nombre})
     return {"results": resultados, "pagination": {"more": False}}

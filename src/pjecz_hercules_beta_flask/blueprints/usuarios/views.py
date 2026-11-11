@@ -557,6 +557,6 @@ def select2_json():
                 )
             )
     resultados = []
-    for usuario in consulta.order_by(Usuario.email).limit(10).all():
-        resultados.append({"id": usuario.id, "text": f"{usuario.email}: {usuario.nombre} - {usuario.puesto}"})
+    for item in consulta.order_by(Usuario.email).limit(10).all():
+        resultados.append({"id": item.id, "text": f"{item.email}: {item.nombre} - {item.puesto}"})
     return {"results": resultados, "pagination": {"more": False}}

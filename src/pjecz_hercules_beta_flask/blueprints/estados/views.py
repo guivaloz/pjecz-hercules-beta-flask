@@ -91,8 +91,8 @@ def select2_json():
         if nombre != "":
             consulta = consulta.filter(Estado.nombre.contains(nombre))
     resultados = []
-    for estado in consulta.order_by(Estado.nombre).limit(10).all():
-        resultados.append({"id": estado.id, "text": estado.nombre})
+    for item in consulta.order_by(Estado.nombre).limit(10).all():
+        resultados.append({"id": item.id, "text": item.nombre})
     return {"results": resultados, "pagination": {"more": False}}
 
 
